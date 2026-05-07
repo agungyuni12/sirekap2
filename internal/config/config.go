@@ -77,7 +77,7 @@ func Load() *Config {
 		if port != "" {
 			serverAddr = "0.0.0.0:" + port
 		} else {
-			serverAddr = "0.0.0.0:8080"
+			serverAddr = "0.0.0.0:8051"
 		}
 	}
 

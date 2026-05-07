@@ -21,9 +21,9 @@ COPY --from=builder /app/templates ./templates
 COPY --from=builder /app/template ./template
 RUN mkdir -p /app/static/uploads /app/output
 
-# Set environment variables
-ENV SERVER_ADDR=0.0.0.0:8080
+# Set default application port
+ENV PORT=8051
 
-EXPOSE 8080
+EXPOSE 8051
 
 CMD ["./sirekap-app"]
