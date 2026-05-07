@@ -1,0 +1,606 @@
+{{ define "content" }}
+<div class="max-w-6xl mx-auto space-y-8" x-data="inputForm()">
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">Input Kegiatan</h2>
+            <p class="text-gray-500 mt-1">Tambahkan data kegiatan dan honor mitra</p>
+        </div>
+        <nav class="flex items-center space-x-2 text-sm">
+            <a href="/dashboard" class="text-gray-500 hover:text-primary transition">Dashboard</a>
+            <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+            <span class="text-primary font-medium">Input</span>
+        </nav>
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+        <!-- Card Header -->
+        <div
+            class="px-8 py-5 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <i class="fas fa-clipboard-list text-primary"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800 dark:text-gray-100">Formulir Input Data</h3>
+            </div>
+            <div class="htmx-indicator flex items-center space-x-2 text-primary">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span class="text-sm font-medium">Memproses...</span>
+            </div>
+        </div>
+
+        <form id="penilaian_pg" class="p-8 space-y-8" autocomplete="off" hx-post="/api/mitra/submit" hx-trigger="submit"
+            hx-indicator=".htmx-indicator" hx-swap="none" @htmx:after-request="handleFormResponse($event)">
+
+            <!-- Hidden Fields -->
+            <input type="hidden" name="username2" id="username2" :value="username">
+
+            <!-- Section 1: Detail Kegiatan -->
+            <div>
+                <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4 flex items-center">
+                    <span
+                        class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center mr-2">1</span>
+                    Detail Kegiatan
+                </h4>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Tahun Anggaran -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Tahun Anggaran <span
+                                class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="form-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            <select name="tahunAnggaran" id="tahunAnggaran" x-model="tahunAnggaran"
+                                @change="onTahunAnggaranChange()" class="w-full select-with-icon">
+                                <option value="">-- Pilih Tahun Anggaran --</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Kegiatan (Autocomplete) -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Kegiatan <span
+                                class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="form-icon">
+                                <i class="fas fa-briefcase"></i>
+                            </span>
+                            <input type="text" name="kegiatan" id="kegiatan" x-model="kegiatan"
+                                @input="searchKegiatan()" @focus="showKegiatanList = true"
+                                @click.away="showKegiatanList = false" class="w-full input-with-icon"
+                                placeholder="Ketik nama kegiatan..." :disabled="!tahunAnggaran"
+                                :class="!tahunAnggaran ? 'bg-gray-100 cursor-not-allowed' : ''">
+                            <div id="kegiatan-results" x-show="showKegiatanList && kegiatanResults.length > 0"
+                                class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 max-h-60 overflow-y-auto">
+                                <template x-for="item in kegiatanResults" :key="item.nama">
+                                    <button type="button" @click="selectKegiatan(item)"
+                                        class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0">
+                                        <span class="font-medium text-gray-800" x-text="item.nama"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                        <small x-show="!tahunAnggaran" class="text-gray-400 block text-xs">
+                            Pilih tahun anggaran terlebih dahulu
+                        </small>
+                    </div>
+
+                    <!-- MAK -->
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">MAK (Kode Anggaran)</label>
+                        <div class="relative">
+                            <span class="form-icon">
+                                <i class="fas fa-barcode"></i>
+                            </span>
+                            <input type="text" name="mak" id="mak" x-model="mak" readonly
+                                class="w-full input-with-icon bg-gray-100 text-gray-500 cursor-not-allowed"
+                                placeholder="Otomatis terisi dari kegiatan">
+                        </div>
+                    </div>
+
+                    <!-- Bulan & Tahun -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Bulan <span
+                                class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="form-icon">
+                                <i class="fas fa-calendar-day"></i>
+                            </span>
+                            <select name="bulan" id="bulan" x-model="bulan" class="w-full select-with-icon">
+                                <option value="">-- Pilih Bulan --</option>
+                                <option value="Januari">Januari</option>
+                                <option value="Februari">Februari</option>
+                                <option value="Maret">Maret</option>
+                                <option value="April">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Juni">Juni</option>
+                                <option value="Juli">Juli</option>
+                                <option value="Agustus">Agustus</option>
+                                <option value="September">September</option>
+                                <option value="Oktober">Oktober</option>
+                                <option value="November">November</option>
+                                <option value="Desember">Desember</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Tahun <span
+                                class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="form-icon">
+                                <i class="fas fa-calendar"></i>
+                            </span>
+                            <select name="tahun" id="tahun" x-model="tahun" class="w-full select-with-icon">
+                                <option value="">-- Pilih Tahun --</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-gray-200">
+
+            <!-- Section 2: Detail Honor Mitra -->
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wider flex items-center">
+                        <span
+                            class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center mr-2">2</span>
+                        Detail Honor Mitra
+                    </h4>
+                    <button type="button" @click="addMitra()"
+                        class="inline-flex items-center px-4 py-2.5 text-sm bg-primary text-white rounded-xl hover:bg-primary-dark shadow-lg shadow-primary/30 hover:shadow-xl transition-all duration-200 font-medium">
+                        <i class="fas fa-plus mr-2"></i> Tambah Mitra
+                    </button>
+                </div>
+
+                <div class="space-y-4" id="mitra-rows-container">
+                    <template x-for="(row, index) in mitraRows" :key="row.id">
+                        <div
+                            class="bg-gray-50 rounded-2xl p-6 border border-gray-200 hover:border-primary/30 hover:bg-blue-50/30 transition-all duration-200 relative group mitra-row">
+
+                            <!-- Remove button - always visible on mobile, hover on desktop -->
+                            <button type="button" @click="removeMitra(index)"
+                                class="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full shadow-lg flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                                x-show="mitraRows.length > 1">
+                                <i class="fas fa-times text-sm"></i>
+                            </button>
+
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+
+                                <!-- Nama Mitra -->
+                                <div class="md:col-span-5 space-y-2">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Nama
+                                        Mitra / Sobat ID</label>
+                                    <div class="relative">
+                                        <span class="form-icon">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        <input type="text" :name="'namamitra[]'" x-model="row.nama"
+                                            @input="searchMitra($event, index)" @focus="row.showList = true"
+                                            class="w-full pl-12 input-with-icon namamitra-input"
+                                            placeholder="Ketik SOBAT ID / Nama...">
+                                        <!-- Mitra autocomplete dropdown -->
+                                        <div x-show="row.showList && row.mitraResults && row.mitraResults.length > 0"
+                                            @click.away="row.showList = false"
+                                            class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 max-h-48 overflow-y-auto show-list-mitra">
+                                            <template x-for="mitra in row.mitraResults" :key="mitra.idsobat">
+                                                <button type="button" @click="selectMitra(mitra, index)"
+                                                    class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0">
+                                                    <span class="font-medium text-gray-800"
+                                                        x-text="mitra.idsobat + ' - ' + mitra.nama"></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Volume -->
+                                <div class="md:col-span-2 space-y-2">
+                                    <label
+                                        class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</label>
+                                    <div class="relative">
+                                        <span class="form-icon">
+                                            <i class="fas fa-hashtag"></i>
+                                        </span>
+                                        <input type="number" :name="'volume[]'" x-model="row.volume"
+                                            @input="calculateTotal()"
+                                            class="w-full pl-12 text-center font-semibold input-with-icon volume-input"
+                                            min="0">
+                                    </div>
+                                </div>
+
+                                <!-- Satuan -->
+                                <div class="md:col-span-2 space-y-2">
+                                    <label
+                                        class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Satuan</label>
+                                    <div class="relative">
+                                        <span class="form-icon">
+                                            <i class="fas fa-ruler"></i>
+                                        </span>
+                                        <input type="text" :name="'satuan[]'" x-model="row.satuan" readonly
+                                            class="w-full pl-12 bg-gray-100 text-gray-500 cursor-not-allowed text-center input-with-icon">
+                                    </div>
+                                </div>
+
+                                <!-- Harga Satuan -->
+                                <div class="md:col-span-3 space-y-2">
+                                    <label
+                                        class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Harga
+                                        Satuan</label>
+                                    <div class="relative">
+                                        <span class="form-icon font-medium">Rp</span>
+                                        <input type="text" :name="'hsatuan[]'" :value="formatCurrency(row.harga)"
+                                            readonly
+                                            class="w-full pl-12 bg-gray-100 text-gray-600 cursor-not-allowed font-semibold input-with-icon hsatuan-input">
+                                        <!-- Hidden input to send actual number value -->
+                                        <input type="hidden" :name="'hsatuan_raw[]'" :value="row.harga">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <hr class="border-gray-200">
+
+            <!-- Section 3: Summary & Waktu Pelaksanaan -->
+            <div>
+                <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4 flex items-center">
+                    <span
+                        class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center mr-2">3</span>
+                    Ringkasan & Waktu Pelaksanaan
+                </h4>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Total Honor -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Honor</label>
+                        <div class="relative">
+                            <span class="form-icon text-green-600 dark:text-green-400 font-bold">Rp</span>
+                            <input type="text" name="honor" id="honor" readonly :value="formatCurrency(totalHonor)"
+                                class="w-full pl-12 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-green-200 dark:border-green-700 font-bold text-2xl text-green-700 dark:text-green-300 input-with-icon">
+                            <!-- Hidden input for actual value -->
+                            <input type="hidden" name="honor_raw" :value="totalHonor">
+                        </div>
+                    </div>
+
+                    <!-- Sisa Honor Kegiatan -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sisa Honor
+                            Kegiatan</label>
+                        <div class="relative">
+                            <span class="form-icon text-amber-600 dark:text-amber-400 font-bold">Rp</span>
+                            <input type="text" name="sisa" id="sisa" readonly :value="formatCurrency(sisaHonor)"
+                                class="w-full pl-12 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 border-amber-200 dark:border-amber-700 font-bold text-2xl text-amber-700 dark:text-amber-300 input-with-icon">
+                            <!-- Hidden input for actual value -->
+                            <input type="hidden" name="sisa_raw" :value="sisaHonor">
+                        </div>
+                    </div>
+
+                    <!-- Waktu Pelaksanaan (Date Range) -->
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Waktu Pelaksanaan</label>
+                        <div class="relative">
+                            <span class="form-icon">
+                                <i class="far fa-calendar-alt"></i>
+                            </span>
+                            <input type="text" name="reservation" id="reservation" x-model="reservation"
+                                class="w-full input-with-icon cursor-pointer" placeholder="Pilih rentang tanggal..."
+                                readonly>
+                        </div>
+                        <small class="text-gray-400 text-xs">Klik untuk memilih tanggal mulai dan selesai</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-end pt-4">
+                <button type="submit"
+                    class="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-green-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center text-lg">
+                    <i class="fas fa-save mr-3"></i> SIMPAN DATA
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- SweetAlert2 for notifications -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Flatpickr for date picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
+<script>
+    function inputForm() {
+        return {
+            // User data from session
+            username: '{{ .UserName }}',
+
+            // Form fields
+            tahunAnggaran: '',
+            kegiatan: '',
+            mak: '',
+            bulan: '',
+            tahun: '',
+            reservation: '',
+
+            // Kegiatan autocomplete
+            showKegiatanList: false,
+            kegiatanResults: [],
+
+            // Mitra rows
+            mitraRows: [
+                {
+                    id: 1,
+                    nama: '',
+                    volume: 0,
+                    satuan: '',
+                    harga: 0,
+                    showList: false,
+                    mitraResults: []
+                }
+            ],
+
+            // Totals
+            totalHonor: 0,
+            sisaHonor: 0,
+
+            // Reset kegiatan when tahun anggaran changes
+            onTahunAnggaranChange() {
+                this.kegiatan = '';
+                this.mak = '';
+                this.sisaHonor = 0;
+                this.mitraRows.forEach(row => {
+                    row.satuan = '';
+                    row.harga = 0;
+                });
+                this.calculateTotal();
+            },
+
+            // Search kegiatan via API
+            async searchKegiatan() {
+                if (this.kegiatan.length < 2 || !this.tahunAnggaran) {
+                    this.kegiatanResults = [];
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/kegiatan/search?query=${encodeURIComponent(this.kegiatan)}&tahun=${this.tahunAnggaran}`);
+                    if (response.ok) {
+                        this.kegiatanResults = await response.json();
+                    }
+                } catch (error) {
+                    console.error('Error searching kegiatan:', error);
+                    this.kegiatanResults = [];
+                }
+            },
+
+            // Select kegiatan from autocomplete
+            async selectKegiatan(item) {
+                this.kegiatan = item.nama;
+                this.showKegiatanList = false;
+                this.kegiatanResults = [];
+
+                // Fetch kegiatan details
+                try {
+                    const response = await fetch(`/api/kegiatan/detail?kegiatan=${encodeURIComponent(item.nama)}&tahun=${this.tahunAnggaran}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.mak = data.mak || '';
+                        this.sisaHonor = data.sisa || 0;
+
+                        // Update all mitra rows with satuan and harga
+                        this.mitraRows.forEach(row => {
+                            row.satuan = data.satuan || '';
+                            row.harga = data.harga || 0;
+                        });
+                        this.calculateTotal();
+                    }
+                } catch (error) {
+                    console.error('Error fetching kegiatan details:', error);
+                }
+            },
+
+            // Search mitra via API
+            async searchMitra(event, index) {
+                const query = event.target.value;
+                if (query.length < 2) {
+                    this.mitraRows[index].mitraResults = [];
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/mitra/search?query=${encodeURIComponent(query)}&tahun=${this.tahunAnggaran}`);
+                    if (response.ok) {
+                        this.mitraRows[index].mitraResults = await response.json();
+                    }
+                } catch (error) {
+                    console.error('Error searching mitra:', error);
+                    this.mitraRows[index].mitraResults = [];
+                }
+            },
+
+            // Select mitra from autocomplete
+            selectMitra(mitra, index) {
+                this.mitraRows[index].nama = mitra.idsobat + ' - ' + mitra.nama;
+                this.mitraRows[index].showList = false;
+                this.mitraRows[index].mitraResults = [];
+            },
+
+            // Add new mitra row
+            addMitra() {
+                const firstRow = this.mitraRows[0];
+                this.mitraRows.push({
+                    id: Date.now(),
+                    nama: '',
+                    volume: 0,
+                    satuan: firstRow?.satuan || '',
+                    harga: firstRow?.harga || 0,
+                    showList: false,
+                    mitraResults: []
+                });
+            },
+
+            // Remove mitra row
+            removeMitra(index) {
+                this.mitraRows.splice(index, 1);
+                this.calculateTotal();
+            },
+
+            // Calculate total honor
+            calculateTotal() {
+                this.totalHonor = this.mitraRows.reduce((acc, row) => {
+                    return acc + (parseInt(row.volume) || 0) * (parseInt(row.harga) || 0);
+                }, 0);
+            },
+
+            // Format currency
+            formatCurrency(value) {
+                return new Intl.NumberFormat('id-ID').format(value);
+            },
+
+            // Handle form submission response
+            handleFormResponse(event) {
+                if (event.detail.successful) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Data berhasil disimpan',
+                    }).then(() => {
+                        window.location = '/dashboard';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kesalahan',
+                        text: 'Gagal menyimpan data. Silakan coba lagi.',
+                    });
+                }
+            },
+
+            // Initialize
+            init() {
+                this.calculateTotal();
+
+                // Initialize date range picker with Flatpickr
+                const self = this;
+
+                flatpickr('#reservation', {
+                    mode: 'range',
+                    dateFormat: 'd/m/Y',
+                    locale: 'id',
+                    disableMobile: true,
+                    showMonths: 2,
+                    onChange: function (selectedDates, dateStr) {
+                        self.reservation = dateStr;
+                    },
+                    onReady: function (selectedDates, dateStr, instance) {
+                        // Style year input to look like month text (remove input appearance)
+                        const container = instance.calendarContainer;
+
+                        // Hide arrow buttons
+                        container.querySelectorAll('.numInputWrapper span').forEach(el => {
+                            el.remove();
+                        });
+
+                        // Style year inputs to look like text
+                        container.querySelectorAll('.cur-year').forEach(input => {
+                            input.type = 'text';
+                            input.readOnly = true;
+                            input.style.cssText = `
+                                border: none !important;
+                                background: transparent !important;
+                                font-weight: 600 !important;
+                                color: #1e293b !important;
+                                font-size: 14px !important;
+                                padding: 0 !important;
+                                width: 45px !important;
+                                text-align: center !important;
+                                cursor: default !important;
+                                -webkit-appearance: none !important;
+                                -moz-appearance: none !important;
+                                appearance: none !important;
+                            `;
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    // Form validation before submit
+    document.addEventListener('htmx:beforeRequest', function (event) {
+        if (event.target.id !== 'penilaian_pg') return;
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        let isValid = true;
+        let errorMessage = '';
+
+        // Validate kegiatan
+        if (!formData.get('kegiatan')) {
+            isValid = false;
+            errorMessage = 'Kegiatan belum diisi';
+        } else if (!formData.get('bulan')) {
+            isValid = false;
+            errorMessage = 'Bulan belum dipilih';
+        } else if (!formData.get('tahun')) {
+            isValid = false;
+            errorMessage = 'Tahun belum dipilih';
+        }
+
+        // Validate mitra rows
+        if (isValid) {
+            const namamitra = formData.getAll('namamitra[]');
+            const volume = formData.getAll('volume[]');
+
+            if (namamitra.length === 0) {
+                isValid = false;
+                errorMessage = 'Harap tambahkan setidaknya satu mitra.';
+            } else {
+                for (let i = 0; i < namamitra.length; i++) {
+                    if (!namamitra[i]) {
+                        isValid = false;
+                        errorMessage = 'Nama Mitra belum diisi di salah satu baris.';
+                        break;
+                    }
+                    if (!volume[i] || parseFloat(volume[i]) <= 0) {
+                        isValid = false;
+                        errorMessage = 'Volume belum diisi atau tidak valid di salah satu baris.';
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!isValid) {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Kesalahan',
+                text: errorMessage
+            });
+        }
+    });
+</script>
+{{ end }}

@@ -1,0 +1,161 @@
+/* Custom styles if needed to override Tailwind */
+.glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Dark Mode Styles */
+.dark .bg-white {
+    background-color: #1f2937 !important;
+}
+
+.dark .text-gray-800,
+.dark .text-gray-900 {
+    color: #f3f4f6 !important;
+}
+
+.dark .text-gray-700 {
+    color: #d1d5db !important;
+}
+
+.dark .text-gray-600 {
+    color: #9ca3af !important;
+}
+
+.dark .text-gray-500 {
+    color: #6b7280 !important;
+}
+
+.dark .border-gray-100 {
+    border-color: #374151 !important;
+}
+
+.dark .border-gray-200 {
+    border-color: #4b5563 !important;
+}
+
+.dark .bg-gray-50 {
+    background-color: #374151 !important;
+}
+
+.dark .bg-gray-100 {
+    background-color: #4b5563 !important;
+}
+
+.dark .hover\:bg-gray-50:hover {
+    background-color: #374151 !important;
+}
+
+/* Dark mode for form inputs */
+.dark select,
+.dark input[type="text"],
+.dark input[type="date"],
+.dark input[type="number"] {
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #f3f4f6 !important;
+}
+
+.dark select option {
+    background-color: #1f2937;
+    color: #f3f4f6;
+}
+
+/* Dark mode for SBML warning */
+.dark .sbml-warning {
+    background-color: #451a03 !important;
+    border-left-color: #f59e0b !important;
+}
+
+.dark .sbml-warning:hover {
+    background-color: #78350f !important;
+}
+
+/* Make ALL text inside SBML warning readable in dark mode */
+.dark .sbml-warning * {
+    color: #fef3c7 !important;
+}
+
+.dark .sbml-warning .text-amber-600 {
+    color: #fcd34d !important;
+}
+
+.dark .sbml-warning .text-red-500 {
+    color: #fca5a5 !important;
+}
+
+.dark .sbml-warning .text-gray-500,
+.dark .sbml-warning .text-gray-600,
+.dark .sbml-warning .text-gray-900 {
+    color: #fef3c7 !important;
+}
+
+/* Dark mode for amber/yellow alerts */
+.dark .bg-amber-50 {
+    background-color: #78350f !important;
+}
+
+.dark .text-amber-800 {
+    color: #fbbf24 !important;
+}
+
+.dark .text-amber-700 {
+    color: #fcd34d !important;
+}
+
+.dark .border-amber-200 {
+    border-color: #92400e !important;
+}
+
+/* Dark mode gradient backgrounds */
+.dark .bg-gradient-to-r.from-amber-50.to-orange-50 {
+    background: linear-gradient(to right, #78350f, #7c2d12) !important;
+}
+
+/* Dark mode for green text (honor amounts) */
+.dark .text-green-600 {
+    color: #4ade80 !important;
+}
+
+/* Dark mode for blue elements */
+.dark .bg-blue-50 {
+    background-color: #1e3a5f !important;
+}
+
+.dark .text-blue-700 {
+    color: #93c5fd !important;
+}
+
+.dark .text-blue-600 {
+    color: #60a5fa !important;
+}
+
+/* Dark mode for badges/pills */
+.dark .bg-blue-100 {
+    background-color: #1e40af !important;
+}
+
+.dark .bg-green-100 {
+    background-color: #166534 !important;
+}
+
+.dark .bg-purple-100 {
+    background-color: #581c87 !important;
+}
+
+.dark .bg-amber-100 {
+    background-color: #78350f !important;
+}
+
+/* Dark mode for anchor links and hover states */
+.dark a.block:hover {
+    background-color: #374151 !important;
+}
+
+/* Glass effect for dark mode */
+.dark .glass {
+    background: rgba(31, 41, 55, 0.7);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+}

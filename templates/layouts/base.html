@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }"
+    :class="{ 'dark': darkMode }">
+
+<script>
+    // Initialize dark mode before DOM loads to prevent flash
+    if (localStorage.getItem('darkMode') === 'true' ||
+        (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    }
+</script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - SIREKAP BPS Dompu</title>
+    <link rel="icon" type="image/x-icon" href="/static/img/sirekap.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="/static/img/sirekap.ico">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress CDN warning in development
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: '#2563EB',
+                            'primary-dark': '#1D4ED8',
+                            secondary: '#F59E0B',
+                            dark: '#111827',
+                        },
+                        fontFamily: {
+                            sans: ['Inter', 'system-ui', 'sans-serif'],
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <!-- Alpine.js Collapse Plugin (must be before Alpine core) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <!-- Alpine.js Core -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <style>
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4B5563;
+            border-radius: 3px;
+        }
+
+        /* Form Elements - Beautiful Modern Style */
+        select,
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        input[type="date"],
+        input[type="time"],
+        textarea {
+            font-size: 1rem !important;
+            padding: 14px 18px !important;
+            border-radius: 12px !important;
+            border: 2px solid #E5E7EB !important;
+            background-color: #F9FAFB !important;
+            transition: all 0.2s ease !important;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+        }
+
+        select:focus,
+        input:focus,
+        textarea:focus {
+            outline: none !important;
+            border-color: #2563EB !important;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important;
+            background-color: #fff !important;
+        }
+
+        /* Dark mode form styles */
+        .dark select,
+        .dark input[type="text"],
+        .dark input[type="email"],
+        .dark input[type="password"],
+        .dark input[type="number"],
+        .dark input[type="date"],
+        .dark input[type="time"],
+        .dark textarea {
+            background-color: #1f2937 !important;
+            border-color: #374151 !important;
+            color: #f3f4f6 !important;
+        }
+
+        .dark select:focus,
+        .dark input:focus,
+        .dark textarea:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25) !important;
+            background-color: #111827 !important;
+        }
+
+        .dark ::placeholder {
+            color: #6b7280 !important;
+        }
+
+        /* ============================================ */
+        /* DARK MODE - Modern Dark Theme               */
+        /* ============================================ */
+
+        /* Card backgrounds */
+        .dark .bg-white {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #0f172a !important;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #1e293b !important;
+        }
+
+        /* All borders */
+        .dark .border-gray-200,
+        .dark .border-gray-300 {
+            border-color: #334155 !important;
+        }
+
+        .dark .border-gray-100 {
+            border-color: #1e293b !important;
+        }
+
+        /* Text colors - inverted for dark mode */
+        .dark .text-gray-900 {
+            color: #f8fafc !important;
+        }
+
+        .dark .text-gray-800 {
+            color: #f1f5f9 !important;
+        }
+
+        .dark .text-gray-700 {
+            color: #e2e8f0 !important;
+        }
+
+        .dark .text-gray-600 {
+            color: #cbd5e1 !important;
+        }
+
+        .dark .text-gray-500 {
+            color: #94a3b8 !important;
+        }
+
+        .dark .text-gray-400 {
+            color: #64748b !important;
+        }
+
+        /* Labels and headings */
+        .dark label {
+            color: #e2e8f0 !important;
+        }
+
+        .dark h1,
+        .dark h2,
+        .dark h3,
+        .dark h4,
+        .dark h5,
+        .dark h6 {
+            color: #f1f5f9 !important;
+        }
+
+        .dark p {
+            color: #cbd5e1;
+        }
+
+        .dark span {
+            color: inherit;
+        }
+
+        /* Table styles */
+        .dark table {
+            background-color: #1e293b !important;
+        }
+
+        .dark thead {
+            background-color: #0f172a !important;
+        }
+
+        .dark th {
+            color: #94a3b8 !important;
+            border-color: #334155 !important;
+        }
+
+        .dark td {
+            color: #e2e8f0 !important;
+            border-color: #334155 !important;
+        }
+
+        .dark tbody tr {
+            border-color: #334155 !important;
+        }
+
+        .dark tbody tr:hover {
+            background-color: #334155 !important;
+        }
+
+        /* Dark mode shadows */
+        .dark .shadow-lg,
+        .dark .shadow-xl,
+        .dark .shadow-2xl {
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(148, 163, 184, 0.05) !important;
+        }
+
+        .dark .shadow-sm,
+        .dark .shadow {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Dark mode hover states */
+        .dark .hover\:bg-blue-50:hover {
+            background-color: rgba(59, 130, 246, 0.15) !important;
+        }
+
+        .dark .hover\:bg-gray-50:hover,
+        .dark .hover\:bg-gray-100:hover {
+            background-color: #334155 !important;
+        }
+
+        /* Dividers */
+        .dark .divide-gray-200>*+* {
+            border-color: #334155 !important;
+        }
+
+        /* Form icons */
+        .dark .form-icon,
+        .dark .text-gray-400 {
+            color: #64748b !important;
+        }
+
+        /* Rounded cards with gradient borders */
+        .dark .rounded-2xl,
+        .dark .rounded-xl {
+            border-color: #334155 !important;
+        }
+
+        /* Status badges */
+        .dark .bg-green-100 {
+            background-color: rgba(34, 197, 94, 0.2) !important;
+        }
+
+        .dark .bg-yellow-100 {
+            background-color: rgba(234, 179, 8, 0.2) !important;
+        }
+
+        .dark .bg-red-100 {
+            background-color: rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .dark .bg-blue-100 {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+        }
+
+        /* Links */
+        .dark a:not(.text-white):not([class*="bg-"]) {
+            color: #60a5fa;
+        }
+
+        .dark a:hover:not(.text-white):not([class*="bg-"]) {
+            color: #93c5fd;
+        }
+
+        /* Small/helper text */
+        .dark small {
+            color: #64748b !important;
+        }
+
+        /* Input disabled state */
+        .dark input:disabled,
+        .dark select:disabled,
+        .dark textarea:disabled {
+            background-color: #0f172a !important;
+            color: #64748b !important;
+            border-color: #1e293b !important;
+        }
+
+        /* Pagination */
+        .dark .bg-blue-600 {
+            background-color: #3b82f6 !important;
+        }
+
+        /* Custom Select Arrow */
+        select {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 14px center !important;
+            background-size: 20px !important;
+            padding-right: 50px !important;
+            cursor: pointer;
+        }
+
+        /* Inputs with icons - larger left padding */
+        input.input-with-icon,
+        .input-with-icon {
+            padding-left: 52px !important;
+        }
+
+        /* Selects with icons - larger left padding */
+        select.select-with-icon {
+            padding-left: 52px !important;
+        }
+
+        /* Icon container for form inputs */
+        .form-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        select:hover {
+            border-color: #CBD5E1 !important;
+        }
+
+        /* Labels */
+        label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Blur Overlay */
+        .backdrop-blur-overlay {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* Flatpickr Complete Reset - Prevent global styles from affecting datepicker */
+        .flatpickr-calendar {
+            font-family: 'Inter', sans-serif !important;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+            border-radius: 16px !important;
+            border: none !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+            padding: 12px !important;
+        }
+
+        .flatpickr-calendar * {
+            box-sizing: border-box !important;
+        }
+
+        /* Reset all inputs and selects inside flatpickr */
+        .flatpickr-calendar select,
+        .flatpickr-calendar input,
+        .flatpickr-calendar .flatpickr-monthDropdown-months,
+        .flatpickr-calendar .numInput {
+            font-size: 13px !important;
+            padding: 2px 6px !important;
+            border-radius: 4px !important;
+            border: 1px solid #e2e8f0 !important;
+            background-color: #fff !important;
+            background-image: none !important;
+            height: 28px !important;
+            line-height: 24px !important;
+            min-height: unset !important;
+            max-height: 28px !important;
+            margin: 0 !important;
+            appearance: auto !important;
+            -webkit-appearance: auto !important;
+            -moz-appearance: auto !important;
+        }
+
+        .flatpickr-calendar select:focus,
+        .flatpickr-calendar input:focus {
+            outline: none !important;
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+        }
+
+        /* Month navigation container */
+        .flatpickr-months {
+            height: 50px !important;
+            display: flex !important;
+            align-items: center !important;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+            border-radius: 12px !important;
+            margin-bottom: 8px !important;
+            padding: 0 8px !important;
+            position: relative !important;
+        }
+
+        .flatpickr-months .flatpickr-month {
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 1 !important;
+            overflow: visible !important;
+        }
+
+        .flatpickr-current-month {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            height: 100% !important;
+            padding: 0 !important;
+            position: static !important;
+            transform: none !important;
+            left: auto !important;
+            width: auto !important;
+        }
+
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            width: auto !important;
+            min-width: 90px !important;
+        }
+
+        .flatpickr-current-month .numInputWrapper {
+            display: inline-flex !important;
+            align-items: center !important;
+            width: auto !important;
+        }
+
+        .flatpickr-current-month input.cur-year {
+            width: 50px !important;
+            text-align: center !important;
+            border: none !important;
+            background: transparent !important;
+            font-weight: 600 !important;
+            color: #1e293b !important;
+            pointer-events: none !important;
+            padding: 0 !important;
+            height: auto !important;
+            -moz-appearance: textfield !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+        }
+
+        /* Hide number input spinners */
+        .flatpickr-current-month input.cur-year::-webkit-outer-spin-button,
+        .flatpickr-current-month input.cur-year::-webkit-inner-spin-button {
+            -webkit-appearance: none !important;
+            margin: 0 !important;
+            display: none !important;
+        }
+
+        /* Hide the up/down arrows container */
+        .flatpickr-current-month .numInputWrapper .arrowUp,
+        .flatpickr-current-month .numInputWrapper .arrowDown,
+        .numInputWrapper span.arrowUp,
+        .numInputWrapper span.arrowDown,
+        .flatpickr-calendar .numInputWrapper span {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        /* Navigation arrows */
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+            position: static !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 32px !important;
+            height: 32px !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+            transition: all 0.15s ease !important;
+            flex-shrink: 0 !important;
+        }
+
+        .flatpickr-prev-month:hover,
+        .flatpickr-next-month:hover {
+            background: #e2e8f0 !important;
+        }
+
+        .flatpickr-prev-month svg,
+        .flatpickr-next-month svg {
+            width: 12px !important;
+            height: 12px !important;
+            fill: #475569 !important;
+        }
+
+        /* Weekday headers */
+        .flatpickr-weekdays {
+            height: 32px !important;
+        }
+
+        .flatpickr-weekday {
+            color: #64748b !important;
+            font-weight: 600 !important;
+            font-size: 11px !important;
+            text-transform: uppercase !important;
+        }
+
+        /* Day cells */
+        .flatpickr-day {
+            border-radius: 10px !important;
+            font-weight: 500 !important;
+            transition: all 0.15s ease !important;
+            line-height: 38px !important;
+            height: 38px !important;
+            max-width: 38px !important;
+        }
+
+        .flatpickr-day:hover {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
+            border-color: transparent !important;
+        }
+
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
+        }
+
+        .flatpickr-day.inRange {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .flatpickr-day.today:not(.selected) {
+            border-color: #6366f1 !important;
+        }
+
+        /* Two month view */
+        .flatpickr-innerContainer {
+            display: flex !important;
+        }
+
+        .flatpickr-rContainer {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body class="h-full font-sans antialiased bg-gray-100">
+
+    {{ if .ShowSidebar }}
+    <!-- Alpine App Wrapper -->
+    <div x-data="{ 
+        sidebarOpen: false,
+        sidebarCollapsed: false,
+        isMobile: window.innerWidth < 1024,
+        activePage: '{{ .ActivePage }}',
+        activeRekapGroup: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else }}false{{ end }},
+        activeMatriksGroup: {{ if eq .ActivePage "matriks" }}true{{ else if eq .ActivePage "monitoring" }}true{{ else if eq .ActivePage "kalender" }}true{{ else if eq .ActivePage "administrasi" }}true{{ else }}false{{ end }},
+        activeLaporGroup: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}false{{ end }},
+        expandedRekap: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else }}false{{ end }}, 
+        expandedMatriks: {{ if eq .ActivePage "matriks" }}true{{ else if eq .ActivePage "monitoring" }}true{{ else if eq .ActivePage "kalender" }}true{{ else if eq .ActivePage "administrasi" }}true{{ else }}false{{ end }},
+        expandedLapor: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}true{{ end }},
+        toggleSidebar() {
+            if (this.isMobile) {
+                this.sidebarOpen = !this.sidebarOpen;
+            } else {
+                this.sidebarCollapsed = !this.sidebarCollapsed;
+            }
+        },
+        init() {
+            window.addEventListener('resize', () => {
+                this.isMobile = window.innerWidth < 1024;
+                if (!this.isMobile) {
+                    this.sidebarOpen = false;
+                }
+            });
+        }
+    }" class="flex h-screen overflow-hidden">
+
+        <!-- Mobile Backdrop (only visible on mobile when sidebar is open) -->
+        <div x-show="sidebarOpen && isMobile" x-transition:enter="transition-opacity ease-out duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-in duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" @click="sidebarOpen = false"
+            class="fixed inset-0 z-30 bg-black/40 lg:hidden">
+        </div>
+
+        <!-- Sidebar: Collapsible on desktop (w-64 expanded, w-20 collapsed), slide-in on mobile -->
+        <aside :class="{ 
+                'translate-x-0': sidebarOpen || !isMobile, 
+                '-translate-x-full': !sidebarOpen && isMobile,
+                'w-64': !sidebarCollapsed || isMobile,
+                'w-20': sidebarCollapsed && !isMobile
+            }"
+            class="fixed lg:static inset-y-0 left-0 z-40 flex flex-col bg-gradient-to-b from-gray-900 to-gray-800 shadow-2xl transform transition-all duration-300 ease-in-out lg:translate-x-0">
+
+            <!-- Logo -->
+            <div class="flex items-center h-20 border-b border-gray-700/50"
+                :class="sidebarCollapsed && !isMobile ? 'px-4 justify-center' : 'px-6'">
+                <a href="/dashboard" class="flex items-center"
+                    :class="sidebarCollapsed && !isMobile ? '' : 'space-x-3'">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg flex-shrink-0">
+                        <img src="/static/img/sirekap.PNG" alt="Logo" class="w-8 h-8 rounded-lg object-cover">
+                    </div>
+                    <div x-show="!sidebarCollapsed || isMobile" x-transition:enter="transition-opacity duration-200"
+                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                        <h1 class="text-xl font-bold text-white tracking-wide whitespace-nowrap">SIREKAP</h1>
+                        <p class="text-xs text-gray-400 whitespace-nowrap">BPS Kab. Dompu</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Navigation Menu -->
+            <div class="flex-1 overflow-y-auto py-6" :class="sidebarCollapsed && !isMobile ? 'px-2' : 'px-4'">
+                <nav class="space-y-2">
+
+                    {{ if eq .UserRole "admin" }}
+                    <!-- REKAPITULASI -->
+                    <div>
+                        <button @click="expandedRekap = !expandedRekap"
+                            class="flex items-center w-full py-3 text-gray-300 rounded-xl transition hover:bg-white/10"
+                            :class="[(expandedRekap || activeRekapGroup) && 'bg-white/10 text-white', sidebarCollapsed && !isMobile ? 'px-2 justify-center' : 'px-4']">
+                            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0"
+                                :class="sidebarCollapsed && !isMobile ? '' : 'mr-3'">
+                                <i class="fas fa-table text-blue-400"></i>
+                            </div>
+                            <span x-show="!sidebarCollapsed || isMobile"
+                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">REKAPITULASI</span>
+                            <i x-show="!sidebarCollapsed || isMobile"
+                                class="fas fa-chevron-down ml-1 flex-shrink-0 text-sm transition-transform duration-200"
+                                :class="expandedRekap && 'rotate-180'"></i>
+                        </button>
+
+                        <div x-show="expandedRekap && (!sidebarCollapsed || isMobile)" x-collapse
+                            class="mt-2 ml-6 pl-4 border-l-2 border-gray-600 space-y-1">
+                            <a href="/dashboard/input" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "input" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-edit w-5 mr-3 {{ if eq .ActivePage "input" }}text-blue-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Input</span>
+                            </a>
+                            <a href="/dashboard/rekap" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "rekap" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-table w-5 mr-3 {{ if eq .ActivePage "rekap" }}text-blue-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Rekap</span>
+                            </a>
+                            <a href="/dashboard/kegiatan" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "kegiatan" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-briefcase w-5 mr-3 {{ if eq .ActivePage "kegiatan" }}text-blue-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Kegiatan</span>
+                            </a>
+                            <a href="/dashboard/surat" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "surat" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-envelope w-5 mr-3 {{ if eq .ActivePage "surat" }}text-blue-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Nomor Surat</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- MATRIKS PERJALANAN -->
+                    <div>
+                        <button @click="expandedMatriks = !expandedMatriks"
+                            class="flex items-center w-full py-3 text-gray-300 rounded-xl transition hover:bg-white/10"
+                            :class="[(expandedMatriks || activeMatriksGroup) && 'bg-white/10 text-white', sidebarCollapsed && !isMobile ? 'px-2 justify-center' : 'px-4']">
+                            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0"
+                                :class="sidebarCollapsed && !isMobile ? '' : 'mr-3'">
+                                <i class="fas fa-route text-purple-400"></i>
+                            </div>
+                            <span x-show="!sidebarCollapsed || isMobile"
+                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">MATRIKS</span>
+                            <i x-show="!sidebarCollapsed || isMobile"
+                                class="fas fa-chevron-down ml-1 flex-shrink-0 text-sm transition-transform duration-200"
+                                :class="expandedMatriks && 'rotate-180'"></i>
+                        </button>
+
+                        <div x-show="expandedMatriks && (!sidebarCollapsed || isMobile)" x-collapse
+                            class="mt-2 ml-6 pl-4 border-l-2 border-gray-600 space-y-1">
+                            <a href="/dashboard/matriks" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "matriks" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-edit w-5 mr-3 {{ if eq .ActivePage "matriks" }}text-purple-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Input</span>
+                            </a>
+                            <a href="/dashboard/monitoring" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "monitoring" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-chart-line w-5 mr-3 {{ if eq .ActivePage "monitoring" }}text-purple-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Monitoring</span>
+                            </a>
+                            <a href="/dashboard/kalender" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "kalender" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-calendar w-5 mr-3 {{ if eq .ActivePage "kalender" }}text-purple-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Kalender</span>
+                            </a>
+                            <a href="/dashboard/administrasi" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "administrasi" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-file-invoice w-5 mr-3 {{ if eq .ActivePage "administrasi" }}text-purple-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Administrasi</span>
+                            </a>
+                        </div>
+                    </div>
+                    {{ else }}
+
+                    <!-- PENGGUNA: LAPOR -->
+                    <div>
+                        <button @click="expandedLapor = !expandedLapor"
+                            class="flex items-center w-full py-3 text-gray-300 rounded-xl transition hover:bg-white/10"
+                            :class="[(expandedLapor || activeLaporGroup) && 'bg-white/10 text-white', sidebarCollapsed && !isMobile ? 'px-2 justify-center' : 'px-4']">
+                            <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0"
+                                :class="sidebarCollapsed && !isMobile ? '' : 'mr-3'">
+                                <i class="fas fa-bullhorn text-green-400"></i>
+                            </div>
+                            <span x-show="!sidebarCollapsed || isMobile"
+                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">LAPOR</span>
+                            <i x-show="!sidebarCollapsed || isMobile"
+                                class="fas fa-chevron-down ml-1 flex-shrink-0 text-sm transition-transform duration-200"
+                                :class="expandedLapor && 'rotate-180'"></i>
+                        </button>
+
+                        <div x-show="expandedLapor && (!sidebarCollapsed || isMobile)" x-collapse
+                            class="mt-2 ml-6 pl-4 border-l-2 border-gray-600 space-y-1">
+                            <a href="/lapor" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "lapor" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-plus w-5 mr-3 {{ if eq .ActivePage "lapor" }}text-green-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Translok</span>
+                            </a>
+                            <a href="/lapor/history" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "lapor-history" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-history w-5 mr-3 {{ if eq .ActivePage "lapor-history" }}text-green-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Riwayat TL</span>
+                            </a>
+                            <a href="/lapor/sppd" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "lapor-sppd" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-clipboard-list w-5 mr-3 {{ if eq .ActivePage "lapor-sppd" }}text-green-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>SPPD</span>
+                            </a>
+                            <a href="/lapor/sppd/history" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "lapor-sppd-history" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-clock-rotate-left w-5 mr-3 {{ if eq .ActivePage "lapor-sppd-history" }}text-green-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Riwayat SPPD</span>
+                            </a>
+                        </div>
+                    </div>
+                    {{ end }}
+
+                </nav>
+            </div>
+
+            <!-- User Profile -->
+            <div class="border-t border-gray-700/50" :class="sidebarCollapsed && !isMobile ? 'p-2' : 'p-4'">
+                <div class="flex items-center rounded-xl bg-gray-800/50"
+                    :class="sidebarCollapsed && !isMobile ? 'p-2 justify-center' : 'space-x-3 p-3'">
+                    <div
+                        class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow flex-shrink-0">
+                        {{ .UserInitials }}
+                    </div>
+                    <div x-show="!sidebarCollapsed || isMobile" class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-white truncate">{{ .UserName }}</p>
+                        <p class="text-xs text-gray-400 capitalize">{{ .UserRole }}</p>
+                    </div>
+                    <a x-show="!sidebarCollapsed || isMobile" href="/logout"
+                        class="p-2 text-gray-400 hover:text-red-400 rounded-lg transition" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+
+            <!-- Header (Always Unblurred) -->
+            <header
+                class="flex items-center justify-between h-20 px-6 border-b shadow-sm z-20 transition-colors duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <div class="flex items-center space-x-4">
+                    <!-- Toggle Button (All screens) -->
+                    <button @click="toggleSidebar()"
+                        class="w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800 dark:text-white">{{ .PageTitle }}</h1>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">Selamat datang kembali!</p>
+                    </div>
+                </div>
+
+                <!-- Right side - Theme Toggle -->
+                <div class="flex items-center space-x-3">
+                    <!-- Dark/Light Mode Toggle -->
+                    <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
+                        class="w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300"
+                        :class="darkMode ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                        title="Toggle Dark/Light Mode">
+                        <i class="fas text-lg" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content (blur only on mobile when sidebar is open) -->
+            <main id="main-content"
+                class="flex-1 overflow-y-auto p-6 lg:p-8 transition-all duration-300 bg-gray-50 dark:bg-gray-900"
+                :class="{ 'blur-sm scale-[0.98]': sidebarOpen && isMobile }"
+                @click="if(sidebarOpen && isMobile) sidebarOpen = false">
+                {{ template "content" . }}
+            </main>
+
+            <!-- Footer -->
+            <footer
+                class="py-4 px-6 text-center text-sm border-t transition-colors duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                &copy; 2026 <span class="font-medium text-gray-700 dark:text-gray-300">BPS Kabupaten Dompu</span>
+            </footer>
+        </div>
+    </div>
+    {{ else }}
+    <!-- No Sidebar Layout (Login Page) -->
+    {{ template "content" . }}
+    {{ end }}
+
+</body>
+
+</html>

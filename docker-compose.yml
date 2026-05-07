@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app-sirekap:
+    build: .
+    container_name: sirekap
+    restart: unless-stopped
+    ports:
+      - '8098:8098'
+    environment:
+      - PORT=8098
+      - DB_HOST=h1098wnz4qclfy4yz15f2qkf
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASS=kot4b4ru
+      - DB_NAME=default
+      - AWS_ENDPOINT_URL=http://minio-wjqki5sdox0zceveed1zua3o:9000
+      - AWS_ACCESS_KEY_ID=ipds
+      - AWS_SECRET_ACCESS_KEY=kot4b4ru
+      - AWS_BUCKET=sirekap
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true

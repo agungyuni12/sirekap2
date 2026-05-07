@@ -1,0 +1,855 @@
+{{ define "content" }}
+<div class="space-y-6 md:space-y-8" x-data="monitoringPage()" x-init="init()">
+
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Monitoring Matriks</h2>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Pantau seluruh data perjalanan, lalu edit atau hapus jika ada pengisian yang perlu diperbaiki.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <nav class="hidden md:flex items-center space-x-2 text-sm">
+                <a href="/dashboard" class="text-gray-500 hover:text-primary transition">Dashboard</a>
+                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                <span class="text-primary font-medium">Monitoring</span>
+            </nav>
+            <a href="/dashboard/matriks"
+                class="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-medium shadow-lg shadow-primary/30">
+                <i class="fas fa-plus mr-2"></i> Input Baru
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Total Data</p>
+                    <p class="text-2xl md:text-3xl font-bold text-gray-900 mt-1" x-text="summary.totalData">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-table text-blue-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Transport Lokal</p>
+                    <p class="text-2xl md:text-3xl font-bold text-emerald-600 mt-1" x-text="summary.totalTransportLokal">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-emerald-100 flex items-center justify-center">
+                    <i class="fas fa-motorcycle text-emerald-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Perjalanan Dinas</p>
+                    <p class="text-2xl md:text-3xl font-bold text-amber-600 mt-1" x-text="summary.totalPerjalananDinas">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
+                    <i class="fas fa-route text-amber-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl md:rounded-2xl border border-purple-200 p-4 md:p-6">
+            <p class="text-xs md:text-sm font-medium text-purple-700">Filter Aktif</p>
+            <p class="text-sm md:text-base font-semibold text-purple-900 mt-2" x-text="activeFilterLabel()">Semua data</p>
+            <p class="text-xs text-purple-700 mt-2">Pencarian fleksibel tetap aktif untuk nama pegawai, NIP, kegiatan, dan nomor surat.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Filter Tahun</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </span>
+                    <select x-model="filters.tahun" @change="loadData()" class="w-full select-with-icon">
+                        <option value="">Semua Tahun</option>
+                        <template x-for="tahun in tahunOptions" :key="tahun">
+                            <option :value="tahun" x-text="tahun"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Perjalanan</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-tags"></i>
+                    </span>
+                    <select x-model="filters.jenis" @change="loadData()" class="w-full select-with-icon">
+                        <option value="">Semua Jenis</option>
+                        <option value="Transport Lokal">Transport Lokal</option>
+                        <option value="Perjalanan Dinas">Perjalanan Dinas</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Cari Data</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" x-model="filters.search" @input.debounce.400ms="loadData()"
+                        class="w-full input-with-icon" placeholder="Nama pegawai / NIP / kegiatan / nomor surat...">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-100">
+            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                <template x-if="loading">
+                    <span class="inline-flex items-center text-primary">
+                        <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data...
+                    </span>
+                </template>
+                <template x-if="!loading">
+                    <span x-text="summary.totalData + ' data ditampilkan'">0 data ditampilkan</span>
+                </template>
+            </div>
+            <button type="button" @click="resetFilters()"
+                class="inline-flex items-center justify-center px-4 py-2 text-gray-600 hover:text-gray-800 transition font-medium">
+                <i class="fas fa-undo mr-2"></i> Reset Filter
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-4 md:px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-900">Daftar Monitoring</h3>
+            <p class="text-sm text-gray-500 mt-1">Setiap baris mewakili satu entri pada tabel matriks perjalanan.</p>
+        </div>
+
+        <template x-if="items.length === 0 && !loading">
+            <div class="p-8 md:p-12 text-center">
+                <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-folder-open text-gray-400 text-2xl md:text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-1">Belum Ada Data</h3>
+                <p class="text-gray-500 text-sm">Coba ubah filter atau tambahkan input matriks baru.</p>
+            </div>
+        </template>
+
+        <div class="hidden md:block overflow-x-auto" x-show="items.length > 0">
+            <table class="min-w-full divide-y divide-gray-100">
+                <thead class="bg-gray-50">
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        <th class="px-6 py-4">No</th>
+                        <th class="px-6 py-4">Pegawai</th>
+                        <th class="px-6 py-4">Kegiatan</th>
+                        <th class="px-6 py-4">Jenis</th>
+                        <th class="px-6 py-4">Perjalanan</th>
+                        <th class="px-6 py-4">Nomor Surat</th>
+                        <th class="px-6 py-4">Jumlah</th>
+                        <th class="px-6 py-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <template x-for="(item, index) in items" :key="item.id">
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-sm text-gray-500" x-text="index + 1"></td>
+                            <td class="px-6 py-4">
+                                <p class="font-semibold text-gray-900" x-text="item.nama"></p>
+                                <p class="text-xs text-gray-500 font-mono mt-1" x-text="item.nip"></p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-sm font-medium text-gray-800" x-text="item.kegiatan"></p>
+                                <p class="text-xs text-gray-500 mt-1" x-text="'MAK: ' + (item.mak || '-')"></p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
+                                    :class="item.jenisPerjalanan === 'Transport Lokal' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                                    x-text="item.jenisPerjalanan"></span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                <p x-text="formatDate(item.tanggalMulai) + ' - ' + formatDate(item.tanggalSelesai)"></p>
+                                <p class="text-xs text-gray-500 mt-1" x-text="(item.asal || '-') + ' → ' + (item.tujuan || '-')"></p>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                <p x-text="item.noSurtug || '-'"></p>
+                                <p class="text-xs text-gray-500 mt-1" x-text="item.noSpd || '-'"></p>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-bold text-blue-700" x-text="'Rp ' + formatCurrency(item.jumlah)"></td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button @click="openEditModal(item.id)"
+                                        class="inline-flex items-center px-3 py-2 text-sm bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition">
+                                        <i class="fas fa-edit mr-2"></i> Edit
+                                    </button>
+                                    <button @click="confirmDelete(item)"
+                                        class="inline-flex items-center px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">
+                                        <i class="fas fa-trash mr-2"></i> Hapus
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="md:hidden divide-y divide-gray-100" x-show="items.length > 0">
+            <template x-for="item in items" :key="item.id">
+                <div class="p-4 space-y-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <h4 class="font-semibold text-gray-900" x-text="item.nama"></h4>
+                            <p class="text-xs text-gray-500 font-mono mt-1" x-text="item.nip"></p>
+                        </div>
+                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
+                            :class="item.jenisPerjalanan === 'Transport Lokal' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                            x-text="item.jenisPerjalanan"></span>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-3 space-y-2 text-sm">
+                        <p><span class="font-medium text-gray-800">Kegiatan:</span> <span x-text="item.kegiatan"></span></p>
+                        <p><span class="font-medium text-gray-800">Perjalanan:</span> <span x-text="formatDate(item.tanggalMulai) + ' - ' + formatDate(item.tanggalSelesai)"></span></p>
+                        <p><span class="font-medium text-gray-800">Rute:</span> <span x-text="(item.asal || '-') + ' → ' + (item.tujuan || '-')"></span></p>
+                        <p><span class="font-medium text-gray-800">Surtug:</span> <span x-text="item.noSurtug || '-'"></span></p>
+                        <p><span class="font-medium text-gray-800">SPD:</span> <span x-text="item.noSpd || '-'"></span></p>
+                        <p><span class="font-medium text-gray-800">Jumlah:</span> <span class="font-semibold text-blue-700" x-text="'Rp ' + formatCurrency(item.jumlah)"></span></p>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-2">
+                        <button @click="openEditModal(item.id)"
+                            class="flex-1 inline-flex items-center justify-center px-3 py-2.5 text-sm bg-amber-100 text-amber-700 rounded-xl hover:bg-amber-200 transition">
+                            <i class="fas fa-edit mr-2"></i> Edit
+                        </button>
+                        <button @click="confirmDelete(item)"
+                            class="flex-1 inline-flex items-center justify-center px-3 py-2.5 text-sm bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition">
+                            <i class="fas fa-trash mr-2"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <div x-show="showEditModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8 text-center">
+            <div class="fixed inset-0 bg-gray-900/70" @click="closeEditModal()"></div>
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-5xl text-left overflow-hidden">
+                <div class="px-5 md:px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Edit Data Matriks</h3>
+                        <p class="text-sm text-gray-500 mt-1">Perbarui data perjalanan jika ada salah input.</p>
+                    </div>
+                    <button @click="closeEditModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 transition text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form @submit.prevent="submitEditForm()">
+                    <div class="p-5 md:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Jenis Perjalanan <span class="text-red-500">*</span></label>
+                                <select x-model="form.jenisPerjalanan" @change="syncEditJumlah()"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="">Pilih jenis perjalanan</option>
+                                    <option value="Transport Lokal">Transport Lokal</option>
+                                    <option value="Perjalanan Dinas">Perjalanan Dinas</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Kegiatan <span class="text-red-500">*</span></label>
+                                <div class="relative" @click.away="showKegiatanList = false">
+                                    <input type="text" x-model="form.kegiatan" @input.debounce.300ms="searchKegiatan()"
+                                        @focus="showKegiatanList = true"
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        placeholder="Ketik kegiatan dari daftartranslok">
+                                    <div x-show="showKegiatanList && kegiatanResults.length > 0" x-cloak
+                                        class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 max-h-56 overflow-y-auto">
+                                        <template x-for="item in kegiatanResults" :key="item.nama + item.mak">
+                                            <button type="button" @click="selectKegiatan(item)"
+                                                class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0">
+                                                <p class="font-medium text-gray-800" x-text="item.nama"></p>
+                                                <p class="text-xs text-gray-500 mt-1" x-text="item.mak || '-'"></p>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">MAK</label>
+                                <input type="text" x-model="form.mak" readonly
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-500 cursor-not-allowed">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Jumlah</label>
+                                <input type="number" x-model="form.jumlah" readonly
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-500 cursor-not-allowed">
+                            </div>
+
+                            <div class="space-y-2 md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Pegawai <span class="text-red-500">*</span></label>
+                                <div class="relative" @click.away="showPegawaiList = false">
+                                    <input type="text" x-model="form.nama" @input.debounce.300ms="searchPegawai()"
+                                        @focus="showPegawaiList = true"
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        placeholder="Ketik nama atau NIP pegawai">
+                                    <div x-show="showPegawaiList && pegawaiResults.length > 0" x-cloak
+                                        class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 max-h-56 overflow-y-auto">
+                                        <template x-for="pegawai in pegawaiResults" :key="pegawai.nip + pegawai.nama">
+                                            <button type="button" @click="selectPegawai(pegawai)"
+                                                class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0">
+                                                <p class="font-medium text-gray-800" x-text="pegawai.nama"></p>
+                                                <p class="text-xs text-gray-500 font-mono mt-1">
+                                                    <span x-text="pegawai.nip"></span>
+                                                    <span x-show="pegawai.golongan"> • <span x-text="pegawai.golongan"></span></span>
+                                                </p>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500">NIP: <span class="font-mono" x-text="form.nip || '-'"></span></p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Golongan</label>
+                                <input type="text" x-model="form.golongan" readonly
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-500 cursor-not-allowed">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Nomor Surat FP</label>
+                                <input type="text" x-model="form.noFp"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Asal <span class="text-red-500">*</span></label>
+                                <select x-model="form.asal"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="">Pilih lokasi asal</option>
+                                    <template x-for="lokasi in lokasiOptions" :key="'asal-' + lokasi">
+                                        <option :value="lokasi" x-text="lokasi"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Tujuan <span class="text-red-500">*</span></label>
+                                <select x-model="form.tujuan"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="">Pilih lokasi tujuan</option>
+                                    <template x-for="lokasi in lokasiOptions" :key="'tujuan-' + lokasi">
+                                        <option :value="lokasi" x-text="lokasi"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Tanggal Mulai <span class="text-red-500">*</span></label>
+                                <input type="date" x-model="form.tanggalMulai"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Tanggal Selesai <span class="text-red-500">*</span></label>
+                                <input type="date" x-model="form.tanggalSelesai"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Nomor Surtug <span class="text-red-500">*</span></label>
+                                <input type="text" x-model="form.noSurtug"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Nomor SPD <span class="text-red-500">*</span></label>
+                                <input type="text" x-model="form.noSpd"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Tanggal Surtug Utama <span class="text-red-500">*</span></label>
+                                <input type="date" x-model="form.tglSurtugUtama"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Tanggal SPD Utama <span class="text-red-500">*</span></label>
+                                <input type="date" x-model="form.tglSpdUtama"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+
+                            <div class="md:col-span-2 space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Perihal FP</label>
+                                <textarea x-model="form.perihalFp" rows="3"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-5 md:px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                        <button type="button" @click="closeEditModal()"
+                            class="inline-flex items-center justify-center px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium">
+                            Batal
+                        </button>
+                        <button type="submit" :disabled="saving"
+                            class="inline-flex items-center justify-center px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-medium shadow-lg shadow-primary/30 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <template x-if="!saving">
+                                <span><i class="fas fa-save mr-2"></i> Simpan Perubahan</span>
+                            </template>
+                            <template x-if="saving">
+                                <span><i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...</span>
+                            </template>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="showDeleteModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8 text-center">
+            <div class="fixed inset-0 bg-gray-900/70" @click="closeDeleteModal()"></div>
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md text-left overflow-hidden">
+                <div class="p-6">
+                    <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mb-4">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Hapus Data Matriks?</h3>
+                    <p class="text-sm text-gray-500 mt-2" x-text="deleteTarget ? ('Data untuk ' + deleteTarget.nama + ' akan dihapus permanen.') : 'Data ini akan dihapus permanen.'"></p>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                    <button type="button" @click="closeDeleteModal()"
+                        class="inline-flex items-center justify-center px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium">
+                        Batal
+                    </button>
+                    <button type="button" @click="deleteItem()" :disabled="deleting"
+                        class="inline-flex items-center justify-center px-5 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition font-medium disabled:opacity-60 disabled:cursor-not-allowed">
+                        <template x-if="!deleting">
+                            <span>Hapus</span>
+                        </template>
+                        <template x-if="deleting">
+                            <span><i class="fas fa-spinner fa-spin mr-2"></i> Menghapus...</span>
+                        </template>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div x-data="toastNotification()" x-init="init()" @show-toast.window="showToast($event.detail)"
+        class="fixed top-4 right-4 z-[60] space-y-3 w-full max-w-sm pointer-events-none">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div x-show="toast.show" x-cloak x-transition:enter="transition ease-out duration-300 transform"
+                x-transition:enter-start="translate-x-full opacity-0"
+                x-transition:enter-end="translate-x-0 opacity-100"
+                x-transition:leave="transition ease-in duration-200 transform"
+                x-transition:leave-start="translate-x-0 opacity-100"
+                x-transition:leave-end="translate-x-full opacity-0"
+                class="pointer-events-auto rounded-2xl shadow-xl px-5 py-4 text-white flex items-start"
+                :class="{
+                    'bg-green-500': toast.type === 'success',
+                    'bg-red-500': toast.type === 'error',
+                    'bg-amber-500': toast.type === 'warning'
+                }">
+                <div class="flex-1">
+                    <p class="font-semibold" x-text="toast.title"></p>
+                    <p class="text-sm opacity-90" x-text="toast.message"></p>
+                </div>
+                <button @click="removeToast(toast.id)" class="ml-3 hover:opacity-75">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </template>
+    </div>
+</div>
+
+<script>
+    function toastNotification() {
+        return {
+            toasts: [],
+            init() {},
+            showToast(detail) {
+                const id = Date.now() + Math.random();
+                this.toasts.push({
+                    id,
+                    type: detail.type || 'success',
+                    title: detail.title || 'Info',
+                    message: detail.message || '',
+                    show: true
+                });
+                setTimeout(() => this.removeToast(id), detail.duration || 4000);
+            },
+            removeToast(id) {
+                const index = this.toasts.findIndex((toast) => toast.id === id);
+                if (index === -1) return;
+                this.toasts[index].show = false;
+                setTimeout(() => {
+                    this.toasts = this.toasts.filter((toast) => toast.id !== id);
+                }, 250);
+            }
+        }
+    }
+
+    function showToast(type, title, message) {
+        window.dispatchEvent(new CustomEvent('show-toast', {
+            detail: { type, title, message }
+        }));
+    }
+
+    function monitoringPage() {
+        return {
+            loading: false,
+            saving: false,
+            deleting: false,
+            showEditModal: false,
+            showDeleteModal: false,
+            showPegawaiList: false,
+            showKegiatanList: false,
+            items: [],
+            tahunOptions: [],
+            pegawaiResults: [],
+            kegiatanResults: [],
+            deleteTarget: null,
+            filters: {
+                search: '',
+                jenis: '',
+                tahun: ''
+            },
+            summary: {
+                totalData: 0,
+                totalTransportLokal: 0,
+                totalPerjalananDinas: 0
+            },
+            lokasiOptions: [
+                'Kabupaten Dompu',
+                'Kecamatan Hu\'u',
+                'Kecamatan Pajo',
+                'Kecamatan Dompu',
+                'Kecamatan Woja',
+                'Kecamatan Kilo',
+                'Kecamatan Kempo',
+                'Kecamatan Manggalewa',
+                'Kecamatan Pekat'
+            ],
+            form: {
+                id: null,
+                nip: '',
+                nama: '',
+                golongan: '',
+                jenisPerjalanan: '',
+                kegiatan: '',
+                asal: '',
+                tujuan: '',
+                tanggalMulai: '',
+                tanggalSelesai: '',
+                noSurtug: '',
+                noSpd: '',
+                jumlah: 0,
+                mak: '',
+                noFp: '',
+                perihalFp: '',
+                tglSurtugUtama: '',
+                tglSpdUtama: ''
+            },
+
+            init() {
+                this.loadData();
+            },
+
+            async loadData() {
+                this.loading = true;
+                try {
+                    const params = new URLSearchParams({
+                        search: this.filters.search || '',
+                        jenis: this.filters.jenis || '',
+                        tahun: this.filters.tahun || ''
+                    });
+
+                    const response = await fetch(`/api/matriks?${params.toString()}`);
+                    if (!response.ok) throw new Error('Failed to load data');
+                    const result = await response.json();
+
+                    this.items = result.data || [];
+                    this.tahunOptions = result.tahunOptions || [];
+                    this.summary.totalData = result.totalData || 0;
+                    this.summary.totalTransportLokal = result.totalTransportLokal || 0;
+                    this.summary.totalPerjalananDinas = result.totalPerjalananDinas || 0;
+                } catch (error) {
+                    console.error('Error loading monitoring:', error);
+                    showToast('error', 'Gagal', 'Gagal memuat data monitoring matriks');
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            resetFilters() {
+                this.filters = { search: '', jenis: '', tahun: '' };
+                this.loadData();
+            },
+
+            activeFilterLabel() {
+                const parts = [];
+                if (this.filters.tahun) parts.push(`Tahun ${this.filters.tahun}`);
+                if (this.filters.jenis) parts.push(this.filters.jenis);
+                if (this.filters.search) parts.push(`Cari: ${this.filters.search}`);
+                return parts.length ? parts.join(' • ') : 'Semua data';
+            },
+
+            formatDate(value) {
+                if (!value) return '-';
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return value;
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            },
+
+            formatCurrency(value) {
+                const number = Number(value || 0);
+                return new Intl.NumberFormat('id-ID').format(number);
+            },
+
+            defaultJumlah() {
+                if (this.form.jenisPerjalanan === 'Transport Lokal') return 170000;
+                if (this.form.jenisPerjalanan === 'Perjalanan Dinas') return 180000;
+                return 0;
+            },
+
+            syncEditJumlah() {
+                this.form.jumlah = this.defaultJumlah();
+            },
+
+            async openEditModal(id) {
+                try {
+                    const response = await fetch(`/api/matriks/${id}`);
+                    if (!response.ok) throw new Error('Failed to load detail');
+                    const item = await response.json();
+
+                    this.form = {
+                        id: item.id,
+                        nip: item.nip || '',
+                        nama: item.nama || '',
+                        golongan: item.golongan || '',
+                        jenisPerjalanan: item.jenisPerjalanan || '',
+                        kegiatan: item.kegiatan || '',
+                        asal: item.asal || '',
+                        tujuan: item.tujuan || '',
+                        tanggalMulai: item.tanggalMulai || '',
+                        tanggalSelesai: item.tanggalSelesai || '',
+                        noSurtug: item.noSurtug || '',
+                        noSpd: item.noSpd || '',
+                        jumlah: Number(item.jumlah || 0),
+                        mak: item.mak || '',
+                        noFp: item.noFp || '',
+                        perihalFp: item.perihalFp || '',
+                        tglSurtugUtama: item.tglSurtugUtama || '',
+                        tglSpdUtama: item.tglSpdUtama || ''
+                    };
+                    this.pegawaiResults = [];
+                    this.kegiatanResults = [];
+                    this.showEditModal = true;
+                } catch (error) {
+                    console.error('Error loading matriks detail:', error);
+                    showToast('error', 'Gagal', 'Gagal memuat detail matriks');
+                }
+            },
+
+            closeEditModal() {
+                this.showEditModal = false;
+            },
+
+            confirmDelete(item) {
+                this.deleteTarget = item;
+                this.showDeleteModal = true;
+            },
+
+            closeDeleteModal() {
+                this.showDeleteModal = false;
+                this.deleteTarget = null;
+            },
+
+            async deleteItem() {
+                if (!this.deleteTarget) return;
+
+                this.deleting = true;
+                try {
+                    const response = await fetch(`/api/matriks/${this.deleteTarget.id}`, {
+                        method: 'DELETE'
+                    });
+                    const text = await response.text();
+                    let result = {};
+                    if (text) {
+                        try {
+                            result = JSON.parse(text);
+                        } catch (error) {
+                            result = { message: text };
+                        }
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(result.message || text || 'Gagal menghapus data');
+                    }
+
+                    this.closeDeleteModal();
+                    await this.loadData();
+                    showToast('success', 'Berhasil', 'Data matriks berhasil dihapus');
+                } catch (error) {
+                    console.error('Error deleting matriks:', error);
+                    showToast('error', 'Gagal', error.message || 'Gagal menghapus data matriks');
+                } finally {
+                    this.deleting = false;
+                }
+            },
+
+            async searchPegawai() {
+                const query = (this.form.nama || '').trim();
+                this.form.nip = '';
+                this.form.golongan = '';
+
+                if (!query) {
+                    this.pegawaiResults = [];
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/pegawai/search?query=${encodeURIComponent(query)}`);
+                    if (!response.ok) throw new Error('Failed to search pegawai');
+                    this.pegawaiResults = await response.json();
+                    this.showPegawaiList = true;
+                } catch (error) {
+                    console.error('Error searching pegawai:', error);
+                    this.pegawaiResults = [];
+                }
+            },
+
+            selectPegawai(pegawai) {
+                this.form.nip = pegawai.nip || '';
+                this.form.nama = pegawai.nama || '';
+                this.form.golongan = pegawai.golongan || '';
+                this.showPegawaiList = false;
+                this.pegawaiResults = [];
+            },
+
+            async searchKegiatan() {
+                const query = (this.form.kegiatan || '').trim();
+                this.form.mak = '';
+
+                if (!query) {
+                    this.kegiatanResults = [];
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/matriks/kegiatan/search?query=${encodeURIComponent(query)}`);
+                    if (!response.ok) throw new Error('Failed to search kegiatan');
+                    this.kegiatanResults = await response.json();
+                    this.showKegiatanList = true;
+                } catch (error) {
+                    console.error('Error searching kegiatan:', error);
+                    this.kegiatanResults = [];
+                }
+            },
+
+            selectKegiatan(item) {
+                this.form.kegiatan = item.nama || '';
+                this.form.mak = item.mak || '';
+                this.kegiatanResults = [];
+                this.showKegiatanList = false;
+            },
+
+            buildPayload() {
+                return {
+                    nip: this.form.nip,
+                    nama: (this.form.nama || '').trim(),
+                    golongan: (this.form.golongan || '').trim(),
+                    jenisPerjalanan: this.form.jenisPerjalanan,
+                    kegiatan: (this.form.kegiatan || '').trim(),
+                    asal: this.form.asal,
+                    tujuan: this.form.tujuan,
+                    tanggalMulai: this.form.tanggalMulai,
+                    tanggalSelesai: this.form.tanggalSelesai,
+                    noSurtug: (this.form.noSurtug || '').trim(),
+                    noSpd: (this.form.noSpd || '').trim(),
+                    jumlah: Number(this.form.jumlah || 0),
+                    mak: (this.form.mak || '').trim(),
+                    noFp: (this.form.noFp || '').trim(),
+                    perihalFp: (this.form.perihalFp || '').trim(),
+                    tglSurtugUtama: this.form.tglSurtugUtama,
+                    tglSpdUtama: this.form.tglSpdUtama
+                };
+            },
+
+            validateEditForm() {
+                if (!this.form.nip) return 'Pegawai wajib dipilih dari daftar';
+                if (!this.form.jenisPerjalanan) return 'Jenis perjalanan wajib dipilih';
+                if (!(this.form.kegiatan || '').trim()) return 'Kegiatan wajib diisi';
+                if (!this.form.asal || !this.form.tujuan) return 'Asal dan tujuan wajib diisi';
+                if (!this.form.tanggalMulai || !this.form.tanggalSelesai) return 'Tanggal perjalanan wajib diisi';
+                if (!this.form.noSurtug || !this.form.noSpd) return 'Nomor surtug dan SPD wajib diisi';
+                if (!this.form.tglSurtugUtama || !this.form.tglSpdUtama) return 'Tanggal surat utama wajib diisi';
+                return '';
+            },
+
+            async submitEditForm() {
+                const validationMessage = this.validateEditForm();
+                if (validationMessage) {
+                    showToast('error', 'Validasi Gagal', validationMessage);
+                    return;
+                }
+
+                this.saving = true;
+                try {
+                    const response = await fetch(`/api/matriks/${this.form.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(this.buildPayload())
+                    });
+
+                    const text = await response.text();
+                    let result = {};
+                    if (text) {
+                        try {
+                            result = JSON.parse(text);
+                        } catch (error) {
+                            result = { message: text };
+                        }
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(result.message || text || 'Gagal menyimpan perubahan');
+                    }
+
+                    this.closeEditModal();
+                    await this.loadData();
+                    showToast('success', 'Berhasil', 'Data matriks berhasil diperbarui');
+                } catch (error) {
+                    console.error('Error updating matriks:', error);
+                    showToast('error', 'Gagal', error.message || 'Gagal memperbarui data matriks');
+                } finally {
+                    this.saving = false;
+                }
+            }
+        }
+    }
+</script>
+{{ end }}

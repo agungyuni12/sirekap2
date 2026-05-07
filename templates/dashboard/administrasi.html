@@ -1,0 +1,438 @@
+{{ define "content" }}
+<div class="space-y-6 md:space-y-8" x-data="administrasiPage()" x-init="init()">
+
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Administrasi Perjalanan</h2>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Ringkasan administrasi per `No FP`, lengkap dengan peserta dan jumlah laporan masuk untuk kebutuhan dokumen dan pencetakan.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <nav class="hidden md:flex items-center space-x-2 text-sm">
+                <a href="/dashboard" class="text-gray-500 hover:text-primary transition">Dashboard</a>
+                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                <span class="text-primary font-medium">Administrasi</span>
+            </nav>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Total FP</p>
+                    <p class="text-2xl md:text-3xl font-bold text-gray-900 mt-1" x-text="summary.totalData">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-file-invoice text-blue-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Total Peserta</p>
+                    <p class="text-2xl md:text-3xl font-bold text-emerald-600 mt-1" x-text="summary.totalPeserta">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-emerald-100 flex items-center justify-center">
+                    <i class="fas fa-users text-emerald-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Laporan Masuk</p>
+                    <p class="text-2xl md:text-3xl font-bold text-amber-600 mt-1" x-text="summary.totalLaporan">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
+                    <i class="fas fa-clipboard-check text-amber-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl md:rounded-2xl border border-purple-200 p-4 md:p-6">
+            <p class="text-xs md:text-sm font-medium text-purple-700">Filter Aktif</p>
+            <p class="text-sm md:text-base font-semibold text-purple-900 mt-2" x-text="activeFilterLabel()">Semua FP</p>
+            <p class="text-xs text-purple-700 mt-2">Pencarian memeriksa `No FP`, `MAK`, dan `Perihal FP` seperti sistem referensi.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+        <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-4">
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Cari Administrasi</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" x-model="filters.search" @input.debounce.400ms="loadData()"
+                        class="w-full input-with-icon" placeholder="Cari No FP, MAK, atau perihal...">
+                </div>
+            </div>
+            <div class="flex items-end">
+                <button type="button" @click="resetFilters()"
+                    class="inline-flex items-center justify-center px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium">
+                    <i class="fas fa-undo mr-2"></i> Reset
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 text-sm text-gray-500 mt-4 pt-4 border-t border-gray-100">
+            <template x-if="loading">
+                <span class="inline-flex items-center text-primary">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data...
+                </span>
+            </template>
+            <template x-if="!loading">
+                <span x-text="summary.totalData + ' FP ditampilkan'">0 FP ditampilkan</span>
+            </template>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-4 md:px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-900">Daftar Administrasi</h3>
+            <p class="text-sm text-gray-500 mt-1">Klik satu baris untuk membuka daftar peserta pada `No FP` tersebut.</p>
+        </div>
+
+        <template x-if="items.length === 0 && !loading">
+            <div class="p-8 md:p-12 text-center">
+                <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-folder-open text-gray-400 text-2xl md:text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-1">Belum Ada Data</h3>
+                <p class="text-gray-500 text-sm">Belum ada administrasi perjalanan yang cocok dengan pencarian.</p>
+            </div>
+        </template>
+
+        <div class="hidden md:block overflow-x-auto" x-show="items.length > 0">
+            <table class="min-w-full divide-y divide-gray-100">
+                <thead class="bg-gray-50">
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        <th class="px-6 py-4">No FP</th>
+                        <th class="px-6 py-4">MAK</th>
+                        <th class="px-6 py-4">Perihal</th>
+                        <th class="px-6 py-4 text-center">Laporan Masuk</th>
+                        <th class="px-6 py-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <template x-for="item in items" :key="item.noFp">
+                    <tbody class="divide-y divide-gray-100">
+                        <tr class="cursor-pointer hover:bg-gray-50 transition" @click="toggleDetails(item)">
+                            <td class="px-6 py-4">
+                                <p class="font-semibold text-gray-900" x-text="item.noFp"></p>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700" x-text="item.mak || '-'"></td>
+                            <td class="px-6 py-4 text-sm text-gray-700" x-text="item.perihalFp || '-'"></td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700"
+                                    x-text="item.jumlahLaporan + ' / ' + item.jumlahPeserta"></span>
+                            </td>
+                            <td class="px-6 py-4" @click.stop>
+                                <div class="flex items-center justify-end gap-2">
+                                        <button type="button"
+                                            class="inline-flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                                            @click="toggleDetails(item)">
+                                            <i class="fas mr-2" :class="expandedNoFP === item.noFp ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                            <span x-text="expandedNoFP === item.noFp ? 'Tutup' : 'Detail'"></span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <tr x-show="expandedNoFP === item.noFp" x-cloak>
+                            <td colspan="5" class="px-0 py-0 bg-gray-50">
+                                <div class="p-5">
+                                    <template x-if="detailLoading">
+                                        <div class="text-sm text-primary inline-flex items-center">
+                                            <i class="fas fa-spinner fa-spin mr-2"></i> Memuat peserta...
+                                        </div>
+                                    </template>
+
+                                    <template x-if="!detailLoading && detailItems.length === 0">
+                                        <p class="text-sm text-gray-500">Tidak ada peserta untuk `No FP` ini.</p>
+                                    </template>
+
+                                    <div class="overflow-x-auto" x-show="!detailLoading && detailItems.length > 0">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-white">
+                                                <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                                    <th class="px-4 py-3">Nama</th>
+                                                    <th class="px-4 py-3">Tujuan</th>
+                                                    <th class="px-4 py-3">Tanggal</th>
+                                                    <th class="px-4 py-3">No Surat</th>
+                                                    <th class="px-4 py-3">Status Laporan</th>
+                                                    <th class="px-4 py-3 text-right">Cetak</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200 bg-white">
+                                                <template x-for="peserta in detailItems" :key="peserta.id">
+                                                    <tr>
+                                                        <td class="px-4 py-3">
+                                                            <p class="font-medium text-gray-900" x-text="peserta.nama"></p>
+                                                            <p class="text-xs text-gray-500 font-mono mt-1" x-text="peserta.nip"></p>
+                                                        </td>
+                                                        <td class="px-4 py-3 text-sm text-gray-700" x-text="peserta.tujuan || '-'"></td>
+                                                        <td class="px-4 py-3 text-sm text-gray-700" x-text="formatDate(peserta.tanggalMulai) + ' - ' + formatDate(peserta.tanggalSelesai)"></td>
+                                                        <td class="px-4 py-3 text-sm text-gray-700">
+                                                            <p x-text="peserta.noSurtug || '-'"></p>
+                                                            <p class="text-xs text-gray-500 mt-1" x-text="peserta.noSpd || '-'"></p>
+                                                        </td>
+                                                        <td class="px-4 py-3">
+                                                            <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
+                                                                :class="reportBadgeClass(peserta.reportType)"
+                                                                x-text="reportLabel(peserta.reportType)"></span>
+                                                        </td>
+                                                        <td class="px-4 py-3" @click.stop>
+                                                            <div class="flex items-center justify-end flex-wrap gap-2">
+                                                                <button type="button" x-show="canPrintReport(peserta)"
+                                                                    @click="printReport(peserta)"
+                                                                    class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+                                                                    <i class="fas fa-file-word mr-2"></i> Laporan
+                                                                </button>
+                                                                <button type="button" @click="printKwitansi(peserta)"
+                                                                    class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">
+                                                                    <i class="fas fa-receipt mr-2"></i> Kwitansi
+                                                                </button>
+                                                                <button type="button" @click="printPernyataan(peserta)"
+                                                                    class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">
+                                                                    <i class="fas fa-file-signature mr-2"></i> Pernyataan
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </template>
+            </table>
+        </div>
+
+        <div class="md:hidden divide-y divide-gray-100" x-show="items.length > 0">
+            <template x-for="item in items" :key="item.noFp">
+                <div class="p-4 space-y-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 break-all" x-text="item.noFp"></h4>
+                            <p class="text-xs text-gray-500 mt-1" x-text="item.mak || '-'"></p>
+                        </div>
+                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700"
+                            x-text="item.jumlahLaporan + ' / ' + item.jumlahPeserta"></span>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-3 space-y-2 text-sm">
+                        <p><span class="font-medium text-gray-800">Perihal:</span> <span x-text="item.perihalFp || '-'"></span></p>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-1">
+                        <button type="button" @click="toggleDetails(item)"
+                            class="flex-1 inline-flex items-center justify-center px-3 py-2.5 text-sm bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition">
+                            <i class="fas mr-2" :class="expandedNoFP === item.noFp ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                            <span x-text="expandedNoFP === item.noFp ? 'Tutup' : 'Detail Peserta'"></span>
+                        </button>
+                    </div>
+
+                    <div x-show="expandedNoFP === item.noFp" x-cloak class="pt-2">
+                        <template x-if="detailLoading">
+                            <div class="text-sm text-primary inline-flex items-center">
+                                <i class="fas fa-spinner fa-spin mr-2"></i> Memuat peserta...
+                            </div>
+                        </template>
+
+                        <div class="space-y-3" x-show="!detailLoading && detailItems.length > 0">
+                            <template x-for="peserta in detailItems" :key="peserta.id">
+                                <div class="bg-gray-50 rounded-xl p-3 text-sm space-y-2">
+                                    <p class="font-semibold text-gray-900" x-text="peserta.nama"></p>
+                                    <p class="text-xs text-gray-500 font-mono" x-text="peserta.nip"></p>
+                                    <p><span class="font-medium text-gray-800">Tujuan:</span> <span x-text="peserta.tujuan || '-'"></span></p>
+                                    <p><span class="font-medium text-gray-800">Tanggal:</span> <span x-text="formatDate(peserta.tanggalMulai) + ' - ' + formatDate(peserta.tanggalSelesai)"></span></p>
+                                    <p><span class="font-medium text-gray-800">Surtug:</span> <span x-text="peserta.noSurtug || '-'"></span></p>
+                                    <p><span class="font-medium text-gray-800">SPD:</span> <span x-text="peserta.noSpd || '-'"></span></p>
+                                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
+                                        :class="reportBadgeClass(peserta.reportType)"
+                                        x-text="reportLabel(peserta.reportType)"></span>
+                                    <div class="flex flex-wrap gap-2 pt-2">
+                                        <button type="button" x-show="canPrintReport(peserta)"
+                                            @click="printReport(peserta)"
+                                            class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+                                            <i class="fas fa-file-word mr-2"></i> Laporan
+                                        </button>
+                                        <button type="button" @click="printKwitansi(peserta)"
+                                            class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">
+                                            <i class="fas fa-receipt mr-2"></i> Kwitansi
+                                        </button>
+                                        <button type="button" @click="printPernyataan(peserta)"
+                                            class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">
+                                            <i class="fas fa-file-signature mr-2"></i> Pernyataan
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <template x-if="!detailLoading && detailItems.length === 0">
+                            <p class="text-sm text-gray-500">Tidak ada peserta untuk FP ini.</p>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+
+<script>
+    function administrasiPage() {
+        return {
+            loading: false,
+            detailLoading: false,
+            items: [],
+            detailItems: [],
+            expandedNoFP: '',
+            filters: {
+                search: ''
+            },
+            summary: {
+                totalData: 0,
+                totalPeserta: 0,
+                totalLaporan: 0
+            },
+
+            init() {
+                this.loadData();
+            },
+
+            async loadData() {
+                this.loading = true;
+                this.expandedNoFP = '';
+                this.detailItems = [];
+
+                try {
+                    const params = new URLSearchParams({
+                        search: this.filters.search || ''
+                    });
+
+                    const response = await fetch(`/api/matriks/administrasi?${params.toString()}`);
+                    if (!response.ok) throw new Error('Failed to load administrasi');
+                    const result = await response.json();
+
+                    this.items = result.data || [];
+                    this.summary.totalData = result.totalData || 0;
+                    this.summary.totalPeserta = result.totalPeserta || 0;
+                    this.summary.totalLaporan = result.totalLaporan || 0;
+                } catch (error) {
+                    console.error('Error loading administrasi:', error);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            resetFilters() {
+                this.filters.search = '';
+                this.loadData();
+            },
+
+            activeFilterLabel() {
+                if (!(this.filters.search || '').trim()) return 'Semua FP';
+                return `Cari: ${this.filters.search}`;
+            },
+
+            async toggleDetails(item) {
+                if (!item || !item.noFp) return;
+
+                if (this.expandedNoFP === item.noFp) {
+                    this.expandedNoFP = '';
+                    this.detailItems = [];
+                    return;
+                }
+
+                this.expandedNoFP = item.noFp;
+                this.detailLoading = true;
+                this.detailItems = [];
+
+                try {
+                    const response = await fetch(`/api/matriks/administrasi/peserta?no_fp=${encodeURIComponent(item.noFp)}`);
+                    if (!response.ok) throw new Error('Failed to load peserta');
+                    const result = await response.json();
+                    this.detailItems = result.data || [];
+                } catch (error) {
+                    console.error('Error loading peserta administrasi:', error);
+                    this.detailItems = [];
+                } finally {
+                    this.detailLoading = false;
+                }
+            },
+
+            formatDate(value) {
+                if (!value) return '-';
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return value;
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            },
+
+            reportLabel(type) {
+                if (type === 'transport') return 'Laporan Translok';
+                if (type === 'sppd') return 'Laporan SPPD';
+                return 'Belum Lapor';
+            },
+
+            reportBadgeClass(type) {
+                if (type === 'transport') return 'bg-emerald-100 text-emerald-700';
+                if (type === 'sppd') return 'bg-blue-100 text-blue-700';
+                return 'bg-gray-100 text-gray-600';
+            },
+
+            canPrintReport(peserta) {
+                return peserta && ['transport', 'sppd'].includes((peserta.reportType || '').toLowerCase());
+            },
+
+            getTodayInputValue() {
+                const now = new Date();
+                const offset = now.getTimezoneOffset() * 60000;
+                return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+            },
+
+            printReport(peserta) {
+                if (!this.canPrintReport(peserta)) return;
+                const type = (peserta.reportType || '').toLowerCase();
+                const endpoint = type === 'transport' ? '/api/matriks/print/translok' : '/api/matriks/print/sppd';
+                window.open(`${endpoint}?id=${encodeURIComponent(peserta.id)}`, '_blank');
+            },
+
+            printPernyataan(peserta) {
+                if (!peserta || !peserta.id) return;
+                window.open(`/api/matriks/print/pernyataan?id=${encodeURIComponent(peserta.id)}`, '_blank');
+            },
+
+            printKwitansi(peserta) {
+                if (!peserta || !peserta.id) return;
+
+                const tanggal = window.prompt('Tanggal kwitansi (format YYYY-MM-DD)', this.getTodayInputValue());
+                if (tanggal === null) return;
+
+                const trimmedDate = tanggal.trim();
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate)) {
+                    alert('Format tanggal harus YYYY-MM-DD');
+                    return;
+                }
+
+                const jenis = (peserta.jenisPerjalanan || '').toLowerCase();
+                const endpoint = jenis === 'transport lokal'
+                    ? '/api/matriks/print/kwitansi/translok'
+                    : '/api/matriks/print/kwitansi/sppd';
+
+                window.open(`${endpoint}?id=${encodeURIComponent(peserta.id)}&tgl=${encodeURIComponent(trimmedDate)}`, '_blank');
+            }
+        }
+    }
+</script>
+{{ end }}

@@ -1,0 +1,173 @@
+{{ define "content" }}
+<div class="space-y-8">
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <!-- Card 1 -->
+        <div
+            class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+            <div class="flex items-center justify-between mb-4">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-tasks text-white text-xl"></i>
+                </div>
+                <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                    Master kegiatan
+                </span>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-800 mb-1">{{ .Stats.TotalKegiatan }}</h3>
+            <p class="text-sm text-gray-500 font-medium">Total Kegiatan</p>
+        </div>
+
+        <!-- Card 2 -->
+        <div
+            class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+            <div class="flex items-center justify-between mb-4">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-money-bill-wave text-white text-xl"></i>
+                </div>
+                <span class="text-xs font-medium text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
+                    Rp {{ formatCurrency .Stats.TotalRealisasi }}
+                </span>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-800 mb-1">{{ printf "%.1f" .Stats.RealisasiPercent }}%</h3>
+            <p class="text-sm text-gray-500 font-medium">Realisasi Anggaran</p>
+        </div>
+
+        <!-- Card 3 -->
+        <div
+            class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+            <div class="flex items-center justify-between mb-4">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-users text-white text-xl"></i>
+                </div>
+                <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
+                    Dari tabel rekap
+                </span>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-800 mb-1">{{ .Stats.TotalMitraAktif }}</h3>
+            <p class="text-sm text-gray-500 font-medium">Mitra Aktif</p>
+        </div>
+
+        <!-- Card 4 -->
+        <div
+            class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+            <div class="flex items-center justify-between mb-4">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-file-alt text-white text-xl"></i>
+                </div>
+                <span class="text-xs font-medium text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
+                    Nomor surat SPK
+                </span>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-800 mb-1">{{ .Stats.TotalSPKTerbit }}</h3>
+            <p class="text-sm text-gray-500 font-medium">SPK Terbit</p>
+        </div>
+    </div>
+
+    <!-- Welcome Section -->
+    <div
+        class="bg-gradient-to-br from-primary to-blue-700 rounded-3xl shadow-xl p-8 md:p-10 text-white relative overflow-hidden">
+        <!-- Decorative Elements -->
+        <div
+            class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl">
+        </div>
+        <div
+            class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl">
+        </div>
+
+        <div class="relative z-10">
+            <div class="flex items-start justify-between flex-wrap gap-6">
+                <div class="max-w-2xl">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Selamat Datang di SIREKAP 👋</h2>
+                    <p class="text-blue-100 text-lg leading-relaxed mb-8">
+                        Sistem Informasi Rekapitulasi dan Administrasi Keuangan adalah platform terintegrasi untuk
+                        pengelolaan kegiatan statistik di BPS Kabupaten Dompu.
+                    </p>
+                    <div class="flex flex-wrap gap-3 mb-8">
+                        <div class="px-4 py-3 rounded-2xl bg-white/15 backdrop-blur border border-white/20">
+                            <p class="text-xs uppercase tracking-wider text-blue-100">Pagu Kegiatan</p>
+                            <p class="text-lg font-semibold">Rp {{ formatCurrency .Stats.TotalPagu }}</p>
+                        </div>
+                        <div class="px-4 py-3 rounded-2xl bg-white/15 backdrop-blur border border-white/20">
+                            <p class="text-xs uppercase tracking-wider text-blue-100">Baris Matriks</p>
+                            <p class="text-lg font-semibold">{{ .Stats.TotalMatriks }}</p>
+                        </div>
+                        <div class="px-4 py-3 rounded-2xl bg-white/15 backdrop-blur border border-white/20">
+                            <p class="text-xs uppercase tracking-wider text-blue-100">Perjalanan Dinas</p>
+                            <p class="text-lg font-semibold">{{ .Stats.TotalPerjalananDin }}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="/dashboard/input"
+                            class="inline-flex items-center px-6 py-3.5 bg-white text-primary font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
+                            <i class="fas fa-plus mr-3"></i> Input Kegiatan Baru
+                        </a>
+                        <a href="/dashboard/rekap"
+                            class="inline-flex items-center px-6 py-3.5 bg-white/20 backdrop-blur text-white font-semibold rounded-xl border border-white/30 hover:bg-white/30 transition-all duration-200">
+                            <i class="fas fa-search mr-3"></i> Lihat Rekapitulasi
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Illustration placeholder -->
+                <div class="hidden lg:flex items-center justify-center">
+                    <div class="w-48 h-48 bg-white/10 rounded-3xl backdrop-blur-sm flex items-center justify-center">
+                        <i class="fas fa-chart-pie text-7xl text-white/50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="/dashboard/input"
+            class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg hover:border-primary/30 transition-all duration-300 group">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-100 transition">
+                    <i class="fas fa-plus-circle text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 group-hover:text-primary transition">Input Data Baru</h4>
+                    <p class="text-sm text-gray-500">Tambah kegiatan baru</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="/dashboard/rekap"
+            class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg hover:border-green-300 transition-all duration-300 group">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:bg-green-100 transition">
+                    <i class="fas fa-file-export text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 group-hover:text-green-600 transition">Export Rekap</h4>
+                    <p class="text-sm text-gray-500">Download laporan</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="/dashboard/matriks"
+            class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-lg hover:border-purple-300 transition-all duration-300 group">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-100 transition">
+                    <i class="fas fa-route text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 group-hover:text-purple-600 transition">Matriks Perjalanan
+                    </h4>
+                    <p class="text-sm text-gray-500">Kelola SPPD</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{{ end }}

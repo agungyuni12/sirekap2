@@ -1,0 +1,168 @@
+package handlers
+
+import (
+	"database/sql"
+	"html/template"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/sessions"
+	"sirekap/internal/models"
+)
+
+var store *sessions.CookieStore
+
+// InitSession initializes the session store with the given key
+func InitSession(key string) {
+	store = sessions.NewCookieStore([]byte(key))
+	store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 7, // 7 days
+		HttpOnly: true,
+	}
+}
+
+// GetStore returns the session store
+func GetStore() *sessions.CookieStore {
+	return store
+}
+
+// LoginPageData holds data for the login template
+type LoginPageData struct {
+	Error   string
+	Success string
+}
+
+// LoginHandler handles GET and POST for /login
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "sirekap-session")
+
+	// If already logged in, redirect
+	if userID, ok := session.Values["user_id"].(int); ok && userID > 0 {
+		level, _ := session.Values["level"].(string)
+		redirectByLevel(w, r, level)
+		return
+	}
+
+	if r.Method == http.MethodGet {
+		renderLogin(w, LoginPageData{})
+		return
+	}
+
+	// POST - Process login
+	if err := r.ParseForm(); err != nil {
+		renderLogin(w, LoginPageData{Error: "Terjadi kesalahan pada sistem."})
+		return
+	}
+
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	if username == "" || password == "" {
+		renderLogin(w, LoginPageData{Error: "Username dan password harus diisi."})
+		return
+	}
+
+	// Find user
+	user, err := models.GetUserByUsernameOrEmail(username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			renderLogin(w, LoginPageData{Error: "Login Gagal. Username atau password yang Anda masukkan salah."})
+			return
+		}
+		log.Printf("Database error: %v", err)
+		renderLogin(w, LoginPageData{Error: "Terjadi kesalahan pada sistem. Silakan coba lagi."})
+		return
+	}
+
+	// Verify password
+	if !user.CheckPassword(password) {
+		renderLogin(w, LoginPageData{Error: "Login Gagal. Username atau password yang Anda masukkan salah."})
+		return
+	}
+
+	// Login successful - save to session
+	session.Values["user_id"] = user.ID
+	session.Values["username"] = user.Username
+	session.Values["nama"] = user.Nama
+	session.Values["nip"] = user.NIP
+	session.Values["email"] = user.Email
+	session.Values["level"] = user.Level
+	session.Values["initials"] = user.GetInitials()
+
+	if err := session.Save(r, w); err != nil {
+		log.Printf("Session save error: %v", err)
+		renderLogin(w, LoginPageData{Error: "Terjadi kesalahan pada sistem."})
+		return
+	}
+
+	// Redirect based on role
+	redirectByLevel(w, r, user.Level)
+}
+
+// LogoutHandler handles logout
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "sirekap-session")
+	
+	// Clear session
+	session.Values = make(map[interface{}]interface{})
+	session.Options.MaxAge = -1
+	session.Save(r, w)
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+// GetUserFromSession retrieves user data from session
+func GetUserFromSession(r *http.Request) map[string]interface{} {
+	session, _ := store.Get(r, "sirekap-session")
+	
+	data := make(map[string]interface{})
+	
+	if userID, ok := session.Values["user_id"].(int); ok {
+		data["UserID"] = userID
+		data["UserName"] = session.Values["nama"]
+		data["Username"] = session.Values["username"]
+		data["UserNIP"] = session.Values["nip"]
+		data["UserEmail"] = session.Values["email"]
+		data["UserRole"] = session.Values["level"]
+		data["UserInitials"] = session.Values["initials"]
+		data["IsLoggedIn"] = true
+	} else {
+		data["IsLoggedIn"] = false
+	}
+	
+	return data
+}
+
+// IsAuthenticated checks if user is authenticated
+func IsAuthenticated(r *http.Request) bool {
+	session, _ := store.Get(r, "sirekap-session")
+	userID, ok := session.Values["user_id"].(int)
+	return ok && userID > 0
+}
+
+// GetUserLevel returns the user's level from session
+func GetUserLevel(r *http.Request) string {
+	session, _ := store.Get(r, "sirekap-session")
+	if level, ok := session.Values["level"].(string); ok {
+		return level
+	}
+	return ""
+}
+
+func renderLogin(w http.ResponseWriter, data LoginPageData) {
+	tmpl, err := template.ParseFiles("templates/login.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, data)
+}
+
+func redirectByLevel(w http.ResponseWriter, r *http.Request, level string) {
+	if level == "admin" {
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/lapor", http.StatusSeeOther)
+	}
+}

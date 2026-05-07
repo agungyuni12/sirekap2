@@ -1,0 +1,872 @@
+{{ define "content" }}
+<div class="space-y-6 md:space-y-8" x-data="rekapForm()"
+    data-total-mitra="{{ if .TotalMitra }}{{ .TotalMitra }}{{ else }}0{{ end }}"
+    data-total-honor="{{ if .TotalHonor }}{{ .TotalHonor }}{{ else }}0{{ end }}"
+    data-total-kegiatan="{{ if .TotalKegiatan }}{{ .TotalKegiatan }}{{ else }}0{{ end }}"
+    data-total-pages="{{ if .TotalPages }}{{ .TotalPages }}{{ else }}1{{ end }}"
+    data-total-data="{{ if .TotalData }}{{ .TotalData }}{{ else }}0{{ end }}"
+    data-showing="{{ if .Showing }}{{ .Showing }}{{ else }}0{{ end }}" data-sbml-limit="3346000">
+
+    <div x-show="toast.show" x-cloak x-transition
+        class="fixed top-5 right-5 z-[70] max-w-sm rounded-2xl px-4 py-3 shadow-2xl text-white"
+        :class="toast.type === 'error' ? 'bg-red-500' : 'bg-emerald-500'">
+        <p class="text-sm font-medium" x-text="toast.message"></p>
+    </div>
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Rekapitulasi Mitra</h2>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Total honor per mitra per bulan</p>
+        </div>
+        <div class="flex items-center flex-wrap justify-end gap-2 md:gap-3">
+            <div class="relative" @click.outside="actionMenuOpen = false">
+                <button @click="actionMenuOpen = !actionMenuOpen"
+                    class="inline-flex items-center px-3 md:px-4 py-2 md:py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium shadow-sm text-sm md:text-base"
+                    :class="{ 'opacity-50 pointer-events-none': totalData === 0 }">
+                    <i class="fas fa-folder-tree mr-2 text-primary"></i>
+                    <span>Dokumen</span>
+                    <i class="fas fa-chevron-down ml-2 text-xs text-gray-400"></i>
+                </button>
+
+                <div x-show="actionMenuOpen" x-cloak x-transition
+                    class="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-gray-100 bg-white shadow-2xl p-2 z-40">
+                    <button @click="actionMenuOpen = false; openSpkBulkModal()"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
+                        <i class="fas fa-layer-group w-5 mr-3 text-blue-500"></i>
+                        <span>Buat SPK</span>
+                    </button>
+                    <button @click="actionMenuOpen = false; openBastBulkModal()"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
+                        <i class="fas fa-file-circle-check w-5 mr-3 text-emerald-500"></i>
+                        <span>Buat BAST</span>
+                    </button>
+                    <a :href="downloadSpkUrl()" @click="actionMenuOpen = false"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-slate-50 hover:text-slate-900 transition"
+                        :class="{ 'opacity-50 pointer-events-none': totalData === 0 }">
+                        <i class="fas fa-file-signature w-5 mr-3 text-sky-500"></i>
+                        <span>Download SPK</span>
+                    </a>
+                    <a :href="downloadBastUrl()" @click="actionMenuOpen = false"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-slate-50 hover:text-slate-900 transition"
+                        :class="{ 'opacity-50 pointer-events-none': totalData === 0 }">
+                        <i class="fas fa-file-contract w-5 mr-3 text-teal-500"></i>
+                        <span>Download BAST</span>
+                    </a>
+                </div>
+            </div>
+            <a href="/dashboard/input"
+                class="inline-flex items-center px-3 md:px-4 py-2 md:py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-medium shadow-lg shadow-primary/30 text-sm md:text-base">
+                <i class="fas fa-plus mr-1 md:mr-2"></i>
+                <span class="hidden sm:inline">Tambah Data</span>
+                <span class="sm:hidden">Tambah</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- SPK Bulk Modal -->
+    <div x-show="bulkSpk.open" x-cloak class="fixed inset-0 z-[60] overflow-y-auto">
+        <div class="fixed inset-0 bg-slate-900/60" @click="closeBulkSpkModal()"></div>
+        <div class="relative min-h-screen flex items-start justify-center p-4 md:p-6">
+            <div class="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden">
+                <div class="px-5 md:px-6 py-4 border-b border-gray-100 flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800">Buat SPK Massal</h3>
+                        <p class="text-sm text-gray-500 mt-1">Pilih mitra dari hasil filter aktif, lalu samakan tanggal suratnya.</p>
+                    </div>
+                    <button @click="closeBulkSpkModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="p-5 md:p-6 space-y-4">
+                    <div class="grid md:grid-cols-[240px,1fr] gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Tanggal Surat</label>
+                            <input type="date" x-model="bulkSpk.tanggalSurat" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 text-sm">
+                            <button type="button" @click="toggleSelectAllSpk()"
+                                class="inline-flex items-center px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium">
+                                <i class="fas fa-check-double mr-2 text-blue-500"></i>
+                                <span x-text="bulkSpk.selected.length === selectableSpkCount() ? 'Batal Pilih Semua' : 'Pilih Semua'"></span>
+                            </button>
+                            <span class="text-gray-500">Terpilih <span class="font-semibold text-gray-800" x-text="bulkSpk.selected.length"></span> dari <span x-text="filteredSpkItems().length"></span> mitra tampil</span>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" x-model="bulkSpk.search" placeholder="Cari nama mitra atau IDSOBAT..."
+                            class="w-full rounded-xl border border-gray-200 pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    </div>
+
+                    <div class="border border-gray-100 rounded-2xl overflow-hidden">
+                        <div x-show="bulkSpk.loading" class="p-10 text-center text-gray-500">
+                            <i class="fas fa-spinner fa-spin mr-2"></i> Memuat kandidat SPK...
+                        </div>
+                        <div x-show="!bulkSpk.loading && filteredSpkItems().length === 0" class="p-10 text-center text-gray-500">
+                            Tidak ada kandidat SPK untuk filter saat ini.
+                        </div>
+                        <div x-show="!bulkSpk.loading && filteredSpkItems().length > 0" class="max-h-[420px] overflow-auto divide-y divide-gray-100">
+                            <template x-for="item in filteredSpkItems()" :key="spkItemKey(item)">
+                                <label class="flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer">
+                                    <input type="checkbox" class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" :value="spkItemKey(item)" x-model="bulkSpk.selected">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="font-semibold text-gray-900" x-text="item.namamitra"></span>
+                                            <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-mono" x-text="item.idsobat"></span>
+                                            <span class="px-2 py-0.5 rounded-lg text-xs font-semibold"
+                                                :class="item.sudahAda ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'"
+                                                x-text="item.sudahAda ? 'Sudah Ada SPK' : 'Belum Ada SPK'"></span>
+                                        </div>
+                                        <p class="text-sm text-gray-500 mt-1" x-text="`${item.bulan} ${item.tahun}`"></p>
+                                        <p class="text-xs text-gray-500 mt-1" x-show="item.nsurat">
+                                            <span class="font-medium text-gray-700" x-text="item.nsurat"></span>
+                                            <span x-show="item.tglsurat" x-text="` • ${item.tglsurat}`"></span>
+                                        </p>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-5 md:px-6 py-4 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-between gap-3">
+                    <p class="text-sm text-gray-500">Nomor surat akan menyesuaikan tanggal yang kamu pilih.</p>
+                    <div class="flex items-center gap-3">
+                        <button @click="closeBulkSpkModal()" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium">Tutup</button>
+                        <button @click="submitBulkSpk()" :disabled="bulkSpk.submitting || bulkSpk.selected.length === 0"
+                            class="px-5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-medium shadow-lg shadow-blue-500/20">
+                            <i class="fas" :class="bulkSpk.submitting ? 'fa-spinner fa-spin mr-2' : 'fa-file-signature mr-2'"></i>
+                            Proses SPK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BAST Bulk Modal -->
+    <div x-show="bulkBast.open" x-cloak class="fixed inset-0 z-[60] overflow-y-auto">
+        <div class="fixed inset-0 bg-slate-900/60" @click="closeBulkBastModal()"></div>
+        <div class="relative min-h-screen flex items-start justify-center p-4 md:p-6">
+            <div class="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden">
+                <div class="px-5 md:px-6 py-4 border-b border-gray-100 flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800">Buat BAST Massal</h3>
+                        <p class="text-sm text-gray-500 mt-1">Pilih nama dan kegiatan yang ingin disamakan tanggal suratnya.</p>
+                    </div>
+                    <button @click="closeBulkBastModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="p-5 md:p-6 space-y-4">
+                    <div class="grid md:grid-cols-[240px,1fr] gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Tanggal Surat</label>
+                            <input type="date" x-model="bulkBast.tanggalSurat" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 text-sm">
+                            <button type="button" @click="toggleSelectAllBast()"
+                                class="inline-flex items-center px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium">
+                                <i class="fas fa-check-double mr-2 text-emerald-500"></i>
+                                <span x-text="bulkBast.selected.length === selectableBastCount() ? 'Batal Pilih Semua' : 'Pilih Semua Yang Bisa Dibuat'"></span>
+                            </button>
+                            <span class="text-gray-500">Terpilih <span class="font-semibold text-gray-800" x-text="bulkBast.selected.length"></span> dari <span x-text="filteredBastItems().length"></span> kegiatan tampil</span>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" x-model="bulkBast.search" placeholder="Cari nama, IDSOBAT, atau kegiatan..."
+                            class="w-full rounded-xl border border-gray-200 pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                    </div>
+
+                    <div class="border border-gray-100 rounded-2xl overflow-hidden">
+                        <div x-show="bulkBast.loading" class="p-10 text-center text-gray-500">
+                            <i class="fas fa-spinner fa-spin mr-2"></i> Memuat kandidat BAST...
+                        </div>
+                        <div x-show="!bulkBast.loading && filteredBastItems().length === 0" class="p-10 text-center text-gray-500">
+                            Tidak ada kandidat BAST untuk filter saat ini.
+                        </div>
+                        <div x-show="!bulkBast.loading && filteredBastItems().length > 0" class="max-h-[420px] overflow-auto divide-y divide-gray-100">
+                            <template x-for="item in filteredBastItems()" :key="String(item.id)">
+                                <label class="flex items-start gap-3 p-4 hover:bg-gray-50" :class="item.spkAda ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'">
+                                    <input type="checkbox" class="mt-1 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" :value="String(item.id)" x-model="bulkBast.selected" :disabled="!item.spkAda">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="font-semibold text-gray-900" x-text="item.namamitra"></span>
+                                            <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-mono" x-text="item.idsobat"></span>
+                                            <span class="px-2 py-0.5 rounded-lg text-xs font-semibold"
+                                                :class="item.spkAda ? 'bg-sky-100 text-sky-700' : 'bg-rose-100 text-rose-700'"
+                                                x-text="item.spkAda ? 'SPK Ada' : 'SPK Belum Ada'"></span>
+                                            <span class="px-2 py-0.5 rounded-lg text-xs font-semibold"
+                                                :class="item.sudahAda ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'"
+                                                x-text="item.sudahAda ? 'Sudah Ada BAST' : 'Belum Ada BAST'"></span>
+                                        </div>
+                                        <p class="text-sm text-gray-700 mt-1" x-text="item.kegiatan"></p>
+                                        <p class="text-xs text-gray-500 mt-1" x-text="`${item.bulan} ${item.tahun}`"></p>
+                                        <p class="text-xs text-gray-500 mt-1" x-show="item.spkSurat">
+                                            SPK: <span class="font-medium text-gray-700" x-text="item.spkSurat"></span>
+                                        </p>
+                                        <p class="text-xs text-gray-500 mt-1" x-show="item.nsurat">
+                                            BAST: <span class="font-medium text-gray-700" x-text="item.nsurat"></span>
+                                            <span x-show="item.tglsurat" x-text="` • ${item.tglsurat}`"></span>
+                                        </p>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-5 md:px-6 py-4 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-between gap-3">
+                    <p class="text-sm text-gray-500">BAST massal hanya aktif untuk kegiatan yang SPK-nya sudah ada.</p>
+                    <div class="flex items-center gap-3">
+                        <button @click="closeBulkBastModal()" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium">Tutup</button>
+                        <button @click="submitBulkBast()" :disabled="bulkBast.submitting || bulkBast.selected.length === 0"
+                            class="px-5 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 font-medium shadow-lg shadow-emerald-500/20">
+                            <i class="fas" :class="bulkBast.submitting ? 'fa-spinner fa-spin mr-2' : 'fa-file-circle-check mr-2'"></i>
+                            Proses BAST
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SBML Warning Alert -->
+    <div x-show="showSbmlWarning" x-cloak
+        class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start space-x-3">
+        <div class="flex-shrink-0">
+            <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-amber-600"></i>
+            </div>
+        </div>
+        <div class="flex-1">
+            <h4 class="font-semibold text-amber-800">Peringatan Batas SBML</h4>
+            <p class="text-amber-700 text-sm mt-1">
+                Terdapat <span class="font-bold" x-text="sbmlExceededCount"></span> mitra yang melebihi batas SBML
+                (Rp 3.346.000). Data tersebut ditandai dengan warna kuning.
+            </p>
+        </div>
+        <button @click="showSbmlWarning = false" class="text-amber-600 hover:text-amber-800">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+        <form id="filter-form" hx-get="/api/rekap/filter" hx-trigger="submit, change from:select delay:500ms"
+            hx-target="#rekap-data-container" hx-swap="innerHTML" hx-indicator=".htmx-indicator">
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+
+                <!-- Tahun Anggaran -->
+                <div class="space-y-1 md:space-y-2">
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun</label>
+                    <div class="relative">
+                        <span class="form-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <select name="tahunAnggaran" id="tahunAnggaran" x-model="tahunAnggaran"
+                            class="w-full select-with-icon text-sm md:text-base">
+                            <option value="">Semua</option>
+                            {{ range .TahunAnggaranOptions }}
+                            <option value="{{ . }}">{{ . }}</option>
+                            {{ end }}
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Bulan -->
+                <div class="space-y-1 md:space-y-2">
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Bulan</label>
+                    <div class="relative">
+                        <span class="form-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </span>
+                        <select name="bulan" id="bulan" x-model="bulan"
+                            class="w-full select-with-icon text-sm md:text-base">
+                            <option value="">Semua</option>
+                            <option value="Januari">Januari</option>
+                            <option value="Februari">Februari</option>
+                            <option value="Maret">Maret</option>
+                            <option value="April">April</option>
+                            <option value="Mei">Mei</option>
+                            <option value="Juni">Juni</option>
+                            <option value="Juli">Juli</option>
+                            <option value="Agustus">Agustus</option>
+                            <option value="September">September</option>
+                            <option value="Oktober">Oktober</option>
+                            <option value="November">November</option>
+                            <option value="Desember">Desember</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Pencarian -->
+                <div class="space-y-1 md:space-y-2">
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Cari</label>
+                    <div class="relative">
+                        <span class="form-icon">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" name="search" id="search" x-model="search"
+                            class="w-full input-with-icon text-sm md:text-base" placeholder="Nama mitra..."
+                            hx-get="/api/rekap/filter" hx-trigger="keyup changed delay:500ms"
+                            hx-target="#rekap-data-container" hx-swap="innerHTML" hx-include="#filter-form">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Filter Actions -->
+            <div
+                class="flex flex-col sm:flex-row items-center justify-between mt-4 pt-4 border-t border-gray-100 gap-3">
+                <div class="htmx-indicator flex items-center space-x-2 text-primary">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span class="text-sm font-medium">Memuat data...</span>
+                </div>
+                <div class="flex items-center space-x-2 md:space-x-3 w-full sm:w-auto">
+                    <button type="button" @click="resetFilters()"
+                        class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 md:px-4 py-2 text-gray-600 hover:text-gray-800 transition font-medium text-sm">
+                        <i class="fas fa-undo mr-2"></i> Reset
+                    </button>
+                    <button type="submit"
+                        class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 md:px-6 py-2 md:py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-medium shadow-lg shadow-primary/30 text-sm md:text-base">
+                        <i class="fas fa-filter mr-2"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-3 gap-3 md:gap-6">
+        <!-- Total Mitra -->
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-3 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Total Mitra</p>
+                    <p class="text-xl md:text-3xl font-bold text-gray-900 mt-0.5 md:mt-1" x-text="totalMitra">0</p>
+                </div>
+                <div
+                    class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-users text-blue-600 text-sm md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Honor -->
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-3 md:p-6">
+            <div class="flex items-center justify-between">
+                <div class="min-w-0 flex-1 mr-2">
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Total Honor</p>
+                    <p class="text-lg md:text-3xl font-bold text-green-600 mt-0.5 md:mt-1 truncate"
+                        x-text="'Rp ' + formatCurrency(totalHonor)">Rp 0</p>
+                </div>
+                <div
+                    class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-money-bill-wave text-green-600 text-sm md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Kegiatan -->
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-3 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Kegiatan</p>
+                    <p class="text-xl md:text-3xl font-bold text-purple-600 mt-0.5 md:mt-1" x-text="totalKegiatan">0</p>
+                </div>
+                <div
+                    class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-purple-100 flex items-center justify-center">
+                    <i class="fas fa-briefcase text-purple-600 text-sm md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SBML Limit Info -->
+    <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200 p-3 md:p-4">
+        <div class="flex items-center space-x-3">
+            <div
+                class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-info-circle text-amber-600 text-sm md:text-base"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs md:text-sm text-amber-800">
+                    <span class="font-semibold">Batas SBML:</span>
+                    <span class="font-bold">Rp 3.346.000</span>
+                    <span class="hidden sm:inline">/ bulan per mitra.</span>
+                    <span class="text-amber-600 ml-1">Klik baris untuk melihat detail kegiatan, SPK & BAST.</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Container -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div id="rekap-data-container">
+            {{ if .RekapData }}
+            <!-- Data rows -->
+            <div class="divide-y divide-gray-100">
+                {{ range $index, $item := .RekapData }}
+                <a href="/dashboard/detail?d={{ encodeLink $item.IDSobat $item.Bulan $item.Tahun }}"
+                    class="block p-4 hover:bg-gray-50 transition-colors cursor-pointer {{ if gtFloat $item.Honor 3346000.0 }}sbml-warning{{ end }}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3 flex-1 min-w-0">
+                            <!-- Number -->
+                            <span
+                                class="w-7 h-7 rounded-full bg-gray-100 text-gray-600 text-xs font-bold flex items-center justify-center flex-shrink-0">{{
+                                add $index 1 }}</span>
+
+                            <!-- Avatar -->
+                            <div
+                                class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow flex-shrink-0">
+                                {{ initials $item.NamaMitra }}
+                            </div>
+
+                            <!-- Info -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center space-x-2 flex-wrap">
+                                    <span
+                                        class="px-2 py-0.5 rounded text-xs font-mono font-semibold bg-blue-50 text-blue-700">{{
+                                        $item.IDSobat }}</span>
+                                    <span class="font-semibold text-gray-900 truncate">{{ $item.NamaMitra }}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ $item.Bulan }} {{ $item.Tahun }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Total Honor & Arrow -->
+                        <div class="flex items-center space-x-3">
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 hidden sm:block">Total Honor</p>
+                                {{ if gtFloat $item.Honor 3346000.0 }}
+                                <p class="font-bold text-amber-600">
+                                    Rp {{ formatCurrency $item.Honor }}
+                                    <span class="text-xs text-red-500 font-normal block sm:inline">(+{{ formatCurrency
+                                        (sub $item.Honor 3346000.0) }})</span>
+                                </p>
+                                {{ else }}
+                                <p class="font-bold text-green-600">Rp {{ formatCurrency $item.Honor }}</p>
+                                {{ end }}
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </div>
+                </a>
+                {{ end }}
+            </div>
+            {{ else }}
+            <!-- Empty State -->
+            <div class="p-8 md:p-12 text-center">
+                <div
+                    class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-inbox text-gray-400 text-2xl md:text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-1">Belum Ada Data</h3>
+                <p class="text-gray-500 text-sm mb-4">Pilih bulan dan tahun untuk melihat data rekap</p>
+            </div>
+            {{ end }}
+        </div>
+
+        <!-- Pagination -->
+        <div class="px-4 py-3 md:py-4 border-t border-gray-100 flex items-center justify-between">
+            <p class="text-xs md:text-sm text-gray-600">
+                <span class="font-semibold" x-text="showing">0-0</span> dari <span x-text="totalData">0</span> mitra
+            </p>
+            <div class="flex items-center space-x-2">
+                <button class="p-2 rounded-lg border border-gray-200 text-gray-500 disabled:opacity-50"
+                    :disabled="currentPage === 1" @click="prevPage()">
+                    <i class="fas fa-chevron-left text-sm"></i>
+                </button>
+                <span class="px-3 py-1 bg-primary text-white rounded-lg text-sm font-semibold"
+                    x-text="currentPage">1</span>
+                <span class="text-gray-400 text-sm">/ <span x-text="totalPages">1</span></span>
+                <button class="p-2 rounded-lg border border-gray-200 text-gray-500 disabled:opacity-50"
+                    :disabled="currentPage === totalPages || totalPages === 0" @click="nextPage()">
+                    <i class="fas fa-chevron-right text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .sbml-warning {
+        background-color: #fef3c7 !important;
+        border-left: 4px solid #f59e0b;
+    }
+
+    .sbml-warning:hover {
+        background-color: #fde68a !important;
+    }
+</style>
+
+<script>
+    function rekapForm() {
+        const rootEl = document.querySelector('[x-data="rekapForm()"]');
+        const getData = (attr, fallback) => {
+            if (rootEl && rootEl.dataset[attr]) {
+                return rootEl.dataset[attr];
+            }
+            return fallback;
+        };
+
+        const SBML_LIMIT = parseInt(getData('sbmlLimit', '3346000')) || 3346000;
+
+        return {
+            tahunAnggaran: '',
+            bulan: '',
+            search: '',
+            toast: {
+                show: false,
+                message: '',
+                type: 'success',
+                timeoutId: null,
+            },
+
+            sbmlLimit: SBML_LIMIT,
+            showSbmlWarning: false,
+            sbmlExceededCount: 0,
+
+            totalMitra: parseInt(getData('totalMitra', '0')) || 0,
+            totalHonor: parseFloat(getData('totalHonor', '0')) || 0,
+            totalKegiatan: parseInt(getData('totalKegiatan', '0')) || 0,
+            actionMenuOpen: false,
+
+            currentPage: 1,
+            totalPages: parseInt(getData('totalPages', '1')) || 1,
+            totalData: parseInt(getData('totalData', '0')) || 0,
+            showing: getData('showing', '0'),
+            bulkSpk: {
+                open: false,
+                loading: false,
+                submitting: false,
+                tanggalSurat: '',
+                search: '',
+                items: [],
+                selected: [],
+            },
+            bulkBast: {
+                open: false,
+                loading: false,
+                submitting: false,
+                tanggalSurat: '',
+                search: '',
+                items: [],
+                selected: [],
+            },
+
+            resetFilters() {
+                this.tahunAnggaran = '';
+                this.bulan = '';
+                this.search = '';
+                this.currentPage = 1;
+                htmx.trigger('#filter-form', 'submit');
+            },
+
+            prevPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.loadPage();
+                }
+            },
+
+            nextPage() {
+                if (this.currentPage < this.totalPages) {
+                    this.currentPage++;
+                    this.loadPage();
+                }
+            },
+
+            loadPage() {
+                const form = document.getElementById('filter-form');
+                let pageInput = form.querySelector('input[name="page"]');
+                if (!pageInput) {
+                    pageInput = document.createElement('input');
+                    pageInput.type = 'hidden';
+                    pageInput.name = 'page';
+                    form.appendChild(pageInput);
+                }
+                pageInput.value = this.currentPage;
+                htmx.trigger(form, 'submit');
+            },
+
+            formatCurrency(value) {
+                return new Intl.NumberFormat('id-ID').format(value);
+            },
+
+            showToast(message, type = 'success') {
+                this.toast.message = message;
+                this.toast.type = type;
+                this.toast.show = true;
+                if (this.toast.timeoutId) {
+                    clearTimeout(this.toast.timeoutId);
+                }
+                this.toast.timeoutId = setTimeout(() => {
+                    this.toast.show = false;
+                }, 3500);
+            },
+
+            buildDownloadUrl(baseUrl) {
+                const params = new URLSearchParams();
+                if (this.tahunAnggaran) params.set('tahunAnggaran', this.tahunAnggaran);
+                if (this.bulan) params.set('bulan', this.bulan);
+                if (this.search) params.set('search', this.search);
+
+                const query = params.toString();
+                return query ? `${baseUrl}?${query}` : baseUrl;
+            },
+
+            downloadSpkUrl() {
+                return this.buildDownloadUrl('/api/rekap/spk/download-all');
+            },
+
+            downloadBastUrl() {
+                return this.buildDownloadUrl('/api/rekap/bast/download-all');
+            },
+
+            spkItemKey(item) {
+                return `${item.idsobat}|${item.bulan}|${item.tahun}`;
+            },
+
+            filteredSpkItems() {
+                const query = this.bulkSpk.search.trim().toLowerCase();
+                if (!query) return this.bulkSpk.items;
+                return this.bulkSpk.items.filter(item =>
+                    `${item.namamitra} ${item.idsobat} ${item.bulan} ${item.tahun}`.toLowerCase().includes(query)
+                );
+            },
+
+            filteredBastItems() {
+                const query = this.bulkBast.search.trim().toLowerCase();
+                if (!query) return this.bulkBast.items;
+                return this.bulkBast.items.filter(item =>
+                    `${item.namamitra} ${item.idsobat} ${item.kegiatan} ${item.bulan} ${item.tahun}`.toLowerCase().includes(query)
+                );
+            },
+
+            selectableSpkCount() {
+                return this.filteredSpkItems().length;
+            },
+
+            selectableBastCount() {
+                return this.filteredBastItems().filter(item => item.spkAda).length;
+            },
+
+            toggleSelectAllSpk() {
+                if (this.bulkSpk.selected.length === this.selectableSpkCount()) {
+                    this.bulkSpk.selected = [];
+                    return;
+                }
+                this.bulkSpk.selected = this.filteredSpkItems().map(item => this.spkItemKey(item));
+            },
+
+            toggleSelectAllBast() {
+                const selectable = this.filteredBastItems().filter(item => item.spkAda).map(item => String(item.id));
+                if (this.bulkBast.selected.length === selectable.length) {
+                    this.bulkBast.selected = [];
+                    return;
+                }
+                this.bulkBast.selected = selectable;
+            },
+
+            async fetchBulkOptions(url) {
+                const response = await fetch(this.buildDownloadUrl(url), {
+                    headers: { 'Accept': 'application/json' },
+                });
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || 'Gagal memuat data');
+                }
+                return response.json();
+            },
+
+            async parseJsonResponse(response) {
+                const raw = await response.text();
+                try {
+                    return raw ? JSON.parse(raw) : {};
+                } catch (_) {
+                    return { error: raw || 'Terjadi kesalahan pada server' };
+                }
+            },
+
+            async openSpkBulkModal() {
+                this.actionMenuOpen = false;
+                this.bulkSpk.open = true;
+                this.bulkSpk.loading = true;
+                this.bulkSpk.selected = [];
+                this.bulkSpk.items = [];
+                this.bulkSpk.tanggalSurat = '';
+                this.bulkSpk.search = '';
+                try {
+                    const result = await this.fetchBulkOptions('/api/rekap/spk/bulk-options');
+                    this.bulkSpk.items = result.data || [];
+                } catch (error) {
+                    console.error(error);
+                    this.showToast('Gagal memuat kandidat SPK', 'error');
+                } finally {
+                    this.bulkSpk.loading = false;
+                }
+            },
+
+            closeBulkSpkModal() {
+                this.bulkSpk.open = false;
+            },
+
+            async openBastBulkModal() {
+                this.actionMenuOpen = false;
+                this.bulkBast.open = true;
+                this.bulkBast.loading = true;
+                this.bulkBast.selected = [];
+                this.bulkBast.items = [];
+                this.bulkBast.tanggalSurat = '';
+                this.bulkBast.search = '';
+                try {
+                    const result = await this.fetchBulkOptions('/api/rekap/bast/bulk-options');
+                    this.bulkBast.items = result.data || [];
+                } catch (error) {
+                    console.error(error);
+                    this.showToast('Gagal memuat kandidat BAST', 'error');
+                } finally {
+                    this.bulkBast.loading = false;
+                }
+            },
+
+            closeBulkBastModal() {
+                this.bulkBast.open = false;
+            },
+
+            async submitBulkSpk() {
+                if (!this.bulkSpk.tanggalSurat) {
+                    this.showToast('Tanggal surat SPK wajib diisi', 'error');
+                    return;
+                }
+
+                const items = this.bulkSpk.items
+                    .filter(item => this.bulkSpk.selected.includes(this.spkItemKey(item)))
+                    .map(item => ({
+                        idsobat: item.idsobat,
+                        bulan: item.bulan,
+                        tahun: item.tahun,
+                    }));
+
+                if (items.length === 0) {
+                    this.showToast('Pilih minimal satu mitra untuk SPK', 'error');
+                    return;
+                }
+
+                this.bulkSpk.submitting = true;
+                try {
+                    const response = await fetch('/api/rekap/spk/create-bulk', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tanggal_surat: this.bulkSpk.tanggalSurat,
+                            items,
+                        }),
+                    });
+
+                    const result = await this.parseJsonResponse(response);
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.error || 'Gagal membuat SPK massal');
+                    }
+
+                    this.showToast(`Berhasil memproses ${result.created} SPK`, 'success');
+                    this.closeBulkSpkModal();
+                    htmx.trigger('#filter-form', 'submit');
+                } catch (error) {
+                    console.error(error);
+                    this.showToast(error.message || 'Gagal membuat SPK massal', 'error');
+                } finally {
+                    this.bulkSpk.submitting = false;
+                }
+            },
+
+            async submitBulkBast() {
+                if (!this.bulkBast.tanggalSurat) {
+                    this.showToast('Tanggal surat BAST wajib diisi', 'error');
+                    return;
+                }
+
+                const items = this.bulkBast.items
+                    .filter(item => this.bulkBast.selected.includes(String(item.id)) && item.spkAda)
+                    .map(item => ({ id: item.id }));
+
+                if (items.length === 0) {
+                    this.showToast('Pilih minimal satu kegiatan untuk BAST', 'error');
+                    return;
+                }
+
+                this.bulkBast.submitting = true;
+                try {
+                    const response = await fetch('/api/rekap/bast/create-bulk', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tanggal_surat: this.bulkBast.tanggalSurat,
+                            items,
+                        }),
+                    });
+
+                    const result = await this.parseJsonResponse(response);
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.error || 'Gagal membuat BAST massal');
+                    }
+
+                    this.showToast(`Berhasil memproses ${result.created} BAST`, 'success');
+                    this.closeBulkBastModal();
+                    htmx.trigger('#filter-form', 'submit');
+                } catch (error) {
+                    console.error(error);
+                    this.showToast(error.message || 'Gagal membuat BAST massal', 'error');
+                } finally {
+                    this.bulkBast.submitting = false;
+                }
+            },
+
+            init() {
+                document.body.addEventListener('htmx:afterSwap', (event) => {
+                    if (event.detail.target.id === 'rekap-data-container') {
+                        const xhr = event.detail.xhr;
+                        if (xhr) {
+                            const totalMitra = xhr.getResponseHeader('X-Total-Mitra');
+                            const totalHonor = xhr.getResponseHeader('X-Total-Honor');
+                            const totalKegiatan = xhr.getResponseHeader('X-Total-Kegiatan');
+                            const totalData = xhr.getResponseHeader('X-Total-Data');
+                            const totalPages = xhr.getResponseHeader('X-Total-Pages');
+                            const showing = xhr.getResponseHeader('X-Showing');
+                            const sbmlExceeded = xhr.getResponseHeader('X-Sbml-Exceeded');
+
+                            if (totalMitra) this.totalMitra = parseInt(totalMitra);
+                            if (totalHonor) this.totalHonor = parseFloat(totalHonor);
+                            if (totalKegiatan) this.totalKegiatan = parseInt(totalKegiatan);
+                            if (totalData) this.totalData = parseInt(totalData);
+                            if (totalPages) this.totalPages = parseInt(totalPages);
+                            if (showing) this.showing = showing;
+                            if (sbmlExceeded) {
+                                this.sbmlExceededCount = parseInt(sbmlExceeded);
+                                this.showSbmlWarning = this.sbmlExceededCount > 0;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
+</script>
+{{ end }}

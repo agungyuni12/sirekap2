@@ -1,0 +1,591 @@
+{{ define "content" }}
+<div class="space-y-6 md:space-y-8" x-data="suratPage()" x-init="init()">
+
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Nomor Surat</h2>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Kelola dan pantau nomor surat SPK dan BAST yang sudah diterbitkan.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <nav class="hidden md:flex items-center space-x-2 text-sm">
+                <a href="/dashboard" class="text-gray-500 hover:text-primary transition">Dashboard</a>
+                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                <span class="text-primary font-medium">Nomor Surat</span>
+            </nav>
+            <button @click="openCreateModal()"
+                class="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-medium shadow-lg shadow-primary/30">
+                <i class="fas fa-plus mr-2"></i> Tambah Nomor Surat
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Total Surat</p>
+                    <p class="text-2xl md:text-3xl font-bold text-gray-900 mt-1" x-text="summary.totalData">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-envelope-open-text text-blue-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">SPK</p>
+                    <p class="text-2xl md:text-3xl font-bold text-emerald-600 mt-1" x-text="summary.totalSPK">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-emerald-100 flex items-center justify-center">
+                    <i class="fas fa-file-signature text-emerald-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">BAST</p>
+                    <p class="text-2xl md:text-3xl font-bold text-amber-600 mt-1" x-text="summary.totalBAST">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
+                    <i class="fas fa-file-alt text-amber-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl md:rounded-2xl border border-purple-200 p-4 md:p-6">
+            <p class="text-xs md:text-sm font-medium text-purple-700">Filter Aktif</p>
+            <p class="text-sm md:text-base font-semibold text-purple-900 mt-2" x-text="activeFilterLabel()">Semua surat</p>
+            <p class="text-xs text-purple-700 mt-2">Daftar ini memuat nomor surat manual dan yang dibuat dari proses SPK/BAST.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Filter Tahun</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </span>
+                    <select x-model="filters.tahun" @change="loadData()" class="w-full select-with-icon">
+                        <option value="">Semua Tahun</option>
+                        <template x-for="tahun in tahunOptions" :key="tahun">
+                            <option :value="tahun" x-text="tahun"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe Surat</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-tags"></i>
+                    </span>
+                    <select x-model="filters.tujuan" @change="loadData()" class="w-full select-with-icon">
+                        <option value="">Semua Tipe</option>
+                        <option value="SPK">SPK</option>
+                        <option value="BAST">BAST</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Cari Surat</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" x-model="filters.search" @input.debounce.400ms="loadData()"
+                        class="w-full input-with-icon" placeholder="Nama mitra / nomor surat...">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-100">
+            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                <template x-if="loading">
+                    <span class="inline-flex items-center text-primary">
+                        <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data...
+                    </span>
+                </template>
+                <template x-if="!loading">
+                    <span x-text="summary.totalData + ' surat ditampilkan'">0 surat ditampilkan</span>
+                </template>
+            </div>
+            <button type="button" @click="resetFilters()"
+                class="inline-flex items-center justify-center px-4 py-2 text-gray-600 hover:text-gray-800 transition font-medium">
+                <i class="fas fa-undo mr-2"></i> Reset Filter
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-4 md:px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-900">Daftar Surat</h3>
+            <p class="text-sm text-gray-500 mt-1">Riwayat nomor surat per mitra, periode, dan klasifikasi.</p>
+        </div>
+
+        <template x-if="items.length === 0 && !loading">
+            <div class="p-8 md:p-12 text-center">
+                <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-folder-open text-gray-400 text-2xl md:text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-1">Belum Ada Surat</h3>
+                <p class="text-gray-500 text-sm">Tambah nomor surat baru atau ubah filter pencarian.</p>
+            </div>
+        </template>
+
+        <div class="hidden md:block overflow-x-auto" x-show="items.length > 0">
+            <table class="min-w-full divide-y divide-gray-100">
+                <thead class="bg-gray-50">
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        <th class="px-6 py-4">No</th>
+                        <th class="px-6 py-4">Mitra</th>
+                        <th class="px-6 py-4">Periode</th>
+                        <th class="px-6 py-4">Tipe</th>
+                        <th class="px-6 py-4">Kode</th>
+                        <th class="px-6 py-4">Tanggal</th>
+                        <th class="px-6 py-4">Nomor Surat</th>
+                        <th class="px-6 py-4">Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <template x-for="(item, index) in items" :key="item.id">
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-sm text-gray-500" x-text="index + 1"></td>
+                            <td class="px-6 py-4">
+                                <p class="font-semibold text-gray-900" x-text="item.nmitra"></p>
+                                <p class="text-xs text-gray-500 mt-1 font-mono" x-text="item.idsobat"></p>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                <span x-text="item.sbulan"></span> <span x-text="item.stahun"></span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
+                                    :class="item.stujuan === 'SPK' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                                    x-text="item.stujuan"></span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-700" x-text="item.nmrsurat || '-'"></td>
+                            <td class="px-6 py-4 text-sm text-gray-700" x-text="formatDate(item.tglsurat)"></td>
+                            <td class="px-6 py-4 text-sm font-semibold text-blue-700 break-all" x-text="item.nsurat"></td>
+                            <td class="px-6 py-4 text-sm text-gray-700" x-text="item.keterangan || '-'"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="md:hidden divide-y divide-gray-100" x-show="items.length > 0">
+            <template x-for="(item, index) in items" :key="item.id">
+                <div class="p-4 space-y-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <p class="text-xs text-gray-500">#<span x-text="index + 1"></span> • <span x-text="item.sbulan"></span> <span x-text="item.stahun"></span></p>
+                            <h4 class="font-semibold text-gray-900 mt-1" x-text="item.nmitra"></h4>
+                            <p class="text-xs text-gray-500 font-mono mt-1" x-text="item.idsobat"></p>
+                        </div>
+                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
+                            :class="item.stujuan === 'SPK' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                            x-text="item.stujuan"></span>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-3 space-y-2 text-sm">
+                        <p><span class="font-medium text-gray-800">Kode:</span> <span x-text="item.nmrsurat || '-'"></span></p>
+                        <p><span class="font-medium text-gray-800">Tanggal:</span> <span x-text="formatDate(item.tglsurat)"></span></p>
+                        <p class="break-all"><span class="font-medium text-gray-800">Nomor:</span> <span class="text-blue-700 font-semibold" x-text="item.nsurat"></span></p>
+                        <p><span class="font-medium text-gray-800">Keterangan:</span> <span x-text="item.keterangan || '-'"></span></p>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <div x-show="showCreateModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8 text-center">
+            <div class="fixed inset-0 bg-gray-900/70" @click="closeCreateModal()"></div>
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-3xl text-left overflow-hidden">
+                <div class="px-5 md:px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Tambah Nomor Surat</h3>
+                        <p class="text-sm text-gray-500 mt-1">Nomor surat akan dibuat otomatis mengikuti format sistem saat ini.</p>
+                    </div>
+                    <button @click="closeCreateModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 transition text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form @submit.prevent="submitForm()">
+                    <div class="p-5 md:p-6 space-y-5">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Mitra <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" x-model="form.mitraLabel" @input.debounce.300ms="searchMitra()"
+                                    @focus="showMitraList = true" @click.away="showMitraList = false"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="Ketik SOBAT ID / nama mitra">
+                                <div x-show="showMitraList && mitraResults.length > 0" x-cloak
+                                    class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 max-h-56 overflow-y-auto">
+                                    <template x-for="mitra in mitraResults" :key="mitra.idsobat">
+                                        <button type="button" @click="selectMitra(mitra)"
+                                            class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0">
+                                            <p class="font-medium text-gray-800" x-text="mitra.nama"></p>
+                                            <p class="text-xs text-gray-500 font-mono mt-1" x-text="mitra.idsobat"></p>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500" x-show="form.idsobat">Terpilih: <span class="font-mono" x-text="form.idsobat"></span></p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Bulan <span class="text-red-500">*</span></label>
+                                <select x-model="form.sbulan" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="">Pilih bulan</option>
+                                    <option value="Januari">Januari</option>
+                                    <option value="Februari">Februari</option>
+                                    <option value="Maret">Maret</option>
+                                    <option value="April">April</option>
+                                    <option value="Mei">Mei</option>
+                                    <option value="Juni">Juni</option>
+                                    <option value="Juli">Juli</option>
+                                    <option value="Agustus">Agustus</option>
+                                    <option value="September">September</option>
+                                    <option value="Oktober">Oktober</option>
+                                    <option value="November">November</option>
+                                    <option value="Desember">Desember</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Tahun <span class="text-red-500">*</span></label>
+                                <input type="number" min="2000" max="2100" x-model="form.stahun"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="2026">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Tipe Surat <span class="text-red-500">*</span></label>
+                                <select x-model="form.stujuan" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="">Pilih tipe surat</option>
+                                    <option value="SPK">SPK</option>
+                                    <option value="BAST">BAST</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Tanggal Surat <span class="text-red-500">*</span></label>
+                                <input type="date" x-model="form.tglsurat"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Keterangan / Nama Kegiatan
+                                <span class="text-red-500" x-show="form.stujuan === 'BAST'">*</span>
+                            </label>
+                            <textarea x-model="form.keterangan" rows="3"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                                :placeholder="form.stujuan === 'BAST' ? 'Wajib diisi untuk BAST, misalnya nama kegiatan' : 'Opsional untuk SPK'"></textarea>
+                            <p class="text-xs text-gray-500">Untuk BAST, keterangan dipakai sebagai pembeda per kegiatan.</p>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4">
+                            <p class="text-xs uppercase tracking-wider text-blue-700 font-semibold">Preview Format</p>
+                            <p class="text-sm text-blue-800 mt-2">Nomor akhir akan dibuat otomatis dengan pola `B-DD.MM.X/5205.PPK/TIPE.P/TAHUN`.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 px-5 md:px-6 py-4 flex items-center justify-end gap-3">
+                        <button type="button" @click="closeCreateModal()"
+                            class="px-4 py-2.5 text-gray-700 hover:text-gray-900 font-medium">
+                            Batal
+                        </button>
+                        <button type="submit" :disabled="submitting"
+                            class="inline-flex items-center px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-medium shadow-lg shadow-primary/30 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <i class="fas fa-spinner fa-spin mr-2" x-show="submitting"></i>
+                            <span x-text="submitting ? 'Menyimpan...' : 'Simpan Nomor Surat'"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div x-data="toastNotification()" x-init="init()" @show-toast.window="showToast($event.detail)"
+        class="fixed top-4 right-4 z-[100] space-y-2">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div x-show="toast.show" x-cloak x-transition:enter="transition ease-out duration-300 transform"
+                x-transition:enter-start="opacity-0 translate-x-full" x-transition:enter-end="opacity-100 translate-x-0"
+                x-transition:leave="transition ease-in duration-200 transform"
+                x-transition:leave-start="opacity-100 translate-x-0" x-transition:leave-end="opacity-0 translate-x-full"
+                :class="{
+                    'bg-green-500': toast.type === 'success',
+                    'bg-red-500': toast.type === 'error',
+                    'bg-amber-500': toast.type === 'warning'
+                }" class="flex items-center px-4 py-3 rounded-xl shadow-lg text-white min-w-[280px] max-w-md">
+                <div class="flex-shrink-0 mr-3">
+                    <i :class="{
+                        'fas fa-check-circle': toast.type === 'success',
+                        'fas fa-times-circle': toast.type === 'error',
+                        'fas fa-exclamation-triangle': toast.type === 'warning'
+                    }" class="text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-semibold" x-text="toast.title"></p>
+                    <p class="text-sm opacity-90" x-text="toast.message"></p>
+                </div>
+                <button @click="removeToast(toast.id)" class="ml-3 hover:opacity-75">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </template>
+    </div>
+
+</div>
+
+<style>
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
+
+<script>
+    function toastNotification() {
+        return {
+            toasts: [],
+            nextId: 1,
+
+            init() {},
+
+            showToast(detail) {
+                const id = this.nextId++;
+                this.toasts.push({
+                    id,
+                    type: detail.type || 'success',
+                    title: detail.title || '',
+                    message: detail.message || '',
+                    show: true
+                });
+
+                setTimeout(() => this.removeToast(id), 3000);
+            },
+
+            removeToast(id) {
+                const index = this.toasts.findIndex((toast) => toast.id === id);
+                if (index === -1) return;
+
+                this.toasts[index].show = false;
+                setTimeout(() => {
+                    this.toasts = this.toasts.filter((toast) => toast.id !== id);
+                }, 300);
+            }
+        }
+    }
+
+    function showToast(type, title, message) {
+        window.dispatchEvent(new CustomEvent('show-toast', {
+            detail: { type, title, message }
+        }));
+    }
+
+    function suratPage() {
+        return {
+            loading: false,
+            submitting: false,
+            showCreateModal: false,
+            showMitraList: false,
+            items: [],
+            tahunOptions: [],
+            mitraResults: [],
+            summary: {
+                totalData: 0,
+                totalSPK: 0,
+                totalBAST: 0
+            },
+            filters: {
+                tahun: '',
+                tujuan: '',
+                search: ''
+            },
+            form: {
+                idsobat: '',
+                nmitra: '',
+                mitraLabel: '',
+                sbulan: '',
+                stahun: '',
+                stujuan: '',
+                tglsurat: '',
+                keterangan: ''
+            },
+
+            init() {
+                this.loadData();
+            },
+
+            defaultForm() {
+                return {
+                    idsobat: '',
+                    nmitra: '',
+                    mitraLabel: '',
+                    sbulan: '',
+                    stahun: this.filters.tahun || '',
+                    stujuan: '',
+                    tglsurat: '',
+                    keterangan: ''
+                };
+            },
+
+            activeFilterLabel() {
+                const parts = [];
+                if (this.filters.tahun) parts.push(`Tahun ${this.filters.tahun}`);
+                if (this.filters.tujuan) parts.push(this.filters.tujuan);
+                if (this.filters.search) parts.push(`"${this.filters.search}"`);
+                return parts.length > 0 ? parts.join(' • ') : 'Semua surat';
+            },
+
+            resetFilters() {
+                this.filters.tahun = '';
+                this.filters.tujuan = '';
+                this.filters.search = '';
+                this.loadData();
+            },
+
+            async loadData() {
+                this.loading = true;
+                try {
+                    const params = new URLSearchParams();
+                    if (this.filters.tahun) params.set('tahun', this.filters.tahun);
+                    if (this.filters.tujuan) params.set('tujuan', this.filters.tujuan);
+                    if (this.filters.search) params.set('search', this.filters.search);
+
+                    const response = await fetch(`/api/surat?${params.toString()}`);
+                    if (!response.ok) throw new Error('Failed to load data');
+
+                    const data = await response.json();
+                    this.items = data.data || [];
+                    this.tahunOptions = data.tahunOptions || [];
+                    this.summary.totalData = data.totalData || 0;
+                    this.summary.totalSPK = data.totalSPK || 0;
+                    this.summary.totalBAST = data.totalBAST || 0;
+                } catch (error) {
+                    console.error('Error loading surat:', error);
+                    showToast('error', 'Gagal', 'Gagal memuat data surat');
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            openCreateModal() {
+                this.form = this.defaultForm();
+                this.mitraResults = [];
+                this.showMitraList = false;
+                this.showCreateModal = true;
+            },
+
+            closeCreateModal() {
+                if (this.submitting) return;
+                this.showCreateModal = false;
+                this.form = this.defaultForm();
+                this.mitraResults = [];
+                this.showMitraList = false;
+            },
+
+            async searchMitra() {
+                const query = (this.form.mitraLabel || '').trim();
+                if (query !== (this.form.nmitra || '').trim()) {
+                    this.form.idsobat = '';
+                    this.form.nmitra = '';
+                }
+                if (query.length < 2) {
+                    this.mitraResults = [];
+                    this.form.idsobat = '';
+                    this.form.nmitra = '';
+                    return;
+                }
+
+                try {
+                    const params = new URLSearchParams({ query });
+                    if (this.form.stahun) params.set('tahun', this.form.stahun);
+
+                    const response = await fetch(`/api/mitra/search?${params.toString()}`);
+                    if (!response.ok) throw new Error('Failed to search mitra');
+
+                    this.mitraResults = await response.json();
+                    this.showMitraList = true;
+                } catch (error) {
+                    console.error('Error searching mitra:', error);
+                    this.mitraResults = [];
+                }
+            },
+
+            selectMitra(mitra) {
+                this.form.idsobat = mitra.idsobat || '';
+                this.form.nmitra = mitra.nama || '';
+                this.form.mitraLabel = mitra.nama || '';
+                this.showMitraList = false;
+                this.mitraResults = [];
+            },
+
+            async submitForm() {
+                this.submitting = true;
+                const payload = {
+                    idsobat: (this.form.idsobat || '').trim(),
+                    nmitra: (this.form.nmitra || '').trim(),
+                    sbulan: (this.form.sbulan || '').trim(),
+                    stahun: String(this.form.stahun || '').trim(),
+                    stujuan: (this.form.stujuan || '').trim(),
+                    tglsurat: (this.form.tglsurat || '').trim(),
+                    keterangan: (this.form.keterangan || '').trim()
+                };
+
+                try {
+                    const response = await fetch('/api/surat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const message = await response.text();
+                        throw new Error(message || 'Request failed');
+                    }
+
+                    const result = await response.json();
+                    this.showCreateModal = false;
+                    this.form = this.defaultForm();
+                    await this.loadData();
+                    showToast('success', 'Berhasil', result.nsurat || 'Nomor surat berhasil disimpan');
+                } catch (error) {
+                    console.error('Error creating surat:', error);
+                    showToast('error', 'Gagal', error.message || 'Gagal menyimpan nomor surat');
+                } finally {
+                    this.submitting = false;
+                }
+            },
+
+            formatDate(value) {
+                if (!value) return '-';
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return value;
+                return new Intl.DateTimeFormat('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                }).format(date);
+            }
+        }
+    }
+</script>
+{{ end }}

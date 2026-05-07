@@ -1,0 +1,507 @@
+{{ define "content" }}
+<div class="space-y-6 md:space-y-8" x-data="kalenderPage()" x-init="init()">
+
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Kalender Matriks</h2>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Lihat agenda perjalanan per hari dari data matriks, lalu telusuri detail pegawai yang sedang bertugas.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <nav class="hidden md:flex items-center space-x-2 text-sm">
+                <a href="/dashboard" class="text-gray-500 hover:text-primary transition">Dashboard</a>
+                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                <span class="text-primary font-medium">Kalender</span>
+            </nav>
+            <a href="/dashboard/monitoring"
+                class="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-medium shadow-lg shadow-primary/30">
+                <i class="fas fa-table mr-2"></i> Lihat Monitoring
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Bulan Aktif</p>
+                    <p class="text-lg md:text-2xl font-bold text-gray-900 mt-1" x-text="currentMonthLabel()"></p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-calendar-alt text-blue-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Agenda Bulan Ini</p>
+                    <p class="text-2xl md:text-3xl font-bold text-emerald-600 mt-1" x-text="summary.totalData">0</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-emerald-100 flex items-center justify-center">
+                    <i class="fas fa-route text-emerald-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium text-gray-500">Hari Dipilih</p>
+                    <p class="text-lg md:text-2xl font-bold text-amber-600 mt-1" x-text="selectedDateLabel()">Belum dipilih</p>
+                </div>
+                <div class="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
+                    <i class="fas fa-thumbtack text-amber-600 text-lg md:text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl md:rounded-2xl border border-purple-200 p-4 md:p-6">
+            <p class="text-xs md:text-sm font-medium text-purple-700">Filter Aktif</p>
+            <p class="text-sm md:text-base font-semibold text-purple-900 mt-2" x-text="activeFilterLabel()">Semua agenda</p>
+            <p class="text-xs text-purple-700 mt-2">Kalender memuat perjalanan yang rentang tanggalnya bersinggungan dengan bulan aktif.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-calendar"></i>
+                    </span>
+                    <select x-model.number="view.year" @change="loadData()" class="w-full select-with-icon">
+                        <template x-for="tahun in tahunOptions" :key="tahun">
+                            <option :value="Number(tahun)" x-text="tahun"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Bulan</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </span>
+                    <select x-model.number="view.month" @change="loadData()" class="w-full select-with-icon">
+                        <template x-for="bulan in monthOptions" :key="bulan.value">
+                            <option :value="bulan.value" x-text="bulan.label"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Perjalanan</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-tags"></i>
+                    </span>
+                    <select x-model="filters.jenis" @change="loadData()" class="w-full select-with-icon">
+                        <option value="">Semua Jenis</option>
+                        <option value="Transport Lokal">Transport Lokal</option>
+                        <option value="Perjalanan Dinas">Perjalanan Dinas</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Cari Pegawai / Kegiatan</label>
+                <div class="relative">
+                    <span class="form-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" x-model="filters.search" @input.debounce.400ms="loadData()"
+                        class="w-full input-with-icon" placeholder="Nama, NIP, kegiatan...">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-100">
+            <div class="flex items-center gap-2">
+                <button type="button" @click="previousMonth()"
+                    class="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button type="button" @click="goToToday()"
+                    class="inline-flex items-center justify-center px-4 h-11 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition font-medium">
+                    Hari Ini
+                </button>
+                <button type="button" @click="nextMonth()"
+                    class="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                <template x-if="loading">
+                    <span class="inline-flex items-center text-primary">
+                        <i class="fas fa-spinner fa-spin mr-2"></i> Memuat kalender...
+                    </span>
+                </template>
+                <template x-if="!loading">
+                    <span x-text="summary.totalData + ' agenda dalam bulan ini'">0 agenda dalam bulan ini</span>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
+                <template x-for="day in weekDays" :key="day">
+                    <div class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-500" x-text="day"></div>
+                </template>
+            </div>
+
+            <div class="grid grid-cols-7">
+                <template x-for="day in calendarDays" :key="day.key">
+                    <button type="button" @click="selectDate(day.date)"
+                        class="min-h-[125px] md:min-h-[145px] border-b border-r border-gray-100 p-2 md:p-3 text-left transition relative"
+                        :class="dayCellClass(day)">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
+                                :class="dayNumberClass(day)" x-text="day.label"></span>
+                            <template x-if="day.events.length > 0">
+                                <span class="inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-xs font-semibold bg-primary/10 text-primary"
+                                    x-text="day.events.length"></span>
+                            </template>
+                        </div>
+
+                        <div class="mt-2 space-y-1">
+                            <template x-for="event in day.events.slice(0, 3)" :key="event.id + '-' + day.key">
+                                <div class="rounded-lg px-2.5 py-2 text-[11px] leading-snug"
+                                    :class="eventBadgeClass(event)">
+                                    <p class="font-semibold truncate" x-text="event.nama"></p>
+                                    <p class="truncate opacity-90" x-text="event.kegiatan"></p>
+                                </div>
+                            </template>
+                            <template x-if="day.events.length > 3">
+                                <p class="text-[11px] font-medium text-gray-500 px-1" x-text="'+' + (day.events.length - 3) + ' agenda lainnya'"></p>
+                            </template>
+                        </div>
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <h3 class="font-semibold text-gray-900">Agenda Harian</h3>
+                    <p class="text-sm text-gray-500 mt-1" x-text="selectedDateLabelLong()">Pilih tanggal pada kalender untuk melihat detail agenda.</p>
+                </div>
+
+                <template x-if="selectedEvents().length === 0">
+                    <div class="p-6 text-center">
+                        <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-calendar-check text-gray-400 text-xl"></i>
+                        </div>
+                        <p class="text-sm text-gray-500">Tidak ada agenda pada tanggal yang dipilih.</p>
+                    </div>
+                </template>
+
+                <div class="divide-y divide-gray-100" x-show="selectedEvents().length > 0">
+                    <template x-for="event in selectedEvents()" :key="'selected-' + event.id">
+                        <div class="p-4 space-y-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-semibold text-gray-900" x-text="event.nama"></p>
+                                    <p class="text-xs text-gray-500 font-mono mt-1" x-text="event.nip"></p>
+                                </div>
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
+                                    :class="event.jenisPerjalanan === 'Transport Lokal' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                                    x-text="event.jenisPerjalanan"></span>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-3 text-sm space-y-2">
+                                <p><span class="font-medium text-gray-800">Kegiatan:</span> <span x-text="event.kegiatan"></span></p>
+                                <p><span class="font-medium text-gray-800">Rentang:</span> <span x-text="formatDate(event.tanggalMulai) + ' - ' + formatDate(event.tanggalSelesai)"></span></p>
+                                <p><span class="font-medium text-gray-800">Rute:</span> <span x-text="(event.asal || '-') + ' → ' + (event.tujuan || '-')"></span></p>
+                                <p><span class="font-medium text-gray-800">Surtug:</span> <span x-text="event.noSurtug || '-'"></span></p>
+                                <p><span class="font-medium text-gray-800">SPD:</span> <span x-text="event.noSpd || '-'"></span></p>
+                                <p><span class="font-medium text-gray-800">Jumlah:</span> <span class="font-semibold text-blue-700" x-text="'Rp ' + formatCurrency(event.jumlah)"></span></p>
+                            </div>
+
+                            <a :href="'/dashboard/monitoring'"
+                                class="inline-flex items-center text-sm font-medium text-primary hover:text-primary-dark transition">
+                                <i class="fas fa-pen mr-2"></i> Lanjut edit di monitoring
+                            </a>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <h3 class="font-semibold text-gray-900">Keterangan Warna</h3>
+                <div class="mt-4 space-y-3 text-sm">
+                    <div class="flex items-center gap-3">
+                        <span class="w-4 h-4 rounded bg-emerald-400"></span>
+                        <span class="text-gray-700">Transport Lokal</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-4 h-4 rounded bg-amber-400"></span>
+                        <span class="text-gray-700">Perjalanan Dinas</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-4 h-4 rounded bg-blue-500"></span>
+                        <span class="text-gray-700">Hari yang sedang dipilih</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function kalenderPage() {
+        const now = new Date();
+        const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        return {
+            loading: false,
+            items: [],
+            tahunOptions: [String(now.getFullYear())],
+            selectedDate: todayString,
+            view: {
+                year: now.getFullYear(),
+                month: now.getMonth() + 1
+            },
+            filters: {
+                search: '',
+                jenis: ''
+            },
+            summary: {
+                totalData: 0
+            },
+            weekDays: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
+            monthOptions: [
+                { value: 1, label: 'Januari' },
+                { value: 2, label: 'Februari' },
+                { value: 3, label: 'Maret' },
+                { value: 4, label: 'April' },
+                { value: 5, label: 'Mei' },
+                { value: 6, label: 'Juni' },
+                { value: 7, label: 'Juli' },
+                { value: 8, label: 'Agustus' },
+                { value: 9, label: 'September' },
+                { value: 10, label: 'Oktober' },
+                { value: 11, label: 'November' },
+                { value: 12, label: 'Desember' }
+            ],
+
+            init() {
+                this.loadData();
+            },
+
+            async loadData() {
+                this.loading = true;
+                try {
+                    const params = new URLSearchParams({
+                        year: String(this.view.year),
+                        month: String(this.view.month),
+                        search: this.filters.search || '',
+                        jenis: this.filters.jenis || ''
+                    });
+
+                    const response = await fetch(`/api/matriks/calendar?${params.toString()}`);
+                    if (!response.ok) throw new Error('Failed to load calendar');
+                    const result = await response.json();
+
+                    this.items = result.data || [];
+                    this.tahunOptions = (result.tahunOptions && result.tahunOptions.length > 0) ? result.tahunOptions : [String(this.view.year)];
+                    this.summary.totalData = result.totalData || 0;
+
+                    if (!this.isDateInCurrentMonth(this.selectedDate)) {
+                        this.selectedDate = this.firstDayString();
+                    }
+                } catch (error) {
+                    console.error('Error loading kalender:', error);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            currentMonthLabel() {
+                const month = this.monthOptions.find((item) => item.value === Number(this.view.month));
+                return month ? `${month.label} ${this.view.year}` : '-';
+            },
+
+            activeFilterLabel() {
+                const parts = [this.currentMonthLabel()];
+                if (this.filters.jenis) parts.push(this.filters.jenis);
+                if (this.filters.search) parts.push(`Cari: ${this.filters.search}`);
+                return parts.join(' • ');
+            },
+
+            firstDayString() {
+                return `${this.view.year}-${String(this.view.month).padStart(2, '0')}-01`;
+            },
+
+            daysInMonth() {
+                return new Date(this.view.year, this.view.month, 0).getDate();
+            },
+
+            firstWeekDay() {
+                return new Date(this.view.year, this.view.month - 1, 1).getDay();
+            },
+
+            isDateInCurrentMonth(dateString) {
+                if (!dateString) return false;
+                const [year, month] = dateString.split('-').map(Number);
+                return year === Number(this.view.year) && month === Number(this.view.month);
+            },
+
+            buildDateString(day) {
+                return `${this.view.year}-${String(this.view.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            },
+
+            eventsForDate(dateString) {
+                return this.items.filter((item) => {
+                    return item.tanggalMulai <= dateString && item.tanggalSelesai >= dateString;
+                });
+            },
+
+            get calendarDays() {
+                const days = [];
+                const firstWeekDay = this.firstWeekDay();
+                const totalDays = this.daysInMonth();
+                const prevMonthLastDay = new Date(this.view.year, this.view.month - 1, 0).getDate();
+
+                for (let i = 0; i < firstWeekDay; i++) {
+                    const day = prevMonthLastDay - firstWeekDay + i + 1;
+                    days.push({
+                        key: `prev-${day}`,
+                        label: day,
+                        date: null,
+                        currentMonth: false,
+                        today: false,
+                        selected: false,
+                        events: []
+                    });
+                }
+
+                for (let day = 1; day <= totalDays; day++) {
+                    const dateString = this.buildDateString(day);
+                    days.push({
+                        key: dateString,
+                        label: day,
+                        date: dateString,
+                        currentMonth: true,
+                        today: dateString === todayString,
+                        selected: dateString === this.selectedDate,
+                        events: this.eventsForDate(dateString)
+                    });
+                }
+
+                while (days.length % 7 !== 0) {
+                    const day = days.length % 7 + 1;
+                    days.push({
+                        key: `next-${day}-${days.length}`,
+                        label: day,
+                        date: null,
+                        currentMonth: false,
+                        today: false,
+                        selected: false,
+                        events: []
+                    });
+                }
+
+                return days;
+            },
+
+            dayCellClass(day) {
+                if (!day.currentMonth) return 'bg-gray-50/60 text-gray-300 cursor-default';
+                if (day.selected) return 'bg-blue-50';
+                return 'bg-white hover:bg-gray-50';
+            },
+
+            dayNumberClass(day) {
+                if (!day.currentMonth) return 'text-gray-300';
+                if (day.selected) return 'bg-blue-500 text-white';
+                if (day.today) return 'bg-primary/10 text-primary';
+                return 'text-gray-700';
+            },
+
+            eventBadgeClass(event) {
+                return event.jenisPerjalanan === 'Transport Lokal'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-amber-100 text-amber-800';
+            },
+
+            selectDate(dateString) {
+                if (!dateString) return;
+                this.selectedDate = dateString;
+            },
+
+            selectedEvents() {
+                if (!this.selectedDate) return [];
+                return this.eventsForDate(this.selectedDate);
+            },
+
+            selectedDateLabel() {
+                if (!this.selectedDate) return 'Belum dipilih';
+                return this.formatDate(this.selectedDate);
+            },
+
+            selectedDateLabelLong() {
+                if (!this.selectedDate) return 'Pilih tanggal pada kalender untuk melihat detail agenda.';
+                const date = new Date(this.selectedDate);
+                if (Number.isNaN(date.getTime())) return this.selectedDate;
+                return date.toLocaleDateString('id-ID', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            },
+
+            previousMonth() {
+                if (this.view.month === 1) {
+                    this.view.month = 12;
+                    this.view.year -= 1;
+                } else {
+                    this.view.month -= 1;
+                }
+                this.selectedDate = this.firstDayString();
+                this.loadData();
+            },
+
+            nextMonth() {
+                if (this.view.month === 12) {
+                    this.view.month = 1;
+                    this.view.year += 1;
+                } else {
+                    this.view.month += 1;
+                }
+                this.selectedDate = this.firstDayString();
+                this.loadData();
+            },
+
+            goToToday() {
+                const today = new Date();
+                this.view.year = today.getFullYear();
+                this.view.month = today.getMonth() + 1;
+                this.selectedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                this.loadData();
+            },
+
+            formatDate(value) {
+                if (!value) return '-';
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return value;
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            },
+
+            formatCurrency(value) {
+                return new Intl.NumberFormat('id-ID').format(Number(value || 0));
+            }
+        }
+    }
+</script>
+{{ end }}

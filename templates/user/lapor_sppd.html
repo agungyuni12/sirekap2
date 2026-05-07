@@ -1,0 +1,365 @@
+{{ define "content" }}
+<div class="space-y-6 md:space-y-8" x-data="laporSPPDPage()" x-init="init()">
+
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Lapor SPPD</h2>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Pilih perjalanan dinas yang belum dilaporkan, lalu isi runtutan kegiatan dan unggah foto lapangan.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/lapor/sppd/history"
+                class="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-medium shadow-lg shadow-primary/20">
+                <i class="fas fa-history mr-2"></i> Riwayat SPPD
+            </a>
+        </div>
+    </div>
+
+    <template x-if="flash.message">
+        <div class="rounded-2xl border px-4 py-3 text-sm font-medium"
+            :class="flash.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'">
+            <div class="flex items-start justify-between gap-3">
+                <span x-text="flash.message"></span>
+                <button type="button" class="text-current/70 hover:text-current" @click="flash.message = ''">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <div class="grid grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)] gap-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-semibold text-gray-900">Perjalanan Belum Dilaporkan</h3>
+                        <p class="text-sm text-gray-500 mt-1">Daftar hanya menampilkan `Perjalanan Dinas` milik akun ini.</p>
+                    </div>
+                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700"
+                        x-text="pendingItems.length + ' item'"></span>
+                </div>
+            </div>
+
+            <template x-if="pendingLoading">
+                <div class="p-6 text-sm text-primary inline-flex items-center">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Memuat perjalanan...
+                </div>
+            </template>
+
+            <template x-if="!pendingLoading && pendingItems.length === 0">
+                <div class="p-8 text-center">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-clipboard-check text-2xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-gray-700">Tidak Ada Tugas Tertunda</h3>
+                    <p class="text-sm text-gray-500 mt-1">Semua perjalanan dinas yang tampil untuk akun ini sudah dilaporkan.</p>
+                </div>
+            </template>
+
+            <div class="divide-y divide-gray-100 max-h-[640px] overflow-y-auto" x-show="!pendingLoading && pendingItems.length > 0">
+                <template x-for="item in pendingItems" :key="item.id">
+                    <button type="button" @click="selectItem(item)"
+                        class="w-full text-left px-5 py-4 transition hover:bg-gray-50"
+                        :class="selectedItem && selectedItem.id === item.id ? 'bg-blue-50' : ''">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="font-semibold text-gray-900 leading-relaxed" x-text="item.perihalFp || 'Tanpa perihal'"></p>
+                                <p class="text-sm text-gray-500 mt-2">
+                                    <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                                    <span x-text="item.tujuan || '-'"></span>
+                                </p>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    <i class="fas fa-calendar-alt mr-2 text-gray-400"></i>
+                                    <span x-text="formatDateRange(item.tanggalMulai, item.tanggalAkhir)"></span>
+                                </p>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                                :class="selectedItem && selectedItem.id === item.id ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'">
+                                Pilih
+                            </span>
+                        </div>
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-gray-900">Form Laporan SPPD</h3>
+                <p class="text-sm text-gray-500 mt-1">Isi runtutan kegiatan sesuai perjalanan yang dipilih.</p>
+            </div>
+
+            <template x-if="!selectedItem">
+                <div class="p-8 md:p-12 text-center">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-hand-pointer text-2xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-gray-700">Belum Ada Perjalanan Dipilih</h3>
+                    <p class="text-sm text-gray-500 mt-1">Klik salah satu daftar perjalanan untuk mulai mengisi laporan SPPD.</p>
+                </div>
+            </template>
+
+            <form x-show="selectedItem" @submit.prevent="submitReport()" class="p-5 md:p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 rounded-2xl p-4">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Nama</p>
+                        <p class="mt-2 font-semibold text-gray-900">{{ .UserName }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-2xl p-4">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">NIP</p>
+                        <p class="mt-2 font-semibold text-gray-900">{{ .UserNIP }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-2xl p-4 md:col-span-2">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Perihal</p>
+                        <p class="mt-2 font-semibold text-gray-900" x-text="selectedItem?.perihalFp || '-'"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-2xl p-4">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Tujuan</p>
+                        <p class="mt-2 font-semibold text-gray-900" x-text="selectedItem?.tujuan || '-'"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-2xl p-4">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Tanggal</p>
+                        <p class="mt-2 font-semibold text-gray-900" x-text="formatDateRange(selectedItem?.tanggalMulai, selectedItem?.tanggalAkhir)"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <template x-for="section in sections" :key="section.key">
+                        <div class="rounded-2xl border border-gray-200 p-4 space-y-3">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900" x-text="section.label"></h4>
+                                    <p class="text-xs text-gray-500" x-text="section.help"></p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 w-full md:w-[220px]">
+                                    <input type="time" x-model="form[section.startKey]" class="w-full">
+                                    <input type="time" x-model="form[section.endKey]" class="w-full">
+                                </div>
+                            </div>
+                            <template x-if="section.readonly">
+                                <input type="text" x-model="form[section.textKey]" readonly class="w-full bg-gray-100">
+                            </template>
+                            <template x-if="!section.readonly">
+                                <textarea x-model="form[section.textKey]" rows="2" class="w-full" :placeholder="section.placeholder"></textarea>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">Foto Kegiatan <span class="text-red-500">*</span></label>
+                    <label
+                        class="flex flex-col items-center justify-center gap-3 px-6 py-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 hover:bg-blue-50 hover:border-primary/40 transition cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                            <i class="fas fa-cloud-upload-alt text-2xl text-primary"></i>
+                        </div>
+                        <div class="text-center">
+                            <p class="font-semibold text-gray-700" x-text="form.fileName || 'Klik untuk memilih foto laporan'"></p>
+                            <p class="text-xs text-gray-500 mt-1">Format JPG, PNG, atau GIF. Maksimal 10MB.</p>
+                        </div>
+                        <input type="file" class="hidden" accept="image/jpeg,image/png,image/gif" @change="handleFileChange($event)">
+                    </label>
+
+                    <template x-if="form.photoPreview">
+                        <div class="rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+                            <img :src="form.photoPreview" alt="Preview foto" class="w-full max-h-72 object-contain">
+                        </div>
+                    </template>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="submit" :disabled="submitting"
+                        class="inline-flex items-center justify-center px-5 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed">
+                        <i class="fas mr-2" :class="submitting ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+                        <span x-text="submitting ? 'Mengirim...' : 'Kirim Laporan SPPD'"></span>
+                    </button>
+                    <button type="button" @click="resetForm()"
+                        class="inline-flex items-center justify-center px-5 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-semibold">
+                        <i class="fas fa-undo mr-2"></i> Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function laporSPPDPage() {
+        return {
+            pendingLoading: false,
+            submitting: false,
+            pendingItems: [],
+            selectedItem: null,
+            flash: { type: '', message: '' },
+            sections: [
+                { key: 'berangkat', label: 'Berangkat', help: 'Waktu dan uraian keberangkatan.', startKey: 'waktu_berangkat_mulai', endKey: 'waktu_berangkat_selesai', textKey: 'isian_berangkat', placeholder: 'Tulis kegiatan saat berangkat...' },
+                { key: 'pengawasan1', label: 'Pengawasan I', help: 'Rangkaian pengawasan sesi pertama.', startKey: 'waktu_pengawasan1_mulai', endKey: 'waktu_pengawasan1_selesai', textKey: 'isian_pengawasan1', placeholder: 'Tulis kegiatan pengawasan pertama...' },
+                { key: 'isoma', label: 'ISOMA', help: 'Waktu istirahat, salat, dan makan.', startKey: 'waktu_isoma_mulai', endKey: 'waktu_isoma_selesai', textKey: 'isian_isoma', placeholder: '', readonly: true },
+                { key: 'pengawasan2', label: 'Pengawasan II', help: 'Rangkaian pengawasan sesi kedua.', startKey: 'waktu_pengawasan2_mulai', endKey: 'waktu_pengawasan2_selesai', textKey: 'isian_pengawasan2', placeholder: 'Tulis kegiatan pengawasan kedua...' },
+                { key: 'pulang', label: 'Pulang', help: 'Waktu dan uraian kepulangan.', startKey: 'waktu_pulang_mulai', endKey: 'waktu_pulang_selesai', textKey: 'isian_pulang', placeholder: 'Tulis kegiatan saat pulang...' }
+            ],
+            form: {
+                waktu_berangkat_mulai: '',
+                waktu_berangkat_selesai: '',
+                isian_berangkat: '',
+                waktu_pengawasan1_mulai: '',
+                waktu_pengawasan1_selesai: '',
+                isian_pengawasan1: '',
+                waktu_isoma_mulai: '',
+                waktu_isoma_selesai: '',
+                isian_isoma: 'Istirahat Sholat dan Makan',
+                waktu_pengawasan2_mulai: '',
+                waktu_pengawasan2_selesai: '',
+                isian_pengawasan2: '',
+                waktu_pulang_mulai: '',
+                waktu_pulang_selesai: '',
+                isian_pulang: '',
+                photoFile: null,
+                photoPreview: '',
+                fileName: ''
+            },
+
+            init() {
+                this.loadPending();
+            },
+
+            async loadPending() {
+                this.pendingLoading = true;
+                try {
+                    const response = await fetch('/api/lapor/sppd/pending');
+                    if (!response.ok) throw new Error('Failed to load pending SPPD reports');
+                    const result = await response.json();
+                    this.pendingItems = result.data || [];
+
+                    if (this.selectedItem) {
+                        const refreshed = this.pendingItems.find(item => item.id === this.selectedItem.id);
+                        this.selectedItem = refreshed || (this.pendingItems[0] || null);
+                    } else {
+                        this.selectedItem = this.pendingItems[0] || null;
+                    }
+
+                    if (!this.selectedItem) this.resetForm();
+                } catch (error) {
+                    console.error('Error loading pending SPPD reports:', error);
+                    this.showFlash('error', 'Daftar perjalanan SPPD belum bisa dimuat.');
+                } finally {
+                    this.pendingLoading = false;
+                }
+            },
+
+            selectItem(item) {
+                this.selectedItem = item;
+                this.resetForm();
+            },
+
+            handleFileChange(event) {
+                const [file] = event.target.files || [];
+                this.form.photoFile = file || null;
+                this.form.fileName = file ? file.name : '';
+                this.form.photoPreview = '';
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = e => this.form.photoPreview = e.target?.result || '';
+                reader.readAsDataURL(file);
+            },
+
+            async submitReport() {
+                if (!this.selectedItem) {
+                    this.showFlash('error', 'Pilih perjalanan yang ingin dilaporkan dulu.');
+                    return;
+                }
+
+                const requiredKeys = [
+                    'waktu_berangkat_mulai', 'waktu_berangkat_selesai', 'isian_berangkat',
+                    'waktu_pengawasan1_mulai', 'waktu_pengawasan1_selesai', 'isian_pengawasan1',
+                    'waktu_isoma_mulai', 'waktu_isoma_selesai',
+                    'waktu_pengawasan2_mulai', 'waktu_pengawasan2_selesai', 'isian_pengawasan2',
+                    'waktu_pulang_mulai', 'waktu_pulang_selesai', 'isian_pulang'
+                ];
+
+                for (const key of requiredKeys) {
+                    if (!(this.form[key] || '').trim()) {
+                        this.showFlash('error', 'Semua kolom waktu dan uraian SPPD wajib diisi.');
+                        return;
+                    }
+                }
+
+                if (!this.form.photoFile) {
+                    this.showFlash('error', 'Foto kegiatan wajib diunggah.');
+                    return;
+                }
+
+                this.submitting = true;
+                try {
+                    const formData = new FormData();
+                    formData.append('id_matriks', this.selectedItem.id);
+                    Object.entries(this.form).forEach(([key, value]) => {
+                        if (['photoFile', 'photoPreview', 'fileName'].includes(key)) return;
+                        formData.append(key, value);
+                    });
+                    formData.append('foto_laporan', this.form.photoFile);
+
+                    const response = await fetch('/api/lapor/sppd/submit', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const message = await response.text();
+                    if (!response.ok) throw new Error(message || 'Gagal menyimpan laporan SPPD');
+
+                    this.showFlash('success', 'Laporan SPPD berhasil dikirim.');
+                    this.resetForm();
+                    await this.loadPending();
+                } catch (error) {
+                    console.error('Error submitting SPPD report:', error);
+                    this.showFlash('error', (error.message || 'Gagal menyimpan laporan SPPD').replace(/^"|"$/g, ''));
+                } finally {
+                    this.submitting = false;
+                }
+            },
+
+            resetForm() {
+                this.form = {
+                    waktu_berangkat_mulai: '',
+                    waktu_berangkat_selesai: '',
+                    isian_berangkat: '',
+                    waktu_pengawasan1_mulai: '',
+                    waktu_pengawasan1_selesai: '',
+                    isian_pengawasan1: '',
+                    waktu_isoma_mulai: '',
+                    waktu_isoma_selesai: '',
+                    isian_isoma: 'Istirahat Sholat dan Makan',
+                    waktu_pengawasan2_mulai: '',
+                    waktu_pengawasan2_selesai: '',
+                    isian_pengawasan2: '',
+                    waktu_pulang_mulai: '',
+                    waktu_pulang_selesai: '',
+                    isian_pulang: '',
+                    photoFile: null,
+                    photoPreview: '',
+                    fileName: ''
+                };
+            },
+
+            showFlash(type, message) {
+                this.flash.type = type;
+                this.flash.message = message;
+            },
+
+            formatDate(value) {
+                if (!value) return '-';
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return value;
+                return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            },
+
+            formatDateRange(start, end) {
+                const startLabel = this.formatDate(start);
+                const endLabel = this.formatDate(end);
+                if (startLabel === endLabel) return startLabel;
+                return `${startLabel} - ${endLabel}`;
+            }
+        }
+    }
+</script>
+{{ end }}
