@@ -405,9 +405,14 @@ func GetMitraSummary(filter RekapFilter) (*MitraSummaryResult, error) {
 
 	whereClause, args := buildMitraSummaryWhereClause(filter)
 
-	// Get total count (distinct mitra)
+	// Count grouped cards exactly as rendered in the data query.
 	var total int
-	countQuery := "SELECT COUNT(DISTINCT idsobat) FROM rekap" + whereClause
+	countQuery := `
+		SELECT COUNT(*) FROM (
+			SELECT idsobat, namamitra, bulan, tahun
+			FROM rekap` + whereClause + `
+			GROUP BY idsobat, namamitra, bulan, tahun
+		) AS grouped_rekap`
 	err := database.DB.QueryRow(countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, err
@@ -429,7 +434,7 @@ func GetMitraSummary(filter RekapFilter) (*MitraSummaryResult, error) {
 	dataQuery := `
 		SELECT idsobat, namamitra, bulan, tahun, SUM(honor) as total_honor 
 		FROM rekap` + whereClause + `
-		GROUP BY idsobat, bulan, tahun 
+		GROUP BY idsobat, namamitra, bulan, tahun 
 		ORDER BY namamitra
 		LIMIT ? OFFSET ?`
 	args = append(args, filter.PerPage, offset)
