@@ -6,9 +6,9 @@ services:
     container_name: sirekap
     restart: unless-stopped
     ports:
-      - '8098:8098'
+      - '8051:8051'
     environment:
-      - PORT=8098
+      - PORT=8051
       - DB_HOST=h1098wnz4qclfy4yz15f2qkf
       - DB_PORT=3306
       - DB_USER=root
