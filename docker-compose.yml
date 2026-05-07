@@ -13,7 +13,7 @@ services:
       - DB_PORT=3306
       - DB_USER=root
       - DB_PASS=kot4b4ru
-      - DB_NAME=default
+      - DB_NAME=seleksimitra
       - AWS_ENDPOINT_URL=http://minio-wjqki5sdox0zceveed1zua3o:9000
       - AWS_ACCESS_KEY_ID=ipds
       - AWS_SECRET_ACCESS_KEY=kot4b4ru
