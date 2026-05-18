@@ -115,42 +115,26 @@ func GetKegiatanDetail(nama, tahun string) (*KegiatanDetail, error) {
 		detail.Harga = harga.Float64
 	}
 
-	// Calculate sisa honor
-	// Get sum of honor from rekap for this kegiatan
-	var sisaQuery string
-	var sisaRow *sql.Row
+	// Calculate sisa honor from existing rekap entries.
+	var honorTerbayar float64
 
 	if tahun != "" {
-		sisaQuery = `
-			SELECT p.total AS harga, COALESCE(SUM(sp.honor), 0) AS jumlah 
-			FROM kegiatan AS p 
-			LEFT JOIN rekap AS sp ON p.nama = sp.kegiatan AND p.tanggaran = sp.tanggaran 
-			WHERE p.nama = ? AND TRIM(p.tanggaran) = TRIM(?) 
-			GROUP BY p.nama, p.tanggaran`
-		sisaRow = database.DB.QueryRow(sisaQuery, matchedNama, tahun)
+		err = database.DB.QueryRow(
+			`SELECT COALESCE(SUM(honor), 0) FROM rekap WHERE kegiatan = ? AND TRIM(tanggaran) = TRIM(?)`,
+			matchedNama,
+			tahun,
+		).Scan(&honorTerbayar)
 	} else {
-		sisaQuery = `
-			SELECT p.total AS harga, COALESCE(SUM(sp.honor), 0) AS jumlah 
-			FROM kegiatan AS p 
-			LEFT JOIN rekap AS sp ON p.nama = sp.kegiatan 
-			WHERE p.nama = ? 
-			GROUP BY p.nama 
-			LIMIT 1`
-		sisaRow = database.DB.QueryRow(sisaQuery, matchedNama)
+		err = database.DB.QueryRow(
+			`SELECT COALESCE(SUM(honor), 0) FROM rekap WHERE kegiatan = ?`,
+			matchedNama,
+		).Scan(&honorTerbayar)
 	}
 
-	var hargaTotal, honorTerbayar float64
-	err = sisaRow.Scan(&hargaTotal, &honorTerbayar)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			// No rekap records yet, sisa = total
-			detail.Sisa = total
-		} else {
-			return nil, err
-		}
-	} else {
-		detail.Sisa = hargaTotal - honorTerbayar
+		return nil, err
 	}
+	detail.Sisa = total - honorTerbayar
 
 	return detail, nil
 }

@@ -76,8 +76,13 @@ func GetKegiatanDetailHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error getting kegiatan detail: %v", err)
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Kegiatan tidak ditemukan"})
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Kegiatan tidak ditemukan"})
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Gagal memuat detail kegiatan"})
 		return
 	}
 
