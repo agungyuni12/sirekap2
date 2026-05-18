@@ -384,7 +384,11 @@
                 }
 
                 try {
-                    const response = await fetch(`/api/kegiatan/search?query=${encodeURIComponent(this.kegiatan)}&tahun=${this.tahunAnggaran}`);
+                    const params = new URLSearchParams({
+                        query: this.kegiatan,
+                        tahun: this.tahunAnggaran,
+                    });
+                    const response = await fetch(`/api/kegiatan/search?${params.toString()}`);
                     if (response.ok) {
                         this.kegiatanResults = await response.json();
                     }
@@ -402,7 +406,11 @@
 
                 // Fetch kegiatan details
                 try {
-                    const response = await fetch(`/api/kegiatan/detail?kegiatan=${encodeURIComponent(item.nama)}&tahun=${this.tahunAnggaran}`);
+                    const params = new URLSearchParams({
+                        kegiatan: item.nama,
+                        tahun: this.tahunAnggaran,
+                    });
+                    const response = await fetch(`/api/kegiatan/detail?${params.toString()}`);
                     if (response.ok) {
                         const data = await response.json();
                         this.mak = data.mak || '';

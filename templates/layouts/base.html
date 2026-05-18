@@ -18,28 +18,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="/static/img/sirekap.ico">
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // Suppress CDN warning in development
-        if (typeof tailwind !== 'undefined') {
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        colors: {
-                            primary: '#2563EB',
-                            'primary-dark': '#1D4ED8',
-                            secondary: '#F59E0B',
-                            dark: '#111827',
-                        },
-                        fontFamily: {
-                            sans: ['Inter', 'system-ui', 'sans-serif'],
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="/static/css/tailwind.css">
 
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>

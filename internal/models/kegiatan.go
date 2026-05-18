@@ -77,24 +77,30 @@ func SearchKegiatan(query, tahun string) ([]KegiatanSearchResult, error) {
 // GetKegiatanDetail gets kegiatan details including calculated sisa honor
 func GetKegiatanDetail(nama, tahun string) (*KegiatanDetail, error) {
 	detail := &KegiatanDetail{}
+	nama = strings.TrimSpace(nama)
+	tahun = strings.TrimSpace(tahun)
 
 	// Get kegiatan basic details
 	var sqlQuery string
 	var row *sql.Row
 
 	if tahun != "" {
-		sqlQuery = `SELECT mak, satuan, harga, total FROM kegiatan WHERE nama = ? AND tanggaran = ?`
+		sqlQuery = `SELECT nama, mak, satuan, harga, total FROM kegiatan WHERE TRIM(nama) = TRIM(?) AND TRIM(tanggaran) = TRIM(?) LIMIT 1`
 		row = database.DB.QueryRow(sqlQuery, nama, tahun)
 	} else {
-		sqlQuery = `SELECT mak, satuan, harga, total FROM kegiatan WHERE nama = ? ORDER BY tanggaran DESC LIMIT 1`
+		sqlQuery = `SELECT nama, mak, satuan, harga, total FROM kegiatan WHERE TRIM(nama) = TRIM(?) ORDER BY tanggaran DESC LIMIT 1`
 		row = database.DB.QueryRow(sqlQuery, nama)
 	}
 
 	var total float64
+	var matchedNama string
 	var mak, satuan sql.NullString
 	var harga sql.NullFloat64
 
-	err := row.Scan(&mak, &satuan, &harga, &total)
+	err := row.Scan(&matchedNama, &mak, &satuan, &harga, &total)
+	if err == sql.ErrNoRows {
+		matchedNama, mak, satuan, harga, total, err = findKegiatanDetailFallback(nama, tahun)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +125,9 @@ func GetKegiatanDetail(nama, tahun string) (*KegiatanDetail, error) {
 			SELECT p.total AS harga, COALESCE(SUM(sp.honor), 0) AS jumlah 
 			FROM kegiatan AS p 
 			LEFT JOIN rekap AS sp ON p.nama = sp.kegiatan AND p.tanggaran = sp.tanggaran 
-			WHERE p.nama = ? AND p.tanggaran = ? 
+			WHERE p.nama = ? AND TRIM(p.tanggaran) = TRIM(?) 
 			GROUP BY p.nama, p.tanggaran`
-		sisaRow = database.DB.QueryRow(sisaQuery, nama, tahun)
+		sisaRow = database.DB.QueryRow(sisaQuery, matchedNama, tahun)
 	} else {
 		sisaQuery = `
 			SELECT p.total AS harga, COALESCE(SUM(sp.honor), 0) AS jumlah 
@@ -130,7 +136,7 @@ func GetKegiatanDetail(nama, tahun string) (*KegiatanDetail, error) {
 			WHERE p.nama = ? 
 			GROUP BY p.nama 
 			LIMIT 1`
-		sisaRow = database.DB.QueryRow(sisaQuery, nama)
+		sisaRow = database.DB.QueryRow(sisaQuery, matchedNama)
 	}
 
 	var hargaTotal, honorTerbayar float64
@@ -147,6 +153,31 @@ func GetKegiatanDetail(nama, tahun string) (*KegiatanDetail, error) {
 	}
 
 	return detail, nil
+}
+
+func findKegiatanDetailFallback(nama, tahun string) (string, sql.NullString, sql.NullString, sql.NullFloat64, float64, error) {
+	query := `SELECT nama, mak, satuan, harga, total FROM kegiatan WHERE 1 = 1`
+	args := make([]interface{}, 0, 8)
+
+	if tahun != "" {
+		query += " AND TRIM(tanggaran) = TRIM(?)"
+		args = append(args, tahun)
+	}
+
+	searchClause, searchArgs := buildFlexibleSearchClause([]string{"nama"}, nama)
+	if searchClause == "" {
+		return "", sql.NullString{}, sql.NullString{}, sql.NullFloat64{}, 0, sql.ErrNoRows
+	}
+
+	query += searchClause + " ORDER BY tanggaran DESC, id ASC LIMIT 1"
+	args = append(args, searchArgs...)
+
+	var matchedNama string
+	var mak, satuan sql.NullString
+	var harga sql.NullFloat64
+	var total float64
+	err := database.DB.QueryRow(query, args...).Scan(&matchedNama, &mak, &satuan, &harga, &total)
+	return matchedNama, mak, satuan, harga, total, err
 }
 
 func ListKegiatan(filter KegiatanFilter) ([]Kegiatan, error) {
