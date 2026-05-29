@@ -129,13 +129,14 @@ func main() {
 	log.Println("Database connected successfully")
 
 	// Initialize session store
-	handlers.InitSession(cfg.Server.SessionKey)
+	handlers.InitSession(cfg.Server.SessionKey, cfg.Server.SessionSecure)
 	if err := storage.Init(cfg.Storage); err != nil {
 		log.Fatalf("Failed to initialize object storage: %v", err)
 	}
 
 	// Initialize Router
 	r := mux.NewRouter()
+	r.Use(middleware.SecurityHeaders)
 
 	// Static Assets
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))

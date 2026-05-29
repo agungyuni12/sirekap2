@@ -1,0 +1,15 @@
+# Environment variables - JANGAN commit ke git
+.env
+.env.local
+.env.production
+
+# Binary
+sirekap
+output/
+
+# Uploads lokal
+static/uploads/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -631,5 +631,7 @@ func buildUserOwnershipClause(userNIP, userName string) (string, []interface{}) 
 		args = append(args, userName)
 	}
 
-	return strings.Join(conditions, " OR "), args
+	// Gunakan AND agar kedua kondisi harus terpenuhi — mencegah akses silang
+	// jika hanya salah satu identifier kebetulan cocok dengan data pengguna lain.
+	return strings.Join(conditions, " AND "), args
 }

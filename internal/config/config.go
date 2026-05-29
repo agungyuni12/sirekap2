@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"strings"
 )
@@ -23,8 +24,9 @@ type DBConfig struct {
 
 // ServerConfig holds server configuration
 type ServerConfig struct {
-	Addr       string
-	SessionKey string
+	Addr          string
+	SessionKey    string
+	SessionSecure bool
 }
 
 // StorageConfig holds object storage configuration.
@@ -81,20 +83,28 @@ func Load() *Config {
 		}
 	}
 
+	dbPassword := strings.TrimSpace(getEnvFirst("DB_PASSWORD", "DB_PASS"))
+	if dbPassword == "" {
+		log.Fatal("FATAL: DB_PASSWORD atau DB_PASS harus diset via environment variable")
+	}
+
+	sessionKey := strings.TrimSpace(getEnvOrDefault("SESSION_KEY", ""))
+	if len(sessionKey) < 32 {
+		log.Fatal("FATAL: SESSION_KEY harus diset via environment variable (minimal 32 karakter)")
+	}
+
 	return &Config{
 		DB: DBConfig{
-			Host: getEnvOrDefault("DB_HOST", "localhost"),
-			Port: getEnvOrDefault("DB_PORT", "3306"),
-			User: getEnvOrDefault("DB_USER", "root"),
-			Password: firstNonEmpty(
-				getEnvFirst("DB_PASSWORD", "DB_PASS"),
-				"kelayu1998",
-			),
-			DBName: getEnvOrDefault("DB_NAME", "seleksimitra"),
+			Host:     getEnvOrDefault("DB_HOST", "localhost"),
+			Port:     getEnvOrDefault("DB_PORT", "3306"),
+			User:     getEnvOrDefault("DB_USER", "root"),
+			Password: dbPassword,
+			DBName:   getEnvOrDefault("DB_NAME", "seleksimitra"),
 		},
 		Server: ServerConfig{
-			Addr:       serverAddr,
-			SessionKey: getEnvOrDefault("SESSION_KEY", "sirekap-secret-key-2026-bps-dompu"), // Change in production
+			Addr:         serverAddr,
+			SessionKey:   sessionKey,
+			SessionSecure: getEnvBool("SESSION_SECURE", true),
 		},
 		Storage: StorageConfig{
 			EndpointURL:     strings.TrimSpace(getEnvFirst("AWS_ENDPOINT_URL")),

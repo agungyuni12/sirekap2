@@ -197,23 +197,25 @@ func saveReportPhotoLocally(content []byte, ext string) (string, error) {
 	return "/" + filepath.ToSlash(destination), nil
 }
 
+// allowedDirs adalah daftar direktori yang boleh diakses untuk legacy photo paths.
+var allowedDirs = []string{"static/uploads", "sirekap2/dashboard", "dashboard", "uploads"}
+
 func resolveLegacyLocalPath(ref string) string {
-	candidates := make([]string, 0, 5)
-	if filepath.IsAbs(ref) {
-		candidates = append(candidates, ref, strings.TrimPrefix(ref, "/"))
-	} else {
-		candidates = append(candidates,
-			ref,
-			filepath.Join("static", "uploads", filepath.Base(ref)),
-			filepath.Join("sirekap2", "dashboard", ref),
-			filepath.Join("dashboard", ref),
-			filepath.Join("uploads", ref),
-		)
+	// Tolak path absolut dan path traversal sepenuhnya — gunakan hanya nama file.
+	base := filepath.Base(filepath.Clean(ref))
+	if base == "" || base == "." || base == ".." || strings.ContainsAny(base, "/\\") {
+		return ""
 	}
 
-	for _, candidate := range candidates {
-		candidate = strings.TrimSpace(candidate)
-		if candidate == "" {
+	for _, dir := range allowedDirs {
+		candidate := filepath.Join(dir, base)
+		// Pastikan path hasil join masih berada di dalam direktori yang diizinkan.
+		cleanDir, _ := filepath.Abs(dir)
+		cleanCandidate, err := filepath.Abs(candidate)
+		if err != nil {
+			continue
+		}
+		if !strings.HasPrefix(cleanCandidate, cleanDir+string(filepath.Separator)) {
 			continue
 		}
 		if _, err := os.Stat(candidate); err == nil {

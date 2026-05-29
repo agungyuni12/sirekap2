@@ -5,20 +5,24 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/sessions"
 	"sirekap/internal/models"
+	"sirekap/internal/ratelimit"
 )
 
 var store *sessions.CookieStore
 
-// InitSession initializes the session store with the given key
-func InitSession(key string) {
+// InitSession initializes the session store with the given key and secure flag
+func InitSession(key string, secure bool) {
 	store = sessions.NewCookieStore([]byte(key))
 	store.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   86400 * 7, // 7 days
+		MaxAge:   86400, // 1 day
 		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteStrictMode,
 	}
 }
 
@@ -50,6 +54,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// POST - Process login
+	clientIP := strings.Split(r.RemoteAddr, ":")[0]
+	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+		clientIP = strings.TrimSpace(strings.SplitN(fwd, ",", 2)[0])
+	}
+
+	if ratelimit.IsBlocked(clientIP) {
+		renderLogin(w, LoginPageData{Error: "Terlalu banyak percobaan login. Coba lagi dalam 15 menit."})
+		return
+	}
+
 	if err := r.ParseForm(); err != nil {
 		renderLogin(w, LoginPageData{Error: "Terjadi kesalahan pada sistem."})
 		return
@@ -67,6 +81,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := models.GetUserByUsernameOrEmail(username)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			ratelimit.RecordFailure(clientIP)
 			renderLogin(w, LoginPageData{Error: "Login Gagal. Username atau password yang Anda masukkan salah."})
 			return
 		}
@@ -77,9 +92,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Verify password
 	if !user.CheckPassword(password) {
+		ratelimit.RecordFailure(clientIP)
 		renderLogin(w, LoginPageData{Error: "Login Gagal. Username atau password yang Anda masukkan salah."})
 		return
 	}
+
+	ratelimit.Reset(clientIP)
 
 	// Login successful - save to session
 	session.Values["user_id"] = user.ID
