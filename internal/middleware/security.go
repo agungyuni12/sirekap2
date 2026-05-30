@@ -14,11 +14,11 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 		w.Header().Set("Content-Security-Policy",
 			"default-src 'self'; "+
-				"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "+
+				"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://static.cloudflareinsights.com; "+
 				"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "+
 				"font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "+
 				"img-src 'self' data: blob:; "+
-				"connect-src 'self';",
+				"connect-src 'self' https://cloudflareinsights.com;",
 		)
 		next.ServeHTTP(w, r)
 	})
