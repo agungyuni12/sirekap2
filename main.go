@@ -500,8 +500,8 @@ func main() {
 
 	// SPK Sensus Ekonomi 2026
 	r.HandleFunc("/api/rekap/spk/se2026/list", middleware.RequireAdmin(handlers.ListRekapSE2026Handler)).Methods("GET")
-	r.HandleFunc("/api/rekap/spk/se2026/next-nomor", middleware.RequireAdmin(handlers.GetNextNomorSPKSE2026Handler)).Methods("GET")
-	r.HandleFunc("/api/rekap/spk/se2026/create", middleware.RequireAdmin(handlers.CreateSPKSE2026Handler)).Methods("POST")
+	r.HandleFunc("/api/rekap/spk/se2026/download", middleware.RequireAdmin(handlers.DownloadSPKSE2026Handler)).Methods("GET")
+	r.HandleFunc("/api/rekap/spk/se2026/download-all", middleware.RequireAdmin(handlers.DownloadAllSPKSE2026Handler)).Methods("GET")
 	r.HandleFunc("/api/rekap/spk/se2026/update-sls", middleware.RequireAdmin(handlers.UpdateJumlahSLSHandler)).Methods("POST")
 
 	// BAST
