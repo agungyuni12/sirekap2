@@ -43,7 +43,7 @@ UPDATE rekap SET id_spk = 'B-075/SPK-SE2026/5205/PL.200/2026' WHERE idsobat = '5
 UPDATE rekap SET id_spk = 'B-076/SPK-SE2026/5205/PL.200/2026' WHERE idsobat = '520525110270' AND kegiatan = 'Pendataan Sensus Ekonomi 2026' AND tahun = '2026'; -- 76. Nabila Rohmatul Ulya
 UPDATE rekap SET id_spk = 'B-077/SPK-SE2026/5205/PL.200/2026' WHERE idsobat = '520525110252' AND kegiatan = 'Pendataan Sensus Ekonomi 2026' AND tahun = '2026'; -- 77. Sri Maryam Ulfah
 UPDATE rekap SET id_spk = 'B-078/SPK-SE2026/5205/PL.200/2026' WHERE idsobat = '520525110025' AND kegiatan = 'Pendataan Sensus Ekonomi 2026' AND tahun = '2026'; -- 78. Tri Puspa Kartiningsih
-UPDATE rekap SET id_spk = 'B-079/SPK-SE2026/5205/PL.200/2026' WHERE idsobat = '5.20526050108E11' AND kegiatan = 'Pendataan Sensus Ekonomi 2026' AND tahun = '2026'; -- 79. Vera Novitasari
+UPDATE rekap SET id_spk = 'B-079/SPK-SE2026/5205/PL.200/2026' WHERE idsobat = '520526050108' AND kegiatan = 'Pendataan Sensus Ekonomi 2026' AND tahun = '2026'; -- 79. Vera Novitasari
 UPDATE rekap SET id_spk = 'B-080/SPK-SE2026/5205/PL.200/2026' WHERE idsobat = '520525110204' AND kegiatan = 'Pendataan Sensus Ekonomi 2026' AND tahun = '2026'; -- 80. Yul Safirah
 UPDATE rekap SET id_spk = 'B-081/SPK-SE2026/5205/PL.200/2026' WHERE idsobat = '520523010001' AND kegiatan = 'Pemeriksa Lapangan Sensus Ekonomi 2026 (PML)' AND tahun = '2026'; -- 81. Nila Utama
 UPDATE rekap SET id_spk = 'B-082/SPK-SE2026/5205/PL.200/2026' WHERE idsobat = '520526050223' AND kegiatan = 'Pendataan Sensus Ekonomi 2026' AND tahun = '2026'; -- 82. Nurdin

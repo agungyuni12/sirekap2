@@ -1,6 +1,6 @@
 -- ============================================================
 -- SE2026 Mitra + Rekap (idempotent - WHERE NOT EXISTS)
--- PCL: 2.5 x 4.629.000 = 11.572.500
+-- PCL: 2.5 x 4.629.000 = 11.561.525
 -- PML: 2.5 x 4.877.000 = 12.192.500
 -- ============================================================
 
@@ -689,7 +689,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522010006', 'ipds5205', 'SITI NURLAILA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522010006' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -703,7 +703,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522010016', 'ipds5205', 'SAHLAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-034/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522010016' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -717,7 +717,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522010030', 'ipds5205', 'SRI NURNANINGSIH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522010030' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -745,7 +745,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522030002', 'ipds5205', 'ISDYANSIH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-059/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522030002' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -794,7 +794,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522030017', 'ipds5205', 'EKO ANSHARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522030017' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -808,7 +808,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522030024', 'ipds5205', 'RACHMAD SOEBARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522030024' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -822,7 +822,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522030028', 'ipds5205', 'NURWAHIDAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522030028' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -836,7 +836,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522030042', 'ipds5205', 'NOERHALIMAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522030042' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -864,7 +864,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522090003', 'ipds5205', 'MAYA AYUNDARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-019/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522090003' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -878,7 +878,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522090014', 'ipds5205', 'HADIJAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-016/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522090014' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -892,21 +892,21 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100006', 'ipds5205', 'ABD. HADI IRAWAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-029/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100006' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100011', 'ipds5205', 'ANWAR RIFAID', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-085/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100011' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100013', 'ipds5205', 'BAHRIL QAMAR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100013' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -920,7 +920,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100027', 'ipds5205', 'NURJANAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100027' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -934,28 +934,28 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100046', 'ipds5205', 'BAIQ NURFITRIANI RAHMAWATI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100046' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100054', 'ipds5205', 'MUJIBURRAHMAN PUTRA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-010/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100054' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100072', 'ipds5205', 'SYAMSUDIN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100072' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100093', 'ipds5205', 'NURUL HIDAYATULLAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100093' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -969,28 +969,28 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100110', 'ipds5205', 'M AGIL AL HUSNA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100110' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100119', 'ipds5205', 'DELFI WULANDARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100119' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100132', 'ipds5205', 'MIRJAN ALHALIK', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-067/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100132' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100140', 'ipds5205', 'KIKI RIZKI AMELIA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100140' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -1004,7 +1004,7 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100142', 'ipds5205', 'ABDUL KODIR JAELANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-004/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100142' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -1018,14 +1018,14 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100165', 'ipds5205', 'RASMINI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-033/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100165' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100174', 'ipds5205', 'PARLI PURMASIDI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-031/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100174' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -1039,28 +1039,28 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100182', 'ipds5205', 'M.SYAHRIR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-009/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100182' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100186', 'ipds5205', 'INDAH PUTRI SARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-017/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100186' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100206', 'ipds5205', 'FITRIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100206' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520522100209', 'ipds5205', 'ABUBAKAR ISMAIL', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520522100209' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -1081,49 +1081,49 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523030007', 'ipds5205', 'KHALIFAH ADRIANI PUTRI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523030007' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523030014', 'ipds5205', 'NURHIDAYATI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523030014' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523030028', 'ipds5205', 'YANA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523030028' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523030048', 'ipds5205', 'DEWI PURWATI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-039/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523030048' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523030051', 'ipds5205', 'NURJAHRA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-021/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523030051' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523030100', 'ipds5205', 'NILMAWANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523030100' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523030109', 'ipds5205', 'JUMRAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523030109' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -1137,35 +1137,35 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523060001', 'ipds5205', 'NUR SHOLEHAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523060001' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523060005', 'ipds5205', 'NURUL KHOTIMAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523060005' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523060007', 'ipds5205', 'AHMAD MUHAZZIR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523060007' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523070002', 'ipds5205', 'TIRANI APRILIA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523070002' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110016', 'ipds5205', 'EGA NUR MUNZIATUNNAS', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110016' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -1179,14 +1179,14 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110050', 'ipds5205', 'ADYA RAGITA CAHYANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110050' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110057', 'ipds5205', 'ABDUL RAHMAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-083/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110057' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -1200,168 +1200,168 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110076', 'ipds5205', 'IMRAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110076' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110093', 'ipds5205', 'IRMAN FITRIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-042/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110093' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110098', 'ipds5205', 'SOFIAN HALIDIN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-035/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110098' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110101', 'ipds5205', 'TRI SATRIA DARMAWAN, SH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-037/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110101' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110107', 'ipds5205', 'ADE ARAHMA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110107' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110113', 'ipds5205', 'ANSARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110113' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110114', 'ipds5205', 'MUH. YUSRIL', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-026/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110114' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520523110115', 'ipds5205', 'NUGIE AKBAR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520523110115' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520524090001', 'ipds5205', 'MERI MARIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520524090001' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520524090003', 'ipds5205', 'FENI ALFAONITA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520524090003' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050001', 'ipds5205', 'ESA ARIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050001' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050002', 'ipds5205', 'TITIAN MARTINI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050002' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050003', 'ipds5205', 'RANI ANNISA SARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050003' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050004', 'ipds5205', 'SRI ANDRIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050004' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050005', 'ipds5205', 'QORI PRISITA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050005' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050006', 'ipds5205', 'AENUL WAHTAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050006' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050007', 'ipds5205', 'VERI IRAWAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050007' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050008', 'ipds5205', 'MUTMAINAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-075/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050008' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050012', 'ipds5205', 'NURUL WAHIDA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050012' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050014', 'ipds5205', 'ULVIA MARDIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050014' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050023', 'ipds5205', 'SUCI PURNANINGSIH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050023' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050025', 'ipds5205', 'M. ARWENDA PRAYOGI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050025' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050026', 'ipds5205', 'ROBIATUL ADAWIYAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050026' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050027', 'ipds5205', 'SANDIKAWATI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050027' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -1375,77 +1375,77 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050031', 'ipds5205', 'AULIA APRILIA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050031' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050032', 'ipds5205', 'FANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050032' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050035', 'ipds5205', 'SARI ULANDARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050035' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050036', 'ipds5205', 'SRI HERAWATI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050036' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050039', 'ipds5205', 'NURUL FITRI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050039' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525050045', 'ipds5205', 'ADRIAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525050045' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110004', 'ipds5205', 'RABIL NAWARA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110004' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110011', 'ipds5205', 'AYU WANDIRA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-038/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110011' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110012', 'ipds5205', 'AFDIANSYAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110012' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110013', 'ipds5205', 'RISKA AMELIA ADE PUTRI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-022/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110013' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110018', 'ipds5205', 'YENI DESILIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110018' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
@@ -1459,643 +1459,643 @@ INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggar
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110025', 'ipds5205', 'TRI PUSPA KARTININGSIH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-078/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110025' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110026', 'ipds5205', 'ST. RAIHAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110026' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110029', 'ipds5205', 'MAGHFIRATUL KHAERANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110029' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110035', 'ipds5205', 'ANGGI ANGGRIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-013/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110035' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110038', 'ipds5205', 'IKA SUCIYARTI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-041/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110038' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110040', 'ipds5205', 'NOVITTA ISLAMIYAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-020/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110040' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110046', 'ipds5205', 'BELA SAFIRA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-069/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110046' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110048', 'ipds5205', 'ANNISA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110048' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110050', 'ipds5205', 'ERIK ADITYA PRATAMA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-065/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110050' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110064', 'ipds5205', 'JUNAIDDIN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-052/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110064' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110066', 'ipds5205', 'INDRA WULAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-071/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110066' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110067', 'ipds5205', 'JUMLIATI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-043/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110067' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110074', 'ipds5205', 'ASTUTI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110074' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110080', 'ipds5205', 'RESTU SUBROTO', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110080' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110086', 'ipds5205', 'MITA RAHMATULLAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110086' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110102', 'ipds5205', 'JUL ASFI WARAIHAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-072/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110102' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110108', 'ipds5205', 'NURLAILAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110108' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110113', 'ipds5205', 'ARNELIANA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-056/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110113' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110118', 'ipds5205', 'DESI RATNASARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110118' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110126', 'ipds5205', 'PATRIALIS AKBAR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-089/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110126' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110141', 'ipds5205', 'NURAMANDA YUNIAR HARTONO', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110141' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110145', 'ipds5205', 'WINDI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110145' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110149', 'ipds5205', 'ERSA NUR ULFA ISLAMIA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110149' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110157', 'ipds5205', 'FAYZA SHABILLA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-070/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110157' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110159', 'ipds5205', 'R. ISFAHUL HUSNA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110159' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110164', 'ipds5205', 'NAUFAL RIFDAL FADILLAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110164' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110171', 'ipds5205', 'ANSHARI NAWAWI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110171' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110176', 'ipds5205', 'ARDIANSYAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-047/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110176' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110177', 'ipds5205', 'M IKSAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-088/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110177' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110180', 'ipds5205', 'OPHIYANSYAH ACHRUL PUTRA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-030/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110180' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110181', 'ipds5205', 'AMINAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110181' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110192', 'ipds5205', 'NUR FUZIATUN ISLAMIAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110192' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110194', 'ipds5205', 'ERSA RIGA PUSPITA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110194' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110195', 'ipds5205', 'ST. NURHASNAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110195' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110197', 'ipds5205', 'FITRIYANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110197' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110199', 'ipds5205', 'DIRTA UARI DARNIATI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110199' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110201', 'ipds5205', 'NURUL RAHMANIA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110201' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110202', 'ipds5205', 'AINUN NASIRAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110202' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110203', 'ipds5205', 'WAWAN SETIAWAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110203' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110204', 'ipds5205', 'YUL SAFIRAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-080/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110204' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110205', 'ipds5205', 'LIDYA SRI RAHAYU', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110205' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110208', 'ipds5205', 'SUBHAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110208' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110213', 'ipds5205', 'JIHAN TRI HAPSARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110213' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110216', 'ipds5205', 'DWI FATHIR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110216' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110221', 'ipds5205', 'SYEHLIN RAUHAR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110221' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110228', 'ipds5205', 'ANGGUN ANABELA YUSTIKA PUTRI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110228' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110234', 'ipds5205', 'MEGA LESTARI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110234' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110241', 'ipds5205', 'MARAATUN HASANAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110241' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110244', 'ipds5205', 'VIRA OKTAVIANA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110244' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110245', 'ipds5205', 'MOCH. RYADI HUSNA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110245' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110252', 'ipds5205', 'SRI MARYAM ULFAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-077/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110252' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110257', 'ipds5205', 'ADETYA ANHAR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-045/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110257' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110259', 'ipds5205', 'FITHRIA ANGGRAENI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110259' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110262', 'ipds5205', 'AINI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110262' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110267', 'ipds5205', 'IVID MUHIBULLAH, SE', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110267' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110270', 'ipds5205', 'NABILA ROHMATUL ULYA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-076/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110270' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520525110280', 'ipds5205', 'HANAFIA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-058/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520525110280' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050015', 'ipds5205', 'ARIS MUNANDAR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-086/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050015' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050017', 'ipds5205', 'MULIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-060/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050017' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050022', 'ipds5205', 'HERMAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-048/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050022' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050023', 'ipds5205', 'RANGGA BARANI SATRIA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-032/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050023' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050047', 'ipds5205', 'WENI RAHAYU', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-063/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050047' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050050', 'ipds5205', 'MUHAMMAD ARKHAM', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-027/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050050' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050055', 'ipds5205', 'ANGGUN PURNAMA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-014/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050055' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050057', 'ipds5205', 'DHIA ULHAQ', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-008/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050057' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050059', 'ipds5205', 'IRAWAN DANDI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-050/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050059' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050070', 'ipds5205', 'JUMRIATI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-073/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050070' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050071', 'ipds5205', 'KURATUL AINI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-018/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050071' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050110', 'ipds5205', 'IKHWAN KURNIAWAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-087/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050110' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050120', 'ipds5205', 'DIAN APRIANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-015/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050120' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050121', 'ipds5205', 'ISKANDAR JULKARNAIN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-051/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050121' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050125', 'ipds5205', 'EMI YULIANA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-040/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050125' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050126', 'ipds5205', 'IMANSYAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-049/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050126' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050138', 'ipds5205', 'MUSLIMATUN FITRIAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-074/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050138' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050144', 'ipds5205', 'SUHADA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-062/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050144' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050147', 'ipds5205', 'AIDA RAHAYU', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-055/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050147' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050151', 'ipds5205', 'DENTI ALIFIA RAMDHOANI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-057/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050151' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050157', 'ipds5205', 'ANDI MUHAMMAD ALI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-006/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050157' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050159', 'ipds5205', 'SULFAH MEIASTRI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-023/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050159' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050176', 'ipds5205', 'SULAIMAN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-036/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050176' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050178', 'ipds5205', 'A. ARIF MUNANDAR', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-003/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050178' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050181', 'ipds5205', 'ARI APRIADI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-007/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050181' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050193', 'ipds5205', 'AMRIZAL', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-046/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050193' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050204', 'ipds5205', 'YULIATI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-054/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050204' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050208', 'ipds5205', 'AL BIMA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-084/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050208' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050223', 'ipds5205', 'NURDIN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-082/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050223' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050231', 'ipds5205', 'MUHAMAD ERWINSYAH PUTRA', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-053/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050231' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050235', 'ipds5205', 'NURMIFTAHUL JANNAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-061/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050235' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050244', 'ipds5205', 'NASRUDIN', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-028/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050244' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050249', 'ipds5205', 'AMINULLAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-005/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050249' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '520526050266', 'ipds5205', 'WALIEY MUFTIHAKAM MARZA KARYADI', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, 'B-011/SPK-SE2026/5205/PL.200/2026'
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='520526050266' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
 INSERT INTO rekap (idsobat, username, namamitra, kegiatan, bulan, tahun, tanggaran,
                    honor, volume, satuan, hsatuan, mak, pmwaktu, pswaktu, jumlah_sls, id_spk)
 SELECT '527223110270', 'ipds5205', 'RAUDATUL JANNAH', 'Pendataan Sensus Ekonomi 2026',
        'Juni-Agustus', '2026', 2026,
-       11572500, '2.5', 'O-B', 4629000, '2902.BMA.006.005.B.521213',
+       11561525, '2.5', 'O-B', 4624610, '2902.BMA.006.005.B.521213',
        '2026-06-15', '2026-08-31', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM rekap WHERE idsobat='527223110270' AND kegiatan='Pendataan Sensus Ekonomi 2026' AND tahun='2026');
