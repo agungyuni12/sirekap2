@@ -498,7 +498,22 @@ func main() {
 	r.HandleFunc("/api/rekap/spk/download", middleware.RequireAdmin(handlers.DownloadSPKHandler)).Methods("GET")
 	r.HandleFunc("/api/rekap/spk/download-all", middleware.RequireAdmin(handlers.DownloadFilteredSPKZipHandler)).Methods("GET")
 
-	// SPK Sensus Ekonomi 2026
+	// Halaman SPK SE2026
+	r.HandleFunc("/dashboard/se2026", middleware.RequireAdmin(func(w http.ResponseWriter, r *http.Request) {
+		data := mergeUserData(r, map[string]interface{}{
+			"Title":       "SPK Sensus Ekonomi 2026",
+			"PageTitle":   "SPK Sensus Ekonomi 2026",
+			"ShowSidebar": true,
+			"ActivePage":  "se2026",
+		})
+		tmpl(w, "layouts/base.html", data,
+			"templates/layouts/base.html",
+			"templates/partials/sidebar.html",
+			"templates/dashboard/se2026.html",
+		)
+	}))
+
+	// API SPK Sensus Ekonomi 2026
 	r.HandleFunc("/api/rekap/spk/se2026/list", middleware.RequireAdmin(handlers.ListRekapSE2026Handler)).Methods("GET")
 	r.HandleFunc("/api/rekap/spk/se2026/download", middleware.RequireAdmin(handlers.DownloadSPKSE2026Handler)).Methods("GET")
 	r.HandleFunc("/api/rekap/spk/se2026/download-all", middleware.RequireAdmin(handlers.DownloadAllSPKSE2026Handler)).Methods("GET")
