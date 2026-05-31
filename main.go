@@ -498,10 +498,10 @@ func main() {
 	r.HandleFunc("/api/rekap/spk/download", middleware.RequireAdmin(handlers.DownloadSPKHandler)).Methods("GET")
 	r.HandleFunc("/api/rekap/spk/download-all", middleware.RequireAdmin(handlers.DownloadFilteredSPKZipHandler)).Methods("GET")
 
-	// Halaman SPK SE2026
+	// Halaman SPK SE2026 - Cetak
 	r.HandleFunc("/dashboard/se2026", middleware.RequireAdmin(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
-			"Title":       "SPK Sensus Ekonomi 2026",
+			"Title":       "Cetak SPK SE2026",
 			"PageTitle":   "SPK Sensus Ekonomi 2026",
 			"ShowSidebar": true,
 			"ActivePage":  "se2026",
@@ -513,8 +513,25 @@ func main() {
 		)
 	}))
 
-	// API SPK Sensus Ekonomi 2026
+	// Halaman Import Petugas SE2026
+	r.HandleFunc("/dashboard/se2026/import", middleware.RequireAdmin(func(w http.ResponseWriter, r *http.Request) {
+		data := mergeUserData(r, map[string]interface{}{
+			"Title":       "Import Petugas SE2026",
+			"PageTitle":   "Import Petugas SE2026",
+			"ShowSidebar": true,
+			"ActivePage":  "se2026-import",
+		})
+		tmpl(w, "layouts/base.html", data,
+			"templates/layouts/base.html",
+			"templates/partials/sidebar.html",
+			"templates/dashboard/se2026_import.html",
+		)
+	}))
+
+	// API SPK + Import Sensus Ekonomi 2026
 	r.HandleFunc("/api/rekap/spk/se2026/list", middleware.RequireAdmin(handlers.ListRekapSE2026Handler)).Methods("GET")
+	r.HandleFunc("/api/rekap/spk/se2026/import/template", middleware.RequireAdmin(handlers.DownloadTemplateSE2026Handler)).Methods("GET")
+	r.HandleFunc("/api/rekap/spk/se2026/import", middleware.RequireAdmin(handlers.ImportPetugasSE2026Handler)).Methods("POST")
 	r.HandleFunc("/api/rekap/spk/se2026/download", middleware.RequireAdmin(handlers.DownloadSPKSE2026Handler)).Methods("GET")
 	r.HandleFunc("/api/rekap/spk/se2026/download-all", middleware.RequireAdmin(handlers.DownloadAllSPKSE2026Handler)).Methods("GET")
 	r.HandleFunc("/api/rekap/spk/se2026/update-sls", middleware.RequireAdmin(handlers.UpdateJumlahSLSHandler)).Methods("POST")

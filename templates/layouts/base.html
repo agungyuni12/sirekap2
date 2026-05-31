@@ -564,10 +564,12 @@
         sidebarCollapsed: false,
         isMobile: window.innerWidth < 1024,
         activePage: '{{ .ActivePage }}',
-        activeRekapGroup: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else if eq .ActivePage "se2026" }}true{{ else }}false{{ end }},
+        activeRekapGroup: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else }}false{{ end }},
+        activeSE2026Group: {{ if eq .ActivePage "se2026" }}true{{ else if eq .ActivePage "se2026-import" }}true{{ else }}false{{ end }},
         activeMatriksGroup: {{ if eq .ActivePage "matriks" }}true{{ else if eq .ActivePage "monitoring" }}true{{ else if eq .ActivePage "kalender" }}true{{ else if eq .ActivePage "administrasi" }}true{{ else }}false{{ end }},
         activeLaporGroup: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}false{{ end }},
-        expandedRekap: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else if eq .ActivePage "se2026" }}true{{ else }}false{{ end }},
+        expandedRekap: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else }}false{{ end }},
+        expandedSE2026: {{ if eq .ActivePage "se2026" }}true{{ else if eq .ActivePage "se2026-import" }}true{{ else }}false{{ end }},
         expandedMatriks: {{ if eq .ActivePage "matriks" }}true{{ else if eq .ActivePage "monitoring" }}true{{ else if eq .ActivePage "kalender" }}true{{ else if eq .ActivePage "administrasi" }}true{{ else }}false{{ end }},
         expandedLapor: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}true{{ end }},
         toggleSidebar() {
@@ -659,11 +661,6 @@
                                 <i class="fas fa-briefcase w-5 mr-3 {{ if eq .ActivePage "kegiatan" }}text-blue-400{{ else }}text-gray-500{{ end }}"></i>
                                 <span>Kegiatan</span>
                             </a>
-                            <a href="/dashboard/se2026" @click="sidebarOpen = false"
-                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "se2026" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
-                                <i class="fas fa-store w-5 mr-3 {{ if eq .ActivePage "se2026" }}text-orange-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>SPK SE2026</span>
-                            </a>
                             <a href="/dashboard/surat" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "surat" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-envelope w-5 mr-3 {{ if eq .ActivePage "surat" }}text-blue-400{{ else }}text-gray-500{{ end }}"></i>
@@ -712,6 +709,37 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- SE 2026 -->
+                    <div class="mt-2">
+                        <button @click="expandedSE2026 = !expandedSE2026"
+                            class="flex items-center w-full py-3 text-gray-300 rounded-xl transition hover:bg-white/10"
+                            :class="[(expandedSE2026 || activeSE2026Group) && 'bg-white/10 text-white', sidebarCollapsed && !isMobile ? 'px-2 justify-center' : 'px-4']">
+                            <div class="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0"
+                                :class="sidebarCollapsed && !isMobile ? '' : 'mr-3'">
+                                <i class="fas fa-store text-orange-400"></i>
+                            </div>
+                            <span x-show="!sidebarCollapsed || isMobile"
+                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">SE 2026</span>
+                            <i x-show="!sidebarCollapsed || isMobile"
+                                class="fas fa-chevron-down ml-1 flex-shrink-0 text-sm transition-transform duration-200"
+                                :class="expandedSE2026 && 'rotate-180'"></i>
+                        </button>
+                        <div x-show="expandedSE2026 && (!sidebarCollapsed || isMobile)" x-collapse
+                            class="mt-2 ml-6 pl-4 border-l-2 border-gray-600 space-y-1">
+                            <a href="/dashboard/se2026" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "se2026" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-file-signature w-5 mr-3 {{ if eq .ActivePage "se2026" }}text-orange-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Cetak SPK</span>
+                            </a>
+                            <a href="/dashboard/se2026/import" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "se2026-import" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-file-import w-5 mr-3 {{ if eq .ActivePage "se2026-import" }}text-orange-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Import Petugas</span>
+                            </a>
+                        </div>
+                    </div>
+
                     {{ else }}
 
                     <!-- PENGGUNA: LAPOR -->

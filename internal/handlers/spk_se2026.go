@@ -272,9 +272,9 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
 		SELECT r.id, r.idsobat, r.namamitra, r.kegiatan, r.honor,
 		       COALESCE(r.id_spk, ''),
-		       COALESCE(m.alamat, ''), COALESCE(m.kecamatan, '')
+		       COALESCE((SELECT m.alamat FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), ''),
+		       COALESCE((SELECT m.kecamatan FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), '')
 		FROM rekap r
-		LEFT JOIN mitra m ON m.idsobat = r.idsobat
 		WHERE r.kegiatan LIKE ?
 		  AND (r.tanggaran = 2026 OR r.tahun = '2026')
 		ORDER BY CASE WHEN r.id_spk IS NOT NULL AND r.id_spk != '' THEN 0 ELSE 1 END,

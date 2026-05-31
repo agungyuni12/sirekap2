@@ -1,0 +1,229 @@
+{{ define "content" }}
+<div class="space-y-6" x-data="se2026Import()">
+
+    <!-- Toast -->
+    <div x-show="toast.show" x-cloak x-transition
+        class="fixed top-5 right-5 z-[70] max-w-sm rounded-2xl px-4 py-3 shadow-2xl text-white"
+        :class="toast.type === 'error' ? 'bg-red-500' : 'bg-emerald-500'">
+        <p class="text-sm font-medium" x-text="toast.message"></p>
+    </div>
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">Import Petugas SE2026</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">Upload file Excel untuk menambahkan petugas baru ke rekap SE2026</p>
+        </div>
+        <a href="/api/rekap/spk/se2026/import/template"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition self-start
+                   bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600
+                   text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm">
+            <i class="fas fa-download text-orange-500"></i>
+            <span>Download Template Excel</span>
+        </a>
+    </div>
+
+    <!-- Info kolom template -->
+    <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/40 rounded-2xl p-4">
+        <p class="text-sm font-semibold text-orange-700 dark:text-orange-300 mb-2">
+            <i class="fas fa-info-circle mr-2"></i>Format Excel yang diterima:
+        </p>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+            <div class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border border-orange-100 dark:border-orange-800/30">
+                <p class="font-semibold text-gray-700 dark:text-gray-300">Kolom A</p>
+                <p class="text-gray-500 dark:text-gray-400">Nama Lengkap</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border border-orange-100 dark:border-orange-800/30">
+                <p class="font-semibold text-gray-700 dark:text-gray-300">Kolom B</p>
+                <p class="text-gray-500 dark:text-gray-400">SOBAT ID</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border border-orange-100 dark:border-orange-800/30">
+                <p class="font-semibold text-gray-700 dark:text-gray-300">Kolom C</p>
+                <p class="text-gray-500 dark:text-gray-400">Posisi (PCL/PML)</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border border-orange-100 dark:border-orange-800/30">
+                <p class="font-semibold text-gray-700 dark:text-gray-300">Kolom D</p>
+                <p class="text-gray-500 dark:text-gray-400">Alamat</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border border-orange-100 dark:border-orange-800/30">
+                <p class="font-semibold text-gray-700 dark:text-gray-300">Kolom E</p>
+                <p class="text-gray-500 dark:text-gray-400">Kecamatan</p>
+            </div>
+        </div>
+        <p class="text-xs text-orange-600 dark:text-orange-400 mt-3">
+            <i class="fas fa-triangle-exclamation mr-1"></i>
+            Baris 1 = header, data mulai baris 2. Petugas yang sudah ada (SOBAT ID sama) akan dilewati otomatis.
+        </p>
+    </div>
+
+    <!-- Upload area -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-600 p-8 text-center transition"
+        :class="dragging ? 'border-orange-400 bg-orange-50 dark:bg-orange-900/10' : ''"
+        @dragover.prevent="dragging=true" @dragleave="dragging=false"
+        @drop.prevent="dragging=false; handleDrop($event)">
+
+        <template x-if="!file">
+            <div>
+                <i class="fas fa-file-excel text-5xl text-gray-300 dark:text-gray-600 mb-4 block"></i>
+                <p class="text-gray-600 dark:text-gray-300 font-medium mb-1">Drag & drop file Excel di sini</p>
+                <p class="text-gray-400 dark:text-gray-500 text-sm mb-4">atau klik tombol di bawah</p>
+                <label class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl cursor-pointer font-medium text-sm transition
+                              bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30">
+                    <i class="fas fa-upload"></i>
+                    <span>Pilih File Excel (.xlsx)</span>
+                    <input type="file" accept=".xlsx,.xls" class="hidden" @change="handleFile($event)">
+                </label>
+            </div>
+        </template>
+
+        <template x-if="file">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <i class="fas fa-file-excel text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-semibold text-gray-800 dark:text-white" x-text="file.name"></p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400" x-text="formatSize(file.size)"></p>
+                    </div>
+                </div>
+                <button @click="file=null; results=null"
+                    class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </template>
+    </div>
+
+    <!-- Tombol Import -->
+    <div class="flex gap-3" x-show="file && !results">
+        <button @click="doImport()" :disabled="loading"
+            class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition
+                   bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 disabled:opacity-50">
+            <i class="fas fa-spinner fa-spin" x-show="loading"></i>
+            <i class="fas fa-file-import" x-show="!loading"></i>
+            <span x-text="loading ? 'Sedang mengimport...' : 'Import Sekarang'"></span>
+        </button>
+        <button @click="file=null" class="px-4 py-2.5 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            Batal
+        </button>
+    </div>
+
+    <!-- Hasil import -->
+    <template x-if="results">
+        <div class="space-y-4">
+            <!-- Ringkasan -->
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/30 rounded-2xl p-4 text-center">
+                    <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400" x-text="results.inserted"></p>
+                    <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">Berhasil diimport</p>
+                </div>
+                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-2xl p-4 text-center">
+                    <p class="text-3xl font-bold text-amber-600 dark:text-amber-400" x-text="results.skipped"></p>
+                    <p class="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">Dilewati (sudah ada)</p>
+                </div>
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-2xl p-4 text-center">
+                    <p class="text-3xl font-bold text-red-600 dark:text-red-400" x-text="results.errors"></p>
+                    <p class="text-xs text-red-600 dark:text-red-400 font-medium mt-1">Error</p>
+                </div>
+            </div>
+
+            <!-- Detail per baris -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                    <p class="font-semibold text-gray-800 dark:text-white text-sm">Detail Hasil Import</p>
+                    <button @click="file=null; results=null"
+                        class="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        <i class="fas fa-plus mr-1"></i>Import Lagi
+                    </button>
+                </div>
+                <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                    <table class="w-full text-sm">
+                        <thead class="sticky top-0 bg-gray-50 dark:bg-gray-900/50">
+                            <tr>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Baris</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Nama</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">SOBAT ID</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
+                            <template x-for="r in results.results" :key="r.baris">
+                                <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/20">
+                                    <td class="px-4 py-2.5 text-gray-400 dark:text-gray-500 text-xs" x-text="r.baris"></td>
+                                    <td class="px-4 py-2.5 font-medium text-gray-800 dark:text-white" x-text="r.nama"></td>
+                                    <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs hidden md:table-cell" x-text="r.sobat"></td>
+                                    <td class="px-4 py-2.5">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium"
+                                            :class="{
+                                                'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300': r.status==='ok',
+                                                'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300': r.status==='skip',
+                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': r.status==='error'
+                                            }">
+                                            <i :class="{'fas fa-check': r.status==='ok', 'fas fa-forward': r.status==='skip', 'fas fa-xmark': r.status==='error'}"></i>
+                                            <span x-text="r.pesan"></span>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+<script>
+function se2026Import() {
+    return {
+        file: null,
+        dragging: false,
+        loading: false,
+        results: null,
+        toast: { show: false, message: '', type: 'success' },
+
+        handleFile(e) {
+            const f = e.target.files[0];
+            if (f) this.file = f;
+        },
+        handleDrop(e) {
+            const f = e.dataTransfer.files[0];
+            if (f && (f.name.endsWith('.xlsx') || f.name.endsWith('.xls'))) {
+                this.file = f;
+            } else {
+                this.showToast('Hanya file Excel (.xlsx) yang diterima', 'error');
+            }
+        },
+        formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+            return (bytes/1024/1024).toFixed(1) + ' MB';
+        },
+        async doImport() {
+            if (!this.file) return;
+            this.loading = true;
+            const fd = new FormData();
+            fd.append('file', this.file);
+            try {
+                const res = await fetch('/api/rekap/spk/se2026/import', { method: 'POST', body: fd });
+                this.results = await res.json();
+                if (this.results.inserted > 0) {
+                    this.showToast(`${this.results.inserted} petugas berhasil diimport`, 'success');
+                } else if (this.results.skipped > 0) {
+                    this.showToast('Semua data sudah ada, tidak ada yang diimport', 'success');
+                }
+            } catch(e) {
+                this.showToast('Gagal mengimport: ' + e.message, 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+        showToast(msg, type='success') {
+            this.toast = { show: true, message: msg, type };
+            setTimeout(() => this.toast.show = false, 4000);
+        }
+    };
+}
+</script>
+{{ end }}
