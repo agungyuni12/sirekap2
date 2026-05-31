@@ -62,16 +62,33 @@ func formatAngkaSE(n int64) string {
 	return result.String()
 }
 
+// properCase mengubah nama kapital semua menjadi Proper Case (tiap kata kapital awal).
+func properCase(s string) string {
+	words := strings.Fields(strings.ToLower(s))
+	for i, w := range words {
+		if len(w) > 0 {
+			words[i] = strings.ToUpper(string([]rune(w)[:1])) + string([]rune(w)[1:])
+		}
+	}
+	return strings.Join(words, " ")
+}
+
+// TGR default per jenis (total biaya pelatihan = sanksi Pasal 11)
+// PCL: 2.332.433 | PML: 2.335.840
+const (
+	tgrDefaultPCL int64 = 2332433
+	tgrDefaultPML int64 = 2335840
+)
+
 // buildSPKSE2026 fetches rekap+mitra data and builds the template replacement map.
-// tanggalSPK: "2026-05-31", jenis: "pcl" atau "pml"
 func buildSPKSE2026(rekapID int, tanggalSPK string) (spkSE2026Data, string, error) {
 	var d spkSE2026Data
 
 	row := database.DB.QueryRow(`
 		SELECT r.namamitra, r.honor, r.id_spk, r.kegiatan,
-		       COALESCE(m.alamat, ''), COALESCE(m.kecamatan, '')
+		       COALESCE((SELECT m.alamat    FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), ''),
+		       COALESCE((SELECT m.kecamatan FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), '')
 		FROM rekap r
-		LEFT JOIN mitra m ON m.idsobat = r.idsobat
 		WHERE r.id = ?`, rekapID)
 
 	var honorStr, idSpk, kegiatan, alamat, kecamatan string
@@ -79,6 +96,8 @@ func buildSPKSE2026(rekapID int, tanggalSPK string) (spkSE2026Data, string, erro
 		return d, "", fmt.Errorf("rekap id %d tidak ditemukan", rekapID)
 	}
 
+	// Proper case nama
+	d.NamaPetugas = properCase(d.NamaPetugas)
 	d.Nomor = idSpk
 
 	// Tanggal
@@ -91,14 +110,18 @@ func buildSPKSE2026(rekapID int, tanggalSPK string) (spkSE2026Data, string, erro
 	d.BlnTeks = bulanTeksSE[tgl.Month()]
 	d.TglAngka = fmt.Sprintf("%02d-%02d", tgl.Day(), int(tgl.Month()))
 
-	// Alamat petugas
+	// Alamat: gabung alamat + kecamatan
+	bagian := []string{}
 	if alamat != "" {
-		d.AlamatPetugas = alamat
-	} else if kecamatan != "" {
-		d.AlamatPetugas = "Kecamatan " + kecamatan + ", Kab. Dompu"
-	} else {
-		d.AlamatPetugas = "Kabupaten Dompu"
+		bagian = append(bagian, alamat)
 	}
+	if kecamatan != "" {
+		bagian = append(bagian, "Kecamatan "+kecamatan)
+	}
+	if len(bagian) == 0 {
+		bagian = append(bagian, "Kabupaten Dompu")
+	}
+	d.AlamatPetugas = strings.Join(bagian, ", ")
 
 	// Honor
 	honorVal, _ := strconv.ParseFloat(honorStr, 64)
@@ -106,16 +129,17 @@ func buildSPKSE2026(rekapID int, tanggalSPK string) (spkSE2026Data, string, erro
 	d.HonorAngka = formatAngkaSE(honorInt)
 	d.HonorTerbilang = strings.Title(Terbilang(honorInt))
 
-	// Sanksi = 40% honor
-	sanksi := int64(honorVal * 0.4)
-	d.SanksiAngka = formatAngkaSE(sanksi)
-	d.SanksiTerbilang = strings.Title(Terbilang(sanksi))
-
 	// Jenis template
 	jenis := "pcl"
+	sanksi := tgrDefaultPCL
 	if strings.Contains(strings.ToLower(kegiatan), "pemeriksa") {
 		jenis = "pml"
+		sanksi = tgrDefaultPML
 	}
+
+	// Sanksi Pasal 11 = TGR (biaya pelatihan per orang)
+	d.SanksiAngka = formatAngkaSE(sanksi)
+	d.SanksiTerbilang = strings.Title(Terbilang(sanksi))
 
 	return d, jenis, nil
 }
