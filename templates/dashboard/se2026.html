@@ -11,57 +11,59 @@
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800">SPK Sensus Ekonomi 2026</h2>
-            <p class="text-gray-500 mt-1 text-sm">Download SPK per petugas atau semua sekaligus (ZIP)</p>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">SPK Sensus Ekonomi 2026</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">Download SPK per petugas atau semua sekaligus (ZIP)</p>
         </div>
-        <div class="flex items-center gap-3">
-            <a :href="`/api/rekap/spk/se2026/download-all?jenis=${tab}&tanggal=2026-05-31`"
-                class="inline-flex items-center px-4 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition font-medium shadow-lg shadow-orange-200 text-sm">
-                <i class="fas fa-file-zipper mr-2"></i>
-                Download Semua ZIP
-            </a>
-        </div>
+        <a :href="`/api/rekap/spk/se2026/download-all?jenis=${tab}&tanggal=2026-05-31`"
+            class="inline-flex items-center px-4 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition font-medium shadow-lg shadow-orange-200 text-sm self-start md:self-auto">
+            <i class="fas fa-file-zipper mr-2"></i>
+            Download Semua (ZIP)
+        </a>
     </div>
 
     <!-- Tab -->
-    <div class="flex gap-2 border-b border-gray-200">
+    <div class="flex gap-1 border-b border-gray-200 dark:border-gray-700">
         <button @click="tab='pcl'; load()"
-            class="px-5 py-2.5 text-sm font-semibold border-b-2 transition"
-            :class="tab==='pcl' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
-            <i class="fas fa-user-check mr-2"></i>
-            PCL / Petugas Lapangan
-            <span class="ml-2 px-2 py-0.5 rounded-full text-xs"
-                :class="tab==='pcl' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500'"
-                x-text="items.filter(i=>i.kegiatan.includes('Pendataan')).length || ''"></span>
+            class="px-5 py-2.5 text-sm font-semibold border-b-2 transition -mb-px"
+            :class="tab==='pcl'
+                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+            <i class="fas fa-user-check mr-2"></i>PCL / Petugas Lapangan
+            <span class="ml-1.5 px-2 py-0.5 rounded-full text-xs font-bold"
+                :class="tab==='pcl' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+                x-text="items.filter(i=>!i.kegiatan.includes('Pemeriksa')).length || 0"></span>
         </button>
         <button @click="tab='pml'; load()"
-            class="px-5 py-2.5 text-sm font-semibold border-b-2 transition"
-            :class="tab==='pml' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
-            <i class="fas fa-user-shield mr-2"></i>
-            PML / Pemeriksa Lapangan
-            <span class="ml-2 px-2 py-0.5 rounded-full text-xs"
-                :class="tab==='pml' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'"
-                x-text="items.filter(i=>i.kegiatan.includes('Pemeriksa')).length || ''"></span>
+            class="px-5 py-2.5 text-sm font-semibold border-b-2 transition -mb-px"
+            :class="tab==='pml'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+            <i class="fas fa-user-shield mr-2"></i>PML / Pemeriksa
+            <span class="ml-1.5 px-2 py-0.5 rounded-full text-xs font-bold"
+                :class="tab==='pml' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+                x-text="items.filter(i=>i.kegiatan.includes('Pemeriksa')).length || 0"></span>
         </button>
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Petugas</p>
-            <p class="text-2xl font-bold text-gray-800 mt-1" x-text="filteredItems().length"></p>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Total</p>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white mt-1" x-text="filteredItems().length"></p>
         </div>
-        <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Sudah SPK</p>
-            <p class="text-2xl font-bold text-emerald-600 mt-1" x-text="filteredItems().filter(i=>i.sudah_spk).length"></p>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Sudah SPK</p>
+            <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1"
+                x-text="filteredItems().filter(i=>i.sudah_spk).length"></p>
         </div>
-        <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Belum SPK</p>
-            <p class="text-2xl font-bold text-red-500 mt-1" x-text="filteredItems().filter(i=>!i.sudah_spk).length"></p>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Belum SPK</p>
+            <p class="text-2xl font-bold text-red-500 dark:text-red-400 mt-1"
+                x-text="filteredItems().filter(i=>!i.sudah_spk).length"></p>
         </div>
-        <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Honor Per Orang</p>
-            <p class="text-lg font-bold text-gray-800 mt-1"
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Honor/Orang</p>
+            <p class="text-base font-bold text-gray-800 dark:text-white mt-1"
                 x-text="tab==='pcl' ? 'Rp 11.572.500' : 'Rp 12.192.500'"></p>
         </div>
     </div>
@@ -69,71 +71,73 @@
     <!-- Search -->
     <div class="relative">
         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-        <input type="text" x-model="search" placeholder="Cari nama petugas..."
-            class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 text-sm">
+        <input type="text" x-model="search" placeholder="Cari nama petugas atau kecamatan..."
+            class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 text-sm">
     </div>
 
     <!-- Tabel -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div x-show="loading" class="p-12 text-center text-gray-500">
-            <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
-            <p>Memuat data...</p>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+
+        <div x-show="loading" class="p-12 text-center text-gray-500 dark:text-gray-400">
+            <i class="fas fa-spinner fa-spin text-2xl mb-3 block"></i>
+            <span>Memuat data...</span>
         </div>
 
-        <div x-show="!loading && filteredItems().length === 0" class="p-12 text-center text-gray-500">
-            <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
-            <p>Tidak ada data ditemukan</p>
+        <div x-show="!loading && filteredItems().length === 0" class="p-12 text-center text-gray-400 dark:text-gray-500">
+            <i class="fas fa-inbox text-4xl mb-3 block text-gray-300 dark:text-gray-600"></i>
+            <span>Tidak ada data ditemukan</span>
         </div>
 
-        <table x-show="!loading && filteredItems().length > 0" class="w-full text-sm">
-            <thead>
-                <tr class="border-b border-gray-100 bg-gray-50/50">
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-10">No</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama Petugas</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Kecamatan</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nomor SPK</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Download</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-                <template x-for="(item, idx) in filteredItems()" :key="item.id">
-                    <tr class="hover:bg-gray-50/50 transition">
-                        <td class="px-4 py-3 text-gray-400 text-xs" x-text="idx+1"></td>
-                        <td class="px-4 py-3">
-                            <p class="font-medium text-gray-800" x-text="item.nama"></p>
-                            <p class="text-xs text-gray-400 mt-0.5" x-text="item.idsobat"></p>
-                        </td>
-                        <td class="px-4 py-3 text-gray-600 hidden md:table-cell" x-text="item.kecamatan || '-'"></td>
-                        <td class="px-4 py-3">
-                            <template x-if="item.sudah_spk">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-medium">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span x-text="item.id_spk"></span>
-                                </span>
-                            </template>
-                            <template x-if="!item.sudah_spk">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 text-red-500 text-xs font-medium">
-                                    <i class="fas fa-clock"></i>
-                                    Belum ada nomor
-                                </span>
-                            </template>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <template x-if="item.sudah_spk">
-                                <a :href="`/api/rekap/spk/se2026/download?rekap_id=${item.id}&tanggal=2026-05-31`"
-                                    class="inline-flex items-center px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-medium hover:bg-orange-600 transition">
-                                    <i class="fas fa-download mr-1.5"></i>
-                                    Download
-                                </a>
-                            </template>
-                            <template x-if="!item.sudah_spk">
-                                <span class="text-gray-300 text-xs">—</span>
-                            </template>
-                        </td>
+        <div x-show="!loading && filteredItems().length > 0" class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide w-10">No</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Nama Petugas</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">Kecamatan</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Nomor SPK</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Download</th>
                     </tr>
-                </template>
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
+                    <template x-for="(item, idx) in filteredItems()" :key="item.id">
+                        <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition">
+                            <td class="px-4 py-3 text-gray-400 dark:text-gray-500 text-xs" x-text="idx+1"></td>
+                            <td class="px-4 py-3">
+                                <p class="font-medium text-gray-800 dark:text-white" x-text="item.nama"></p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5" x-text="item.idsobat"></p>
+                            </td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell" x-text="item.kecamatan || '-'"></td>
+                            <td class="px-4 py-3">
+                                <template x-if="item.sudah_spk">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span x-text="item.id_spk"></span>
+                                    </span>
+                                </template>
+                                <template x-if="!item.sudah_spk">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 text-xs font-medium">
+                                        <i class="fas fa-clock"></i>
+                                        Belum ada nomor
+                                    </span>
+                                </template>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <template x-if="item.sudah_spk">
+                                    <a :href="`/api/rekap/spk/se2026/download?rekap_id=${item.id}&tanggal=2026-05-31`"
+                                        class="inline-flex items-center px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium transition">
+                                        <i class="fas fa-download mr-1.5"></i>SPK
+                                    </a>
+                                </template>
+                                <template x-if="!item.sudah_spk">
+                                    <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
+                                </template>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -162,13 +166,16 @@ function se2026() {
         },
 
         filteredItems() {
-            const q = this.search.toLowerCase();
+            const q = this.search.toLowerCase().trim();
+            if (!q) return this.items || [];
             return (this.items || []).filter(i =>
-                !q || i.nama.toLowerCase().includes(q) || (i.kecamatan||'').toLowerCase().includes(q)
+                i.nama.toLowerCase().includes(q) ||
+                (i.kecamatan || '').toLowerCase().includes(q) ||
+                (i.id_spk || '').toLowerCase().includes(q)
             );
         },
 
-        showToast(msg, type='success') {
+        showToast(msg, type = 'success') {
             this.toast = { show: true, message: msg, type };
             setTimeout(() => this.toast.show = false, 3000);
         }

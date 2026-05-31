@@ -564,10 +564,10 @@
         sidebarCollapsed: false,
         isMobile: window.innerWidth < 1024,
         activePage: '{{ .ActivePage }}',
-        activeRekapGroup: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else }}false{{ end }},
+        activeRekapGroup: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else if eq .ActivePage "se2026" }}true{{ else }}false{{ end }},
         activeMatriksGroup: {{ if eq .ActivePage "matriks" }}true{{ else if eq .ActivePage "monitoring" }}true{{ else if eq .ActivePage "kalender" }}true{{ else if eq .ActivePage "administrasi" }}true{{ else }}false{{ end }},
         activeLaporGroup: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}false{{ end }},
-        expandedRekap: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else }}false{{ end }}, 
+        expandedRekap: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else if eq .ActivePage "se2026" }}true{{ else }}false{{ end }},
         expandedMatriks: {{ if eq .ActivePage "matriks" }}true{{ else if eq .ActivePage "monitoring" }}true{{ else if eq .ActivePage "kalender" }}true{{ else if eq .ActivePage "administrasi" }}true{{ else }}false{{ end }},
         expandedLapor: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}true{{ end }},
         toggleSidebar() {
@@ -659,6 +659,11 @@
                                 <i class="fas fa-briefcase w-5 mr-3 {{ if eq .ActivePage "kegiatan" }}text-blue-400{{ else }}text-gray-500{{ end }}"></i>
                                 <span>Kegiatan</span>
                             </a>
+                            <a href="/dashboard/se2026" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "se2026" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-store w-5 mr-3 {{ if eq .ActivePage "se2026" }}text-orange-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>SPK SE2026</span>
+                            </a>
                             <a href="/dashboard/surat" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "surat" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-envelope w-5 mr-3 {{ if eq .ActivePage "surat" }}text-blue-400{{ else }}text-gray-500{{ end }}"></i>
@@ -704,11 +709,6 @@
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "administrasi" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-file-invoice w-5 mr-3 {{ if eq .ActivePage "administrasi" }}text-purple-400{{ else }}text-gray-500{{ end }}"></i>
                                 <span>Administrasi</span>
-                            </a>
-                            <a href="/dashboard/se2026" @click="sidebarOpen = false"
-                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "se2026" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
-                                <i class="fas fa-store w-5 mr-3 {{ if eq .ActivePage "se2026" }}text-orange-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>SPK SE2026</span>
                             </a>
                         </div>
                     </div>

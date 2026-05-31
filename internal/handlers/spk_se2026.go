@@ -126,17 +126,17 @@ func generateSPKDocx(d spkSE2026Data, jenis string) ([]byte, error) {
 		tpl = "static/templates-se2026/spk_pml_se2026.docx"
 	}
 	return replaceInDocx(tpl, map[string]string{
-		"${nomor}":            d.Nomor,
-		"${hari}":             d.Hari,
-		"${tgl_teks}":         d.TglTeks,
-		"${bln_teks}":         d.BlnTeks,
-		"${tgl_angka}":        d.TglAngka,
-		"${nama_petugas}":     d.NamaPetugas,
-		"${alamat_petugas}":   d.AlamatPetugas,
-		"${honor_angka}":      d.HonorAngka,
-		"${honor_terbilang}":  d.HonorTerbilang,
-		"${sanksi_angka}":     d.SanksiAngka,
-		"${sanksi_terbilang}": d.SanksiTerbilang,
+		"nomor":            d.Nomor,
+		"hari":             d.Hari,
+		"tgl_teks":         d.TglTeks,
+		"bln_teks":         d.BlnTeks,
+		"tgl_angka":        d.TglAngka,
+		"nama_petugas":     d.NamaPetugas,
+		"alamat_petugas":   d.AlamatPetugas,
+		"honor_angka":      d.HonorAngka,
+		"honor_terbilang":  d.HonorTerbilang,
+		"sanksi_angka":     d.SanksiAngka,
+		"sanksi_terbilang": d.SanksiTerbilang,
 	})
 }
 
