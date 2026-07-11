@@ -11,15 +11,54 @@
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">SPK Sensus Ekonomi 2026</h2>
-            <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">Download SPK per petugas atau semua sekaligus (ZIP)</p>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">SPK &amp; BAPP Sensus Ekonomi 2026</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">Download SPK/BAPP per petugas atau semua sekaligus (ZIP)</p>
         </div>
-        <a :href="`/api/rekap/spk/se2026/download-all?jenis=${tab}&tanggal=2026-05-31`"
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition self-start md:self-auto
-                   bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30">
-            <i class="fas fa-file-zipper"></i>
-            <span>Download Semua (ZIP)</span>
-        </a>
+        <div class="flex flex-wrap items-center gap-2 self-start md:self-auto">
+            <select x-model="metode"
+                title="Metode hitung persentase progres (sama seperti dropdown di dashboard sigempar)"
+                class="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm">
+                <option value="1">Metode 1: Total/Total</option>
+                <option value="2">Metode 2: Total/Prelist</option>
+                <option value="3">Metode 3: Prelist/Prelist</option>
+            </select>
+            <button @click="syncRealisasi()" :disabled="syncing"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
+                       bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white shadow-lg shadow-blue-500/30">
+                <i class="fas fa-rotate" :class="syncing && 'fa-spin'"></i>
+                <span x-text="syncing ? 'Menyinkron...' : 'Sinkron Realisasi'"></span>
+            </button>
+            <a :href="`/api/rekap/spk/se2026/download-all?jenis=${tab}&tanggal=2026-05-31`"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
+                       bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30">
+                <i class="fas fa-file-zipper"></i>
+                <span>SPK (ZIP)</span>
+            </a>
+            <a :href="`/api/rekap/spk/se2026/bapp/download-all?jenis=${tab}&termin=1&tanggal=2026-08-15`"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
+                       bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/30">
+                <i class="fas fa-file-zipper"></i>
+                <span>BAPP I (ZIP)</span>
+            </a>
+            <a :href="`/api/rekap/spk/se2026/bapp/download-all?jenis=${tab}&termin=2&tanggal=2026-08-15`"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
+                       bg-purple-700 hover:bg-purple-800 text-white shadow-lg shadow-purple-700/30">
+                <i class="fas fa-file-zipper"></i>
+                <span>BAPP II (ZIP)</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Unmatched warning -->
+    <div x-show="unmatched.length > 0" x-cloak
+        class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4">
+        <p class="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-2">
+            <i class="fas fa-triangle-exclamation mr-1"></i>
+            <span x-text="unmatched.length"></span> nama tidak match tunggal ke data se2026 (cek manual):
+        </p>
+        <ul class="text-xs text-amber-700 dark:text-amber-400 space-y-0.5 list-disc list-inside">
+            <template x-for="u in unmatched" :key="u"><li x-text="u"></li></template>
+        </ul>
     </div>
 
     <!-- Tab -->
@@ -97,7 +136,11 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Nama Petugas</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">Kecamatan</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Nomor SPK</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Download</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Target/Real. SLS</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">SPK</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">BAPP I</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">BAPP II</th>
+                        <th x-show="tab==='pml'" class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pernyataan</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
@@ -125,6 +168,9 @@
                                     </span>
                                 </template>
                             </td>
+                            <td class="px-4 py-3 text-center text-xs text-gray-600 dark:text-gray-300 hidden lg:table-cell">
+                                <span x-text="item.target_sls"></span> / <span x-text="item.realisasi_sls"></span>
+                            </td>
                             <td class="px-4 py-3 text-center">
                                 <template x-if="item.sudah_spk">
                                     <a :href="`/api/rekap/spk/se2026/download?rekap_id=${item.id}&tanggal=2026-05-31`"
@@ -134,6 +180,63 @@
                                     </a>
                                 </template>
                                 <template x-if="!item.sudah_spk">
+                                    <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
+                                </template>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <template x-if="item.sudah_bapp1">
+                                    <a :href="`/api/rekap/spk/se2026/bapp/download?rekap_id=${item.id}&termin=1&tanggal=2026-08-15`"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-purple-500 hover:bg-purple-600 text-white shadow-sm shadow-purple-300 dark:shadow-purple-900/40">
+                                        <i class="fas fa-download"></i>BAPP I
+                                    </a>
+                                </template>
+                                <template x-if="!item.sudah_bapp1 && item.sudah_spk">
+                                    <button @click="createBAPP(item, 1)"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                        <i class="fas fa-plus"></i>Buat
+                                    </button>
+                                </template>
+                                <template x-if="!item.sudah_bapp1 && !item.sudah_spk">
+                                    <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
+                                </template>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <template x-if="item.sudah_bapp2">
+                                    <a :href="`/api/rekap/spk/se2026/bapp/download?rekap_id=${item.id}&termin=2&tanggal=2026-08-15`"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-purple-700 hover:bg-purple-800 text-white shadow-sm shadow-purple-300 dark:shadow-purple-900/40">
+                                        <i class="fas fa-download"></i>BAPP II
+                                    </a>
+                                </template>
+                                <template x-if="!item.sudah_bapp2 && item.sudah_spk">
+                                    <button @click="createBAPP(item, 2)"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                        <i class="fas fa-plus"></i>Buat
+                                    </button>
+                                </template>
+                                <template x-if="!item.sudah_bapp2 && !item.sudah_spk">
+                                    <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
+                                </template>
+                            </td>
+                            <td x-show="tab==='pml'" class="px-4 py-3 text-center">
+                                <template x-if="item.sudah_pernyataan">
+                                    <a :href="`/api/rekap/spk/se2026/pernyataan/download?rekap_id=${item.id}&tanggal=2026-08-15`"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-blue-500 hover:bg-blue-600 text-white shadow-sm shadow-blue-300 dark:shadow-blue-900/40">
+                                        <i class="fas fa-download"></i>Pernyataan
+                                    </a>
+                                </template>
+                                <template x-if="!item.sudah_pernyataan && item.sudah_spk">
+                                    <button @click="createPernyataan(item)"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                        <i class="fas fa-plus"></i>Buat
+                                    </button>
+                                </template>
+                                <template x-if="!item.sudah_pernyataan && !item.sudah_spk">
                                     <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
                                 </template>
                             </td>
@@ -151,6 +254,9 @@ function se2026() {
         tab: 'pcl',
         items: [],
         loading: false,
+        syncing: false,
+        metode: '1',
+        unmatched: [],
         search: '',
         toast: { show: false, message: '', type: 'success' },
 
@@ -166,6 +272,51 @@ function se2026() {
                 this.showToast('Gagal memuat data', 'error');
             } finally {
                 this.loading = false;
+            }
+        },
+
+        async syncRealisasi() {
+            this.syncing = true;
+            try {
+                const res = await fetch(`/api/rekap/spk/se2026/sync-realisasi?metode=${this.metode}`, { method: 'POST' });
+                const data = await res.json();
+                this.unmatched = data.unmatched || [];
+                this.showToast(`Sinkron selesai: ${data.updated_ppl} PPL, ${data.updated_pml} PML diperbarui`);
+                await this.load();
+            } catch (e) {
+                this.showToast('Gagal sinkron realisasi', 'error');
+            } finally {
+                this.syncing = false;
+            }
+        },
+
+        async createBAPP(item, termin) {
+            try {
+                const res = await fetch('/api/rekap/spk/se2026/bapp/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rekap_id: item.id, termin: termin, tanggal: '2026-08-15' })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                this.showToast(`Nomor BAPP Termin ${termin === 1 ? 'I' : 'II'} berhasil dibuat`);
+                await this.load();
+            } catch (e) {
+                this.showToast('Gagal membuat nomor BAPP: ' + e.message, 'error');
+            }
+        },
+
+        async createPernyataan(item) {
+            try {
+                const res = await fetch('/api/rekap/spk/se2026/pernyataan/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rekap_id: item.id, tanggal: '2026-08-15' })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                this.showToast('Nomor Surat Pernyataan berhasil dibuat');
+                await this.load();
+            } catch (e) {
+                this.showToast('Gagal membuat nomor Surat Pernyataan: ' + e.message, 'error');
             }
         },
 

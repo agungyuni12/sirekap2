@@ -296,6 +296,8 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
 		SELECT r.id, r.idsobat, r.namamitra, r.kegiatan, r.honor,
 		       COALESCE(r.id_spk, ''),
+		       COALESCE(r.id_bapp1, ''), COALESCE(r.id_bapp2, ''), COALESCE(r.id_pernyataan1, ''),
+		       COALESCE(NULLIF(r.jumlah_sls,''),'0'), r.realisasi_sls,
 		       COALESCE((SELECT m.alamat FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), ''),
 		       COALESCE((SELECT m.kecamatan FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), '')
 		FROM rekap r
@@ -311,27 +313,40 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type Item struct {
-		ID        int     `json:"id"`
-		IDSobat   string  `json:"idsobat"`
-		Nama      string  `json:"nama"`
-		Kegiatan  string  `json:"kegiatan"`
-		Honor     float64 `json:"honor"`
-		IDSpk     string  `json:"id_spk"`
-		SudahSPK  bool    `json:"sudah_spk"`
-		Alamat    string  `json:"alamat"`
-		Kecamatan string  `json:"kecamatan"`
+		ID              int     `json:"id"`
+		IDSobat         string  `json:"idsobat"`
+		Nama            string  `json:"nama"`
+		Kegiatan        string  `json:"kegiatan"`
+		Honor           float64 `json:"honor"`
+		IDSpk           string  `json:"id_spk"`
+		SudahSPK        bool    `json:"sudah_spk"`
+		IDBapp1         string  `json:"id_bapp1"`
+		SudahBapp1      bool    `json:"sudah_bapp1"`
+		IDBapp2         string  `json:"id_bapp2"`
+		SudahBapp2      bool    `json:"sudah_bapp2"`
+		IDPernyataan1   string  `json:"id_pernyataan1"`
+		SudahPernyataan bool    `json:"sudah_pernyataan"`
+		TargetSLS       int     `json:"target_sls"`
+		RealisasiSLS    int     `json:"realisasi_sls"`
+		Alamat          string  `json:"alamat"`
+		Kecamatan       string  `json:"kecamatan"`
 	}
 
 	var items []Item
 	for rows.Next() {
 		var item Item
-		var honorStr string
+		var honorStr, jumlahSLSStr string
 		if err := rows.Scan(&item.ID, &item.IDSobat, &item.Nama, &item.Kegiatan,
-			&honorStr, &item.IDSpk, &item.Alamat, &item.Kecamatan); err != nil {
+			&honorStr, &item.IDSpk, &item.IDBapp1, &item.IDBapp2, &item.IDPernyataan1,
+			&jumlahSLSStr, &item.RealisasiSLS, &item.Alamat, &item.Kecamatan); err != nil {
 			continue
 		}
 		item.Honor, _ = strconv.ParseFloat(honorStr, 64)
+		item.TargetSLS, _ = strconv.Atoi(strings.TrimSpace(jumlahSLSStr))
 		item.SudahSPK = strings.Contains(item.IDSpk, "SPK-SE2026")
+		item.SudahBapp1 = item.IDBapp1 != ""
+		item.SudahBapp2 = item.IDBapp2 != ""
+		item.SudahPernyataan = item.IDPernyataan1 != ""
 		items = append(items, item)
 	}
 

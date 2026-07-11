@@ -536,6 +536,15 @@ func main() {
 	r.HandleFunc("/api/rekap/spk/se2026/download-all", middleware.RequireAdmin(handlers.DownloadAllSPKSE2026Handler)).Methods("GET")
 	r.HandleFunc("/api/rekap/spk/se2026/update-sls", middleware.RequireAdmin(handlers.UpdateJumlahSLSHandler)).Methods("POST")
 
+	// API BAPP + Surat Pernyataan SE2026
+	r.HandleFunc("/api/rekap/spk/se2026/sync-realisasi", middleware.RequireAdmin(handlers.SyncRealisasiSE2026Handler)).Methods("POST")
+	r.HandleFunc("/api/rekap/spk/se2026/bapp/create", middleware.RequireAdmin(handlers.CreateBAPPHandler)).Methods("POST")
+	r.HandleFunc("/api/rekap/spk/se2026/bapp/create-bulk", middleware.RequireAdmin(handlers.CreateBulkBAPPHandler)).Methods("POST")
+	r.HandleFunc("/api/rekap/spk/se2026/bapp/download", middleware.RequireAdmin(handlers.DownloadBAPPSE2026Handler)).Methods("GET")
+	r.HandleFunc("/api/rekap/spk/se2026/bapp/download-all", middleware.RequireAdmin(handlers.DownloadAllBAPPSE2026Handler)).Methods("GET")
+	r.HandleFunc("/api/rekap/spk/se2026/pernyataan/create", middleware.RequireAdmin(handlers.CreatePernyataanHandler)).Methods("POST")
+	r.HandleFunc("/api/rekap/spk/se2026/pernyataan/download", middleware.RequireAdmin(handlers.DownloadPernyataanSE2026Handler)).Methods("GET")
+
 	// BAST
 	r.HandleFunc("/api/rekap/bast/bulk-options", middleware.RequireAdmin(handlers.ListBulkBASTOptionsHandler)).Methods("GET")
 	r.HandleFunc("/api/rekap/bast/create", middleware.RequireAdmin(handlers.CreateBASTHandler)).Methods("POST")
