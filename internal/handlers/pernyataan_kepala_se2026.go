@@ -78,9 +78,16 @@ func buildPernyataanKepalaSE2026(tanggal string) (kepalaSE2026Data, []usahaKelua
 	return d, lampiran, nil
 }
 
+// kepalaColW adalah lebar kolom (twips/dxa) persis seperti tabel contoh di
+// surat_pernyataan_kepala_se2026.docx asli (total 13410 dxa = penuh selebar halaman
+// landscape lampiran tersebut).
+var kepalaColW = [6]int{1123, 2692, 2690, 2424, 2426, 2055}
+
 // generateKepalaLampiranTableXML sama seperti generateLampiranTableXML tapi dengan
-// tambahan kolom Jabatan (PML/PPL campur dalam satu tabel).
+// tambahan kolom Jabatan (PML/PPL campur dalam satu tabel) - lebar kolom & tblLayout=fixed
+// disamakan dengan tabel contoh di template aslinya.
 func generateKepalaLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
+	c := kepalaColW
 	var rowXML string
 	totalTarget, totalRealisasi := 0, 0
 	for i, r := range rows {
@@ -88,26 +95,31 @@ func generateKepalaLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 		totalRealisasi += r.Realisasi
 		rowXML += fmt.Sprintf(`
 <w:tr>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
-</w:tr>`, i+1, escapeXML(r.Nama), escapeXML(r.Jabatan), r.TargetPrelist, r.Realisasi, persentase(r.Realisasi, r.TargetPrelist))
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+</w:tr>`,
+			tcOpen(c[0]), i+1, tcOpen(c[1]), escapeXML(r.Nama), tcOpen(c[2]), escapeXML(r.Jabatan),
+			tcOpen(c[3]), r.TargetPrelist, tcOpen(c[4]), r.Realisasi, tcOpen(c[5]), persentase(r.Realisasi, r.TargetPrelist))
 	}
 	rowXML += fmt.Sprintf(`
 <w:tr>
-<w:tc><w:tcPr><w:gridSpan w:val="3"/></w:tcPr><w:p><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>Jumlah</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
-</w:tr>`, totalTarget, totalRealisasi, persentase(totalRealisasi, totalTarget))
+<w:tc><w:tcPr><w:tcW w:w="%d" w:type="dxa"/><w:gridSpan w:val="3"/>`+tcBordersXML+`</w:tcPr><w:p><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>Jumlah</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+</w:tr>`,
+		c[0]+c[1]+c[2], tcOpen(c[3]), totalTarget, tcOpen(c[4]), totalRealisasi, tcOpen(c[5]), persentase(totalRealisasi, totalTarget))
 
-	return `<w:tbl>
+	return fmt.Sprintf(`<w:tbl>
 <w:tblPr>
 <w:tblStyle w:val="TableGrid"/>
-<w:tblW w:w="0" w:type="auto"/>
+<w:tblW w:w="%d" w:type="dxa"/>
+<w:jc w:val="center"/>
+<w:tblLayout w:type="fixed"/>
 <w:tblBorders>
 <w:top w:val="single" w:sz="4" w:space="0" w:color="000000"/>
 <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
@@ -118,21 +130,25 @@ func generateKepalaLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 </w:tblBorders>
 </w:tblPr>
 <w:tblGrid>
-<w:gridCol w:w="600"/>
-<w:gridCol w:w="2600"/>
-<w:gridCol w:w="1600"/>
-<w:gridCol w:w="1600"/>
-<w:gridCol w:w="2000"/>
-<w:gridCol w:w="1300"/>
+<w:gridCol w:w="%d"/>
+<w:gridCol w:w="%d"/>
+<w:gridCol w:w="%d"/>
+<w:gridCol w:w="%d"/>
+<w:gridCol w:w="%d"/>
+<w:gridCol w:w="%d"/>
 </w:tblGrid>
 <w:tr>
-<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Nama Petugas</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Jabatan</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Presentase (%)</w:t></w:r></w:p></w:tc>
-</w:tr>` + rowXML + `</w:tbl>`
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Nama Petugas</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Jabatan</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Presentase (%%)</w:t></w:r></w:p></w:tc>
+</w:tr>`,
+		c[0]+c[1]+c[2]+c[3]+c[4]+c[5], c[0], c[1], c[2], c[3], c[4], c[5],
+		tcOpen(c[0]), docFontRPrBold, tcOpen(c[1]), docFontRPrBold, tcOpen(c[2]), docFontRPrBold,
+		tcOpen(c[3]), docFontRPrBold, tcOpen(c[4]), docFontRPrBold, tcOpen(c[5]), docFontRPrBold,
+	) + rowXML + `</w:tbl>`
 }
 
 func generatePernyataanKepalaDocx(d kepalaSE2026Data, lampiran []usahaKeluargaLampiranRow) ([]byte, error) {
