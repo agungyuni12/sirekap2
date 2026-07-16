@@ -283,9 +283,32 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 	return d, jenis, lampiran, nil
 }
 
+// docFontRPr/docFontRPrBold adalah run-properties yang menyamakan font tabel lampiran
+// dengan sisa dokumen (Bookman Old Style 12pt/sz=24), supaya isian tabel tidak "lompat"
+// gaya-nya dibanding teks contoh aslinya.
+const (
+	docFontRPr     = `<w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style" w:eastAsia="Bookman Old Style" w:cs="Bookman Old Style"/><w:sz w:val="24"/><w:szCs w:val="24"/>`
+	docFontRPrBold = `<w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style" w:eastAsia="Bookman Old Style" w:cs="Bookman Old Style"/><w:b/><w:sz w:val="24"/><w:szCs w:val="24"/>`
+	// tcBordersXML: garis tunggal di semua sisi sel, sama seperti tabel contoh aslinya.
+	tcBordersXML = `<w:tcBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="000000"/><w:start w:val="single" w:sz="4" w:space="0" w:color="000000"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="000000"/><w:end w:val="single" w:sz="4" w:space="0" w:color="000000"/></w:tcBorders>`
+)
+
+// tcOpen membuka sebuah <w:tc> dengan lebar tetap (dxa) sesuai kolom tabel contoh asli,
+// supaya tabel dinamis yang di-generate persis selebar & serapi tabel contoh di template.
+func tcOpen(widthDxa int) string {
+	return fmt.Sprintf(`<w:tc><w:tcPr><w:tcW w:w="%d" w:type="dxa"/>`+tcBordersXML+`</w:tcPr>`, widthDxa)
+}
+
+// pmlColW adalah lebar kolom (twips/dxa) persis seperti tabel contoh di
+// surat_pernyataan_pml_se2026.docx asli (930/3630/1634/2326/2100, total 10620 dxa).
+var pmlColW = [5]int{930, 3630, 1634, 2326, 2100}
+
 // generateLampiranTableXML membangun <w:tbl> "No | Nama Petugas Lapangan | Target Prelist |
-// Realisasi Hasil Pendataan (Usaha+Keluarga) | Presentase (%)" + baris "Jumlah" di akhir.
+// Realisasi Hasil Pendataan (Usaha+Keluarga) | Presentase (%)" + baris "Jumlah" di akhir -
+// lebar kolom & tblLayout=fixed disamakan dengan tabel contoh di template aslinya, dan
+// tabel ditengahkan (jc=center) di halaman.
 func generateLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
+	c := pmlColW
 	var rowXML strings.Builder
 	totalTarget, totalRealisasi := 0, 0
 	for i, r := range rows {
@@ -293,25 +316,30 @@ func generateLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 		totalRealisasi += r.Realisasi
 		rowXML.WriteString(fmt.Sprintf(`
 <w:tr>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:t>%s</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%.1f</w:t></w:r></w:p></w:tc>
-</w:tr>`, i+1, escapeXML(r.Nama), r.TargetPrelist, r.Realisasi, persentase(r.Realisasi, r.TargetPrelist)))
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+</w:tr>`,
+			tcOpen(c[0]), i+1, tcOpen(c[1]), escapeXML(r.Nama), tcOpen(c[2]), r.TargetPrelist,
+			tcOpen(c[3]), r.Realisasi, tcOpen(c[4]), persentase(r.Realisasi, r.TargetPrelist)))
 	}
 	rowXML.WriteString(fmt.Sprintf(`
 <w:tr>
-<w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Jumlah</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
-</w:tr>`, totalTarget, totalRealisasi, persentase(totalRealisasi, totalTarget)))
+<w:tc><w:tcPr><w:tcW w:w="%d" w:type="dxa"/><w:gridSpan w:val="2"/>`+tcBordersXML+`</w:tcPr><w:p><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>Jumlah</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+</w:tr>`,
+		c[0]+c[1], tcOpen(c[2]), totalTarget, tcOpen(c[3]), totalRealisasi, tcOpen(c[4]), persentase(totalRealisasi, totalTarget)))
 
-	return `<w:tbl>
+	return fmt.Sprintf(`<w:tbl>
 <w:tblPr>
 <w:tblStyle w:val="TableGrid"/>
-<w:tblW w:w="0" w:type="auto"/>
+<w:tblW w:w="%d" w:type="dxa"/>
+<w:jc w:val="center"/>
+<w:tblLayout w:type="fixed"/>
 <w:tblBorders>
 <w:top w:val="single" w:sz="4" w:space="0" w:color="000000"/>
 <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
@@ -322,19 +350,23 @@ func generateLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 </w:tblBorders>
 </w:tblPr>
 <w:tblGrid>
-<w:gridCol w:w="700"/>
-<w:gridCol w:w="3300"/>
-<w:gridCol w:w="1900"/>
-<w:gridCol w:w="2200"/>
-<w:gridCol w:w="1500"/>
+<w:gridCol w:w="%d"/>
+<w:gridCol w:w="%d"/>
+<w:gridCol w:w="%d"/>
+<w:gridCol w:w="%d"/>
+<w:gridCol w:w="%d"/>
 </w:tblGrid>
 <w:tr>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Nama Petugas Lapangan</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Presentase (%)</w:t></w:r></w:p></w:tc>
-</w:tr>` + rowXML.String() + `</w:tbl>`
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Nama Petugas Lapangan</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
+%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Presentase (%%)</w:t></w:r></w:p></w:tc>
+</w:tr>`,
+		c[0]+c[1]+c[2]+c[3]+c[4], c[0], c[1], c[2], c[3], c[4],
+		tcOpen(c[0]), docFontRPrBold, tcOpen(c[1]), docFontRPrBold, tcOpen(c[2]), docFontRPrBold,
+		tcOpen(c[3]), docFontRPrBold, tcOpen(c[4]), docFontRPrBold,
+	) + rowXML.String() + `</w:tbl>`
 }
 
 func generateSuratPernyataanDocx(d bappSE2026Data, jenis string, lampiran []usahaKeluargaLampiranRow) ([]byte, error) {

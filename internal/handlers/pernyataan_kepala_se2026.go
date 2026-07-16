@@ -88,20 +88,20 @@ func generateKepalaLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 		totalRealisasi += r.Realisasi
 		rowXML += fmt.Sprintf(`
 <w:tr>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:t>%s</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%s</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%.1f</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
 </w:tr>`, i+1, escapeXML(r.Nama), escapeXML(r.Jabatan), r.TargetPrelist, r.Realisasi, persentase(r.Realisasi, r.TargetPrelist))
 	}
 	rowXML += fmt.Sprintf(`
 <w:tr>
-<w:tc><w:tcPr><w:gridSpan w:val="3"/></w:tcPr><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Jumlah</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+<w:tc><w:tcPr><w:gridSpan w:val="3"/></w:tcPr><w:p><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>Jumlah</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
 </w:tr>`, totalTarget, totalRealisasi, persentase(totalRealisasi, totalTarget))
 
 	return `<w:tbl>
@@ -126,12 +126,12 @@ func generateKepalaLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 <w:gridCol w:w="1300"/>
 </w:tblGrid>
 <w:tr>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Nama Petugas</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Jabatan</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Presentase (%)</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Nama Petugas</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Jabatan</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr>` + docFontRPrBold + `</w:rPr><w:t>Presentase (%)</w:t></w:r></w:p></w:tc>
 </w:tr>` + rowXML + `</w:tbl>`
 }
 
