@@ -155,37 +155,73 @@ func SyncRealisasiSE2026Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ---------------------------------------------------------------------------------
-// Surat Pernyataan Penyelesaian Lapangan Termin I (dari PML)
+// Surat Pernyataan Penyelesaian Lapangan Termin I (PPL & PML)
 // ---------------------------------------------------------------------------------
 
-type pplLampiranRow struct {
-	Nama      string
-	Kecamatan string
-	Desa      string
-	JumlahSLS int
-	Realisasi int
+// usahaKeluargaLampiranRow adalah satu baris tabel lampiran: satu petugas (PPL, dipakai
+// di lampiran surat pernyataan PML & Kepala) atau agregat sendiri (PML/PPL individu).
+type usahaKeluargaLampiranRow struct {
+	Nama          string
+	Jabatan       string // "Petugas Lapangan" / "Pemeriksa Lapangan" - dipakai lampiran Kepala saja
+	TargetPrelist int
+	Realisasi     int
 }
 
-// buildSuratPernyataanPML mengambil data PML (dari rekap) + daftar PPL binaannya
-// (dari se2026.sls, dikelompokkan per PPL) untuk lampiran tabel.
-func buildSuratPernyataanPML(rekapID int, tanggal string) (bappSE2026Data, []pplLampiranRow, error) {
+func persentase(realisasi, target int) float64 {
+	if target == 0 {
+		return 0
+	}
+	return float64(realisasi) / float64(target) * 100
+}
+
+// computeUsahaKeluargaSE2026 menjumlahkan target prelist (se2026.sls.target) dan realisasi
+// hasil pendataan usaha+keluarga (se2026.progress.fasih_total, metode "FASIH total submit"
+// sesuai arahan user) untuk satu user se2026 (PPL: by ppl_id, PML: by pml_id).
+func computeUsahaKeluargaSE2026(uid int, isPML bool) (target int, realisasi int, err error) {
+	col := "s.ppl_id"
+	if isPML {
+		col = "s.pml_id"
+	}
+	q := fmt.Sprintf(`
+		SELECT COALESCE(SUM(s.target),0), COALESCE(SUM(p.fasih_total),0)
+		FROM se2026.sls s LEFT JOIN se2026.progress p ON p.sls_id = s.id
+		WHERE %s = ?`, col)
+	err = database.DB.QueryRow(q, uid).Scan(&target, &realisasi)
+	return
+}
+
+// buildSuratPernyataanSE2026 mengambil data petugas (PPL atau PML, dari rekap) dan
+// menyusun map placeholder + (khusus PML) daftar PPL binaan untuk lampiran tabel.
+func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, string, []usahaKeluargaLampiranRow, error) {
 	var d bappSE2026Data
-	var idSpk, tahun string
+	var idSpk, tahun, kegiatan string
 
 	row := database.DB.QueryRow(`
-		SELECT r.namamitra, COALESCE(r.id_spk,''), r.tahun
-		FROM rekap r WHERE r.id = ? AND r.kegiatan LIKE '%Pemeriksa Lapangan Sensus Ekonomi%'`, rekapID)
-	if err := row.Scan(&d.NamaPetugas, &idSpk, &tahun); err != nil {
-		return d, nil, fmt.Errorf("rekap PML id %d tidak ditemukan", rekapID)
+		SELECT r.namamitra, COALESCE(r.id_spk,''), r.tahun, r.kegiatan
+		FROM rekap r WHERE r.id = ?`, rekapID)
+	if err := row.Scan(&d.NamaPetugas, &idSpk, &tahun, &kegiatan); err != nil {
+		return d, "", nil, fmt.Errorf("rekap id %d tidak ditemukan", rekapID)
 	}
 	d.NamaPetugas = properCase(d.NamaPetugas)
 	if idSpk == "" {
-		return d, nil, fmt.Errorf("petugas ini belum memiliki nomor SPK")
+		return d, "", nil, fmt.Errorf("petugas ini belum memiliki nomor SPK")
+	}
+	jenis := jenisPetugasSE2026(kegiatan)
+
+	tgl, err := time.Parse("2006-01-02", tanggal)
+	if err != nil {
+		tgl, _ = time.Parse("2006-01-02", "2026-08-15")
 	}
 
-	nomor, err := bappNomorFromSPK(idSpk, "pernyataan", 1, tahun)
+	kind := "pernyataan_ppl"
+	seRole := "ppl"
+	if jenis == "pml" {
+		kind = "pernyataan_pml"
+		seRole = "pml"
+	}
+	nomor, err := suratNomorSE2026(idSpk, kind, 1, tahun, tgl)
 	if err != nil {
-		return d, nil, err
+		return d, jenis, nil, err
 	}
 	d.Nomor = nomor
 	d.NomorSPK = idSpk
@@ -195,59 +231,82 @@ func buildSuratPernyataanPML(rekapID int, tanggal string) (bappSE2026Data, []ppl
 		WHERE UPPER(CONVERT(nama USING utf8mb4)) COLLATE utf8mb4_unicode_ci = UPPER(?) COLLATE utf8mb4_unicode_ci
 		LIMIT 1`, d.NamaPetugas).Scan(&d.NIKPetugas)
 
-	tgl, err := time.Parse("2006-01-02", tanggal)
-	if err != nil {
-		tgl, _ = time.Parse("2006-01-02", "2026-08-15")
-	}
 	d.Hari = hariIndonesia[tgl.Weekday().String()]
 	d.TglTeks = dayToTeks(tgl.Day())
 	d.BlnTeks = bulanTeksSE[tgl.Month()]
 	d.TglAngka = fmt.Sprintf("%02d-%02d", tgl.Day(), int(tgl.Month()))
 
-	uid, cnt := findSE2026UserID(d.NamaPetugas, "pml")
+	uid, cnt := findSE2026UserID(d.NamaPetugas, seRole)
 	if cnt != 1 {
-		return d, nil, fmt.Errorf("nama PML '%s' tidak ketemu tunggal di se2026.users (%d kandidat) - jalankan sinkron realisasi dulu", d.NamaPetugas, cnt)
+		return d, jenis, nil, fmt.Errorf("nama '%s' tidak ketemu tunggal di se2026.users (%d kandidat) - jalankan sinkron realisasi dulu", d.NamaPetugas, cnt)
 	}
 
+	if jenis == "pcl" {
+		// PPL: tidak ada lampiran tabel, cukup angka target/realisasi/persentase dirinya sendiri.
+		target, realisasi, err := computeUsahaKeluargaSE2026(uid, false)
+		if err != nil {
+			return d, jenis, nil, fmt.Errorf("gagal menghitung realisasi: %v", err)
+		}
+		return d, jenis, []usahaKeluargaLampiranRow{{
+			Nama: d.NamaPetugas, TargetPrelist: target, Realisasi: realisasi,
+		}}, nil
+	}
+
+	// PML: daftar PPL binaan (dari se2026.sls, dikelompokkan per PPL).
 	rows, err := database.DB.Query(`
-		SELECT u.name, COALESCE(s.nama_kec,''), COALESCE(s.nama_desa,''), COUNT(*) AS jml_sls,
-		       SUM(CASE WHEN COALESCE(p.jumlah_submit,0) >= s.target THEN 1 ELSE 0 END) AS realisasi_sls
+		SELECT u.name, u.id
 		FROM se2026.sls s
 		JOIN se2026.users u ON u.id = s.ppl_id
-		LEFT JOIN se2026.progress p ON p.sls_id = s.id
 		WHERE s.pml_id = ?
-		GROUP BY u.id, u.name, s.nama_kec, s.nama_desa
+		GROUP BY u.id, u.name
 		ORDER BY u.name`, uid)
 	if err != nil {
-		return d, nil, fmt.Errorf("gagal mengambil daftar PPL binaan: %v", err)
+		return d, jenis, nil, fmt.Errorf("gagal mengambil daftar PPL binaan: %v", err)
 	}
 	defer rows.Close()
 
-	var lampiran []pplLampiranRow
+	var lampiran []usahaKeluargaLampiranRow
 	for rows.Next() {
-		var lr pplLampiranRow
-		if err := rows.Scan(&lr.Nama, &lr.Kecamatan, &lr.Desa, &lr.JumlahSLS, &lr.Realisasi); err == nil {
-			lr.Nama = properCase(lr.Nama)
-			lampiran = append(lampiran, lr)
+		var nama string
+		var pplUID int
+		if err := rows.Scan(&nama, &pplUID); err != nil {
+			continue
 		}
+		target, realisasi, err := computeUsahaKeluargaSE2026(pplUID, false)
+		if err != nil {
+			continue
+		}
+		lampiran = append(lampiran, usahaKeluargaLampiranRow{
+			Nama: properCase(nama), TargetPrelist: target, Realisasi: realisasi,
+		})
 	}
-	return d, lampiran, nil
+	return d, jenis, lampiran, nil
 }
 
-// generateLampiranTableXML membangun <w:tbl> untuk daftar PPL binaan PML.
-func generateLampiranTableXML(rows []pplLampiranRow) string {
+// generateLampiranTableXML membangun <w:tbl> "No | Nama Petugas Lapangan | Target Prelist |
+// Realisasi Hasil Pendataan (Usaha+Keluarga) | Presentase (%)" + baris "Jumlah" di akhir.
+func generateLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 	var rowXML strings.Builder
+	totalTarget, totalRealisasi := 0, 0
 	for i, r := range rows {
+		totalTarget += r.TargetPrelist
+		totalRealisasi += r.Realisasi
 		rowXML.WriteString(fmt.Sprintf(`
 <w:tr>
 <w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%d</w:t></w:r></w:p></w:tc>
 <w:tc><w:p><w:r><w:t>%s</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%s</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%s</w:t></w:r></w:p></w:tc>
 <w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%d</w:t></w:r></w:p></w:tc>
 <w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%d</w:t></w:r></w:p></w:tc>
-</w:tr>`, i+1, escapeXML(r.Nama), escapeXML(r.Kecamatan), escapeXML(r.Desa), r.JumlahSLS, r.Realisasi))
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>%.1f</w:t></w:r></w:p></w:tc>
+</w:tr>`, i+1, escapeXML(r.Nama), r.TargetPrelist, r.Realisasi, persentase(r.Realisasi, r.TargetPrelist)))
 	}
+	rowXML.WriteString(fmt.Sprintf(`
+<w:tr>
+<w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Jumlah</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+</w:tr>`, totalTarget, totalRealisasi, persentase(totalRealisasi, totalTarget)))
 
 	return `<w:tbl>
 <w:tblPr>
@@ -264,40 +323,62 @@ func generateLampiranTableXML(rows []pplLampiranRow) string {
 </w:tblPr>
 <w:tblGrid>
 <w:gridCol w:w="700"/>
-<w:gridCol w:w="2400"/>
-<w:gridCol w:w="1600"/>
-<w:gridCol w:w="1600"/>
-<w:gridCol w:w="1400"/>
-<w:gridCol w:w="1400"/>
+<w:gridCol w:w="3300"/>
+<w:gridCol w:w="1900"/>
+<w:gridCol w:w="2200"/>
+<w:gridCol w:w="1500"/>
 </w:tblGrid>
 <w:tr>
 <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Nama Petugas Lapangan Sensus</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Kecamatan</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Desa</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Jumlah SLS/Sub-SLS</w:t></w:r></w:p></w:tc>
-<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Realisasi</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Nama Petugas Lapangan</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Presentase (%)</w:t></w:r></w:p></w:tc>
 </w:tr>` + rowXML.String() + `</w:tbl>`
 }
 
-func generateSuratPernyataanDocx(d bappSE2026Data, lampiran []pplLampiranRow) ([]byte, error) {
-	return replaceInDocx("static/templates-se2026/surat_pernyataan_pml_se2026.docx", map[string]string{
-		"nomor":          d.Nomor,
-		"nomor_spk":      d.NomorSPK,
-		"nama_petugas":   d.NamaPetugas,
-		"nik_petugas":    d.NIKPetugas,
-		"nama_ketua_tim": ketuaTimNamaSE2026,
-		"nip_ketua_tim":  ketuaTimNIPSE2026,
-		"table":          generateLampiranTableXML(lampiran),
+func generateSuratPernyataanDocx(d bappSE2026Data, jenis string, lampiran []usahaKeluargaLampiranRow) ([]byte, error) {
+	if jenis == "pml" {
+		return replaceInDocx("static/templates-se2026/surat_pernyataan_pml_se2026.docx", map[string]string{
+			"nomor":          d.Nomor,
+			"nomor_spk":      d.NomorSPK,
+			"tgl_teks":       d.TglTeks,
+			"bln_teks":       d.BlnTeks,
+			"nama_petugas":   d.NamaPetugas,
+			"nik_petugas":    d.NIKPetugas,
+			"nama_ketua_tim": ketuaTimNamaSE2026,
+			"nip_ketua_tim":  ketuaTimNIPSE2026,
+			"table":          generateLampiranTableXML(lampiran),
+		})
+	}
+	// PPL: tanpa tabel, angka langsung di badan surat (lampiran hanya 1 baris berisi diri sendiri).
+	target, realisasi := 0, 0
+	if len(lampiran) == 1 {
+		target, realisasi = lampiran[0].TargetPrelist, lampiran[0].Realisasi
+	}
+	return replaceInDocx("static/templates-se2026/surat_pernyataan_ppl_se2026.docx", map[string]string{
+		"nomor":               d.Nomor,
+		"nomor_spk":           d.NomorSPK,
+		"tgl_teks":            d.TglTeks,
+		"bln_teks":            d.BlnTeks,
+		"nama_petugas":        d.NamaPetugas,
+		"nik_petugas":         d.NIKPetugas,
+		"nama_ketua_tim":      ketuaTimNamaSE2026,
+		"nip_ketua_tim":       ketuaTimNIPSE2026,
+		"target_prelist":      strconv.Itoa(target),
+		"realisasi_usaha_kel": strconv.Itoa(realisasi),
+		"persentase":          fmt.Sprintf("%.1f", persentase(realisasi, target)),
 	})
 }
 
-// assignPernyataanNumber sama seperti assignBAPPNumber tapi untuk Surat Pernyataan PML.
+// assignPernyataanNumber sama seperti assignBAPPNumber tapi untuk Surat Pernyataan
+// Penyelesaian Lapangan (PPL & PML sama-sama pakai kolom id_pernyataan1/tgl_pernyataan1 -
+// aman karena baris rekap PPL dan PML untuk 1 orang tidak pernah sama, kegiatan-nya beda).
 func assignPernyataanNumber(rekapID int, tanggal string) error {
-	var idSpk, tahun string
+	var idSpk, tahun, kegiatan string
 	var existing sql.NullString
-	err := database.DB.QueryRow(`SELECT COALESCE(id_spk,''), tahun, id_pernyataan1 FROM rekap WHERE id=?`, rekapID).
-		Scan(&idSpk, &tahun, &existing)
+	err := database.DB.QueryRow(`SELECT COALESCE(id_spk,''), tahun, kegiatan, id_pernyataan1 FROM rekap WHERE id=?`, rekapID).
+		Scan(&idSpk, &tahun, &kegiatan, &existing)
 	if err != nil {
 		return fmt.Errorf("rekap id %d tidak ditemukan", rekapID)
 	}
@@ -307,13 +388,17 @@ func assignPernyataanNumber(rekapID int, tanggal string) error {
 	if idSpk == "" {
 		return fmt.Errorf("petugas belum memiliki nomor SPK")
 	}
-	nomor, err := bappNomorFromSPK(idSpk, "pernyataan", 1, tahun)
-	if err != nil {
-		return err
-	}
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
 		return fmt.Errorf("format tanggal salah, gunakan YYYY-MM-DD")
+	}
+	kind := "pernyataan_ppl"
+	if jenisPetugasSE2026(kegiatan) == "pml" {
+		kind = "pernyataan_pml"
+	}
+	nomor, err := suratNomorSE2026(idSpk, kind, 1, tahun, tgl)
+	if err != nil {
+		return err
 	}
 	_, err = database.DB.Exec(`UPDATE rekap SET id_pernyataan1=?, tgl_pernyataan1=? WHERE id=?`,
 		nomor, tgl.Format("2006-01-02"), rekapID)
@@ -350,7 +435,7 @@ func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		tanggal = "2026-08-15"
 	}
 
-	d, lampiran, err := buildSuratPernyataanPML(rekapID, tanggal)
+	d, jenis, lampiran, err := buildSuratPernyataanSE2026(rekapID, tanggal)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -360,7 +445,7 @@ func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	docx, err := generateSuratPernyataanDocx(d, lampiran)
+	docx, err := generateSuratPernyataanDocx(d, jenis, lampiran)
 	if err != nil {
 		http.Error(w, "Gagal generate Surat Pernyataan: "+err.Error(), http.StatusInternalServerError)
 		return

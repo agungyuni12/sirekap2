@@ -544,6 +544,9 @@ func main() {
 	r.HandleFunc("/api/rekap/spk/se2026/bapp/download-all", middleware.RequireAdmin(handlers.DownloadAllBAPPSE2026Handler)).Methods("GET")
 	r.HandleFunc("/api/rekap/spk/se2026/pernyataan/create", middleware.RequireAdmin(handlers.CreatePernyataanHandler)).Methods("POST")
 	r.HandleFunc("/api/rekap/spk/se2026/pernyataan/download", middleware.RequireAdmin(handlers.DownloadPernyataanSE2026Handler)).Methods("GET")
+	r.HandleFunc("/api/rekap/spk/se2026/pernyataan-kepala/status", middleware.RequireAdmin(handlers.StatusPernyataanKepalaSE2026Handler)).Methods("GET")
+	r.HandleFunc("/api/rekap/spk/se2026/pernyataan-kepala/create", middleware.RequireAdmin(handlers.CreatePernyataanKepalaHandler)).Methods("POST")
+	r.HandleFunc("/api/rekap/spk/se2026/pernyataan-kepala/download", middleware.RequireAdmin(handlers.DownloadPernyataanKepalaSE2026Handler)).Methods("GET")
 
 	// BAST
 	r.HandleFunc("/api/rekap/bast/bulk-options", middleware.RequireAdmin(handlers.ListBulkBASTOptionsHandler)).Methods("GET")

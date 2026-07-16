@@ -14,10 +14,12 @@ import (
 	"sirekap/internal/database"
 )
 
-// Identitas tetap PPK & Ketua Tim Pelaksana SE2026 BPS Kabupaten Dompu (dikonfirmasi user).
+// Identitas tetap Kepala BPS, PPK & Ketua Tim Pelaksana SE2026 BPS Kabupaten Dompu (dikonfirmasi user).
 const (
-	ppkNamaSE2026      = "Emalia Septiani Hirma"
-	ppkNIPSE2026       = "199809032022012002"
+	kepalaNamaSE2026   = "Ahwan Hadi, S.ST., M.Ak"
+	kepalaNIPSE2026    = "19780223 200012 1 002"
+	ppkNamaSE2026      = "Emalia Septiani Hirma, S.Tr.Stat."
+	ppkNIPSE2026       = "19980903 202201 2 002"
 	ketuaTimNamaSE2026 = "Abdul Farid, SE"
 	ketuaTimNIPSE2026  = "19720404 199803 1 005"
 )
@@ -37,29 +39,40 @@ type bappSE2026Data struct {
 	HonorTerbilang string
 }
 
-var bappNomorSeqRe = regexp.MustCompile(`B-(\d+)/SPK-SE2026`)
+var suratNomorSeqRe = regexp.MustCompile(`B-(\d+)/SPK-SE2026`)
 
-// bappNomorFromSPK menurunkan nomor BAPP/Surat Pernyataan dari nomor SPK yang sudah
-// dimiliki petugas (id_spk), memakai ulang sequence yang sama supaya dokumen-dokumen
-// ini tetap terhubung 1:1 ke perjanjian kerja yang sama, bukan sequence baru.
-func bappNomorFromSPK(idSpk, kind string, termin int, tahun string) (string, error) {
-	m := bappNomorSeqRe.FindStringSubmatch(idSpk)
+// suratNomorSE2026 membangun nomor surat (BAPP / Surat Pernyataan) dari nomor SPK yang
+// sudah dimiliki petugas (id_spk) - dipakai ulang sequence-nya (angka setelah "B-") supaya
+// dokumen-dokumen ini tetap terhubung 1:1 ke perjanjian kerja yang sama, bukan sequence baru -
+// digabung dengan bulan+tanggal terbit dokumen ini sendiri.
+// Format: B-{bulan(2)}.{tanggal(2)}.{nomor}/....
+// kind: "pernyataan_ppl" | "pernyataan_pml" | "bapp"
+func suratNomorSE2026(idSpk, kind string, termin int, tahun string, tgl time.Time) (string, error) {
+	m := suratNomorSeqRe.FindStringSubmatch(idSpk)
 	if m == nil {
 		return "", fmt.Errorf("nomor SPK tidak dikenali: %s", idSpk)
 	}
-	seq := m[1]
+	tgd := fmt.Sprintf("%02d.%02d.%s", int(tgl.Month()), tgl.Day(), m[1])
 	switch kind {
 	case "bapp":
 		roman := "I"
 		if termin == 2 {
 			roman = "II"
 		}
-		return fmt.Sprintf("B-%s/BAPP-%s-SE2026/5205/PL.200/%s", seq, roman, tahun), nil
-	case "pernyataan":
-		return fmt.Sprintf("B-%s/SE2026/5205/PL.200/%s", seq, tahun), nil
+		return fmt.Sprintf("B-%s/BAPP-%s-SE2026/5205.PPK/BA/%s", tgd, roman, tahun), nil
+	case "pernyataan_ppl":
+		return fmt.Sprintf("B-%s/SE2026/5205/Super.PPL/%s", tgd, tahun), nil
+	case "pernyataan_pml":
+		return fmt.Sprintf("B-%s/SE2026/5205/Super.PML/%s", tgd, tahun), nil
 	default:
 		return "", fmt.Errorf("kind tidak dikenal: %s", kind)
 	}
+}
+
+// kepalaNomorSE2026 membangun nomor Surat Pernyataan Kepala BPS - dokumen tunggal (bukan
+// per-petugas), jadi sequence-nya selalu 001 per termin/tahun, bukan diturunkan dari SPK.
+func kepalaNomorSE2026(tahun string, tgl time.Time) string {
+	return fmt.Sprintf("B-%02d.%02d.001/SE2026/5205/Super.KPL/%s", int(tgl.Month()), tgl.Day(), tahun)
 }
 
 // jenisPetugasSE2026 menentukan pcl/pml dari teks kegiatan, sama seperti buildSPKSE2026.
@@ -90,7 +103,12 @@ func buildBAPPSE2026(rekapID, termin int, tanggalBAPP string) (bappSE2026Data, s
 	}
 	jenis := jenisPetugasSE2026(kegiatan)
 
-	nomor, err := bappNomorFromSPK(idSpk, "bapp", termin, tahun)
+	tgl, err := time.Parse("2006-01-02", tanggalBAPP)
+	if err != nil {
+		tgl, _ = time.Parse("2006-01-02", "2026-08-15")
+	}
+
+	nomor, err := suratNomorSE2026(idSpk, "bapp", termin, tahun, tgl)
 	if err != nil {
 		return d, jenis, err
 	}
@@ -104,10 +122,6 @@ func buildBAPPSE2026(rekapID, termin int, tanggalBAPP string) (bappSE2026Data, s
 		WHERE UPPER(CONVERT(nama USING utf8mb4)) COLLATE utf8mb4_unicode_ci = UPPER(?) COLLATE utf8mb4_unicode_ci
 		LIMIT 1`, d.NamaPetugas).Scan(&d.NIKPetugas)
 
-	tgl, err := time.Parse("2006-01-02", tanggalBAPP)
-	if err != nil {
-		tgl, _ = time.Parse("2006-01-02", "2026-08-15")
-	}
 	d.Hari = hariIndonesia[tgl.Weekday().String()]
 	d.TglTeks = dayToTeks(tgl.Day())
 	d.BlnTeks = bulanTeksSE[tgl.Month()]
@@ -183,13 +197,13 @@ func assignBAPPNumber(rekapID, termin int, tanggal string) error {
 		return fmt.Errorf("petugas belum memiliki nomor SPK")
 	}
 
-	nomor, err := bappNomorFromSPK(idSpk, "bapp", termin, tahun)
-	if err != nil {
-		return err
-	}
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
 		return fmt.Errorf("format tanggal salah, gunakan YYYY-MM-DD")
+	}
+	nomor, err := suratNomorSE2026(idSpk, "bapp", termin, tahun, tgl)
+	if err != nil {
+		return err
 	}
 	_, err = database.DB.Exec(fmt.Sprintf(`UPDATE rekap SET %s=?, %s=? WHERE id=?`, idCol, tglCol),
 		nomor, tgl.Format("2006-01-02"), rekapID)
