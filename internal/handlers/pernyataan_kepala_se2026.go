@@ -24,15 +24,16 @@ type kepalaSE2026Data struct {
 	TglAngka string
 }
 
-// buildPernyataanKepalaSE2026 mengagregasi seluruh petugas SE2026 (PPL+PML) tahun 2026
-// dari rekap, digabung ke se2026.sls/progress untuk target/realisasi usaha+keluarga -
-// nama yang tidak ketemu tunggal di se2026.users dilewati (sama seperti sync-realisasi).
+// buildPernyataanKepalaSE2026 mengagregasi SEMUA petugas SE2026 (PML lalu PPL) yang ada
+// di lk_ppk_payable_se2026 - daftar resmi "yang bisa dicairkan" termin ini (215 PPL +
+// 14 PML terkonfirmasi, lihat migrations/add_lk_ppk_payable_se2026.sql), diurutkan
+// sesuai seq (alfabetis per role).
 func buildPernyataanKepalaSE2026(tanggal string) (kepalaSE2026Data, []usahaKeluargaLampiranRow, error) {
 	var d kepalaSE2026Data
 
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
-		tgl, _ = time.Parse("2006-01-02", "2026-08-15")
+		tgl, _ = time.Parse("2006-01-02", "2026-07-17")
 	}
 	d.Hari = hariIndonesia[tgl.Weekday().String()]
 	d.TglTeks = dayToTeks(tgl.Day())
@@ -40,41 +41,46 @@ func buildPernyataanKepalaSE2026(tanggal string) (kepalaSE2026Data, []usahaKelua
 	d.TglAngka = fmt.Sprintf("%02d-%02d", tgl.Day(), int(tgl.Month()))
 	d.Nomor = kepalaNomorSE2026("2026", tgl)
 
-	rows, err := database.DB.Query(`
-		SELECT r.namamitra, r.kegiatan
-		FROM rekap r
-		WHERE r.kegiatan LIKE '%Sensus Ekonomi 2026%'
-		  AND (r.tanggaran = 2026 OR r.tahun = '2026')
-		ORDER BY r.kegiatan, r.namamitra`)
-	if err != nil {
-		return d, nil, fmt.Errorf("gagal mengambil daftar petugas: %v", err)
-	}
-	defer rows.Close()
-
 	var lampiran []usahaKeluargaLampiranRow
-	for rows.Next() {
-		var nama, kegiatan string
-		if err := rows.Scan(&nama, &kegiatan); err != nil {
+
+	pmlRows, err := database.DB.Query(`SELECT idsobat, nama FROM lk_ppk_payable_se2026 WHERE role='pml' ORDER BY seq`)
+	if err != nil {
+		return d, nil, fmt.Errorf("gagal mengambil daftar PML: %v", err)
+	}
+	for pmlRows.Next() {
+		var idsobat, nama string
+		if err := pmlRows.Scan(&idsobat, &nama); err != nil {
 			continue
 		}
-		nama = properCase(nama)
-		jenis := jenisPetugasSE2026(kegiatan)
-		jabatan, seRole := "Petugas Lapangan", "ppl"
-		if jenis == "pml" {
-			jabatan, seRole = "Pemeriksa Lapangan", "pml"
-		}
-		uid, cnt := findSE2026UserID(nama, seRole)
-		if cnt != 1 {
-			continue
-		}
-		target, realisasi, err := computeUsahaKeluargaSE2026(uid, jenis == "pml")
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, true)
 		if err != nil {
 			continue
 		}
 		lampiran = append(lampiran, usahaKeluargaLampiranRow{
-			Nama: nama, Jabatan: jabatan, TargetPrelist: target, Realisasi: realisasi,
+			Nama: properCase(nama), Jabatan: "Pemeriksa Lapangan", TargetPrelist: target, Realisasi: realisasi,
 		})
 	}
+	pmlRows.Close()
+
+	pplRows, err := database.DB.Query(`SELECT idsobat, nama FROM lk_ppk_payable_se2026 WHERE role='ppl' ORDER BY seq`)
+	if err != nil {
+		return d, nil, fmt.Errorf("gagal mengambil daftar PPL: %v", err)
+	}
+	for pplRows.Next() {
+		var idsobat, nama string
+		if err := pplRows.Scan(&idsobat, &nama); err != nil {
+			continue
+		}
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, false)
+		if err != nil {
+			continue
+		}
+		lampiran = append(lampiran, usahaKeluargaLampiranRow{
+			Nama: properCase(nama), Jabatan: "Petugas Lapangan", TargetPrelist: target, Realisasi: realisasi,
+		})
+	}
+	pplRows.Close()
+
 	return d, lampiran, nil
 }
 
@@ -215,7 +221,7 @@ func CreatePernyataanKepalaHandler(w http.ResponseWriter, r *http.Request) {
 func DownloadPernyataanKepalaSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	tanggal := r.URL.Query().Get("tanggal")
 	if tanggal == "" {
-		tanggal = "2026-08-15"
+		tanggal = "2026-07-17"
 	}
 
 	var existing sql.NullString

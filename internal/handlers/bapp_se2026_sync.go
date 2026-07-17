@@ -174,32 +174,34 @@ func persentase(realisasi, target int) float64 {
 	return float64(realisasi) / float64(target) * 100
 }
 
-// computeUsahaKeluargaSE2026 menjumlahkan target prelist (se2026.sls.target) dan realisasi
-// hasil pendataan usaha+keluarga (se2026.progress.fasih_total, metode "FASIH total submit"
-// sesuai arahan user) untuk satu user se2026 (PPL: by ppl_id, PML: by pml_id).
-func computeUsahaKeluargaSE2026(uid int, isPML bool) (target int, realisasi int, err error) {
-	col := "s.ppl_id"
+// computeUsahaKeluargaSE2026 menjumlahkan target & realisasi hasil pendataan usaha+keluarga
+// dari lk_ppk_termin1_se2026, HANYA baris SLS PRIORITAS (prioritas=1, sesuai arahan user) -
+// juga mengembalikan hitungan SLS (target_sls = jumlah SLS prioritas, realisasi_sls = jumlah
+// SLS prioritas yang realisasinya sudah >= target-nya sendiri).
+func computeUsahaKeluargaSE2026(idsobat string, isPML bool) (target, realisasi, targetSLS, realisasiSLS int, err error) {
+	col := "ppl_idsobat"
 	if isPML {
-		col = "s.pml_id"
+		col = "pml_idsobat"
 	}
 	q := fmt.Sprintf(`
-		SELECT COALESCE(SUM(s.target),0), COALESCE(SUM(p.fasih_total),0)
-		FROM se2026.sls s LEFT JOIN se2026.progress p ON p.sls_id = s.id
-		WHERE %s = ?`, col)
-	err = database.DB.QueryRow(q, uid).Scan(&target, &realisasi)
+		SELECT COALESCE(SUM(target),0), COALESCE(SUM(realisasi),0),
+		       COUNT(*), COALESCE(SUM(CASE WHEN realisasi >= target THEN 1 ELSE 0 END),0)
+		FROM lk_ppk_termin1_se2026 WHERE %s = ? AND prioritas = 1`, col)
+	err = database.DB.QueryRow(q, idsobat).Scan(&target, &realisasi, &targetSLS, &realisasiSLS)
 	return
 }
 
 // buildSuratPernyataanSE2026 mengambil data petugas (PPL atau PML, dari rekap) dan
-// menyusun map placeholder + (khusus PML) daftar PPL binaan untuk lampiran tabel.
+// menyusun map placeholder + (khusus PML) daftar PPL binaan untuk lampiran tabel - hanya
+// petugas yang ada di lk_ppk_termin1_se2026 (daftar resmi yang bisa dibayarkan) yang boleh.
 func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, string, []usahaKeluargaLampiranRow, error) {
 	var d bappSE2026Data
-	var idSpk, tahun, kegiatan string
+	var idsobat, idSpk, tahun, kegiatan string
 
 	row := database.DB.QueryRow(`
-		SELECT r.namamitra, COALESCE(r.id_spk,''), r.tahun, r.kegiatan
+		SELECT r.idsobat, r.namamitra, COALESCE(r.id_spk,''), r.tahun, r.kegiatan
 		FROM rekap r WHERE r.id = ?`, rekapID)
-	if err := row.Scan(&d.NamaPetugas, &idSpk, &tahun, &kegiatan); err != nil {
+	if err := row.Scan(&idsobat, &d.NamaPetugas, &idSpk, &tahun, &kegiatan); err != nil {
 		return d, "", nil, fmt.Errorf("rekap id %d tidak ditemukan", rekapID)
 	}
 	d.NamaPetugas = properCase(d.NamaPetugas)
@@ -207,19 +209,23 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 		return d, "", nil, fmt.Errorf("petugas ini belum memiliki nomor SPK")
 	}
 	jenis := jenisPetugasSE2026(kegiatan)
+	isPML := jenis == "pml"
+
+	seq, _, ok := getPayableSeq(idsobat, isPML)
+	if !ok {
+		return d, jenis, nil, fmt.Errorf("'%s' tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)", d.NamaPetugas)
+	}
 
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
-		tgl, _ = time.Parse("2006-01-02", "2026-08-15")
+		tgl, _ = time.Parse("2006-01-02", "2026-07-16")
 	}
 
 	kind := "pernyataan_ppl"
-	seRole := "ppl"
-	if jenis == "pml" {
+	if isPML {
 		kind = "pernyataan_pml"
-		seRole = "pml"
 	}
-	nomor, err := suratNomorSE2026(idSpk, kind, 1, tahun, tgl)
+	nomor, err := suratNomorSE2026(seq, kind, 1, tahun, tgl)
 	if err != nil {
 		return d, jenis, nil, err
 	}
@@ -236,14 +242,9 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 	d.BlnTeks = bulanTeksSE[tgl.Month()]
 	d.TglAngka = fmt.Sprintf("%02d-%02d", tgl.Day(), int(tgl.Month()))
 
-	uid, cnt := findSE2026UserID(d.NamaPetugas, seRole)
-	if cnt != 1 {
-		return d, jenis, nil, fmt.Errorf("nama '%s' tidak ketemu tunggal di se2026.users (%d kandidat) - jalankan sinkron realisasi dulu", d.NamaPetugas, cnt)
-	}
-
-	if jenis == "pcl" {
+	if !isPML {
 		// PPL: tidak ada lampiran tabel, cukup angka target/realisasi/persentase dirinya sendiri.
-		target, realisasi, err := computeUsahaKeluargaSE2026(uid, false)
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, false)
 		if err != nil {
 			return d, jenis, nil, fmt.Errorf("gagal menghitung realisasi: %v", err)
 		}
@@ -252,14 +253,12 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 		}}, nil
 	}
 
-	// PML: daftar PPL binaan (dari se2026.sls, dikelompokkan per PPL).
+	// PML: daftar PPL binaan (dari lk_ppk_termin1_se2026, dikelompokkan per PPL).
 	rows, err := database.DB.Query(`
-		SELECT u.name, u.id
-		FROM se2026.sls s
-		JOIN se2026.users u ON u.id = s.ppl_id
-		WHERE s.pml_id = ?
-		GROUP BY u.id, u.name
-		ORDER BY u.name`, uid)
+		SELECT ppl_idsobat, ppl_nama FROM lk_ppk_termin1_se2026
+		WHERE pml_idsobat = ? AND prioritas = 1
+		GROUP BY ppl_idsobat, ppl_nama
+		ORDER BY ppl_nama`, idsobat)
 	if err != nil {
 		return d, jenis, nil, fmt.Errorf("gagal mengambil daftar PPL binaan: %v", err)
 	}
@@ -267,12 +266,11 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 
 	var lampiran []usahaKeluargaLampiranRow
 	for rows.Next() {
-		var nama string
-		var pplUID int
-		if err := rows.Scan(&nama, &pplUID); err != nil {
+		var pplIDSobat, nama string
+		if err := rows.Scan(&pplIDSobat, &nama); err != nil {
 			continue
 		}
-		target, realisasi, err := computeUsahaKeluargaSE2026(pplUID, false)
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(pplIDSobat, false)
 		if err != nil {
 			continue
 		}
@@ -407,10 +405,10 @@ func generateSuratPernyataanDocx(d bappSE2026Data, jenis string, lampiran []usah
 // Penyelesaian Lapangan (PPL & PML sama-sama pakai kolom id_pernyataan1/tgl_pernyataan1 -
 // aman karena baris rekap PPL dan PML untuk 1 orang tidak pernah sama, kegiatan-nya beda).
 func assignPernyataanNumber(rekapID int, tanggal string) error {
-	var idSpk, tahun, kegiatan string
+	var idsobat, idSpk, tahun, kegiatan string
 	var existing sql.NullString
-	err := database.DB.QueryRow(`SELECT COALESCE(id_spk,''), tahun, kegiatan, id_pernyataan1 FROM rekap WHERE id=?`, rekapID).
-		Scan(&idSpk, &tahun, &kegiatan, &existing)
+	err := database.DB.QueryRow(`SELECT idsobat, COALESCE(id_spk,''), tahun, kegiatan, id_pernyataan1 FROM rekap WHERE id=?`, rekapID).
+		Scan(&idsobat, &idSpk, &tahun, &kegiatan, &existing)
 	if err != nil {
 		return fmt.Errorf("rekap id %d tidak ditemukan", rekapID)
 	}
@@ -420,15 +418,20 @@ func assignPernyataanNumber(rekapID int, tanggal string) error {
 	if idSpk == "" {
 		return fmt.Errorf("petugas belum memiliki nomor SPK")
 	}
+	isPML := jenisPetugasSE2026(kegiatan) == "pml"
+	seq, _, ok := getPayableSeq(idsobat, isPML)
+	if !ok {
+		return fmt.Errorf("petugas tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)")
+	}
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
 		return fmt.Errorf("format tanggal salah, gunakan YYYY-MM-DD")
 	}
 	kind := "pernyataan_ppl"
-	if jenisPetugasSE2026(kegiatan) == "pml" {
+	if isPML {
 		kind = "pernyataan_pml"
 	}
-	nomor, err := suratNomorSE2026(idSpk, kind, 1, tahun, tgl)
+	nomor, err := suratNomorSE2026(seq, kind, 1, tahun, tgl)
 	if err != nil {
 		return err
 	}
@@ -464,7 +467,7 @@ func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	tanggal := r.URL.Query().Get("tanggal")
 	if tanggal == "" {
-		tanggal = "2026-08-15"
+		tanggal = "2026-07-16"
 	}
 
 	d, jenis, lampiran, err := buildSuratPernyataanSE2026(rekapID, tanggal)

@@ -34,7 +34,7 @@
                 <i class="fas fa-file-zipper"></i>
                 <span>SPK (ZIP)</span>
             </a>
-            <a :href="`/api/rekap/spk/se2026/bapp/download-all?jenis=${tab}&termin=1&tanggal=2026-08-15`"
+            <a :href="`/api/rekap/spk/se2026/bapp/download-all?jenis=${tab}&termin=1&tanggal=2026-07-17`"
                 class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
                        bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/30">
                 <i class="fas fa-file-zipper"></i>
@@ -47,7 +47,7 @@
                 <span>BAPP II (ZIP)</span>
             </a>
             <a x-show="kepalaNomor" x-cloak
-                :href="`/api/rekap/spk/se2026/pernyataan-kepala/download?tanggal=2026-08-15`"
+                :href="`/api/rekap/spk/se2026/pernyataan-kepala/download?tanggal=2026-07-17`"
                 class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
                        bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/30">
                 <i class="fas fa-download"></i>
@@ -198,7 +198,7 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <template x-if="item.sudah_bapp1">
-                                    <a :href="`/api/rekap/spk/se2026/bapp/download?rekap_id=${item.id}&termin=1&tanggal=2026-08-15`"
+                                    <a :href="`/api/rekap/spk/se2026/bapp/download?rekap_id=${item.id}&termin=1&tanggal=2026-07-17`"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
                                                bg-purple-500 hover:bg-purple-600 text-white shadow-sm shadow-purple-300 dark:shadow-purple-900/40">
                                         <i class="fas fa-download"></i>BAPP I
@@ -236,7 +236,7 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <template x-if="item.sudah_pernyataan">
-                                    <a :href="`/api/rekap/spk/se2026/pernyataan/download?rekap_id=${item.id}&tanggal=2026-08-15`"
+                                    <a :href="`/api/rekap/spk/se2026/pernyataan/download?rekap_id=${item.id}&tanggal=2026-07-16`"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
                                                bg-blue-500 hover:bg-blue-600 text-white shadow-sm shadow-blue-300 dark:shadow-blue-900/40">
                                         <i class="fas fa-download"></i>Pernyataan
@@ -289,7 +289,7 @@ function se2026() {
                 const res = await fetch('/api/rekap/spk/se2026/pernyataan-kepala/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tanggal: '2026-08-15' })
+                    body: JSON.stringify({ tanggal: '2026-07-17' })
                 });
                 if (!res.ok) throw new Error(await res.text());
                 this.showToast('Nomor Surat Pernyataan Kepala BPS berhasil dibuat');
@@ -332,7 +332,7 @@ function se2026() {
                 const res = await fetch('/api/rekap/spk/se2026/bapp/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rekap_id: item.id, termin: termin, tanggal: '2026-08-15' })
+                    body: JSON.stringify({ rekap_id: item.id, termin: termin, tanggal: termin === 1 ? '2026-07-17' : '2026-08-15' })
                 });
                 if (!res.ok) throw new Error(await res.text());
                 this.showToast(`Nomor BAPP Termin ${termin === 1 ? 'I' : 'II'} berhasil dibuat`);
@@ -347,7 +347,7 @@ function se2026() {
                 const res = await fetch('/api/rekap/spk/se2026/pernyataan/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rekap_id: item.id, tanggal: '2026-08-15' })
+                    body: JSON.stringify({ rekap_id: item.id, tanggal: '2026-07-16' })
                 });
                 if (!res.ok) throw new Error(await res.text());
                 this.showToast('Nomor Surat Pernyataan berhasil dibuat');

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -39,20 +38,14 @@ type bappSE2026Data struct {
 	HonorTerbilang string
 }
 
-var suratNomorSeqRe = regexp.MustCompile(`B-(\d+)/SPK-SE2026`)
-
-// suratNomorSE2026 membangun nomor surat (BAPP / Surat Pernyataan) dari nomor SPK yang
-// sudah dimiliki petugas (id_spk) - dipakai ulang sequence-nya (angka setelah "B-") supaya
-// dokumen-dokumen ini tetap terhubung 1:1 ke perjanjian kerja yang sama, bukan sequence baru -
-// digabung dengan bulan+tanggal terbit dokumen ini sendiri.
-// Format: B-{bulan(2)}.{tanggal(2)}.{nomor}/....
+// suratNomorSE2026 membangun nomor surat (BAPP / Surat Pernyataan) dari seq (nomor urut
+// baru, alfabetis per role, lihat lk_ppk_payable_se2026 & getPayableSeq) digabung dengan
+// bulan+tanggal terbit dokumen ini sendiri. Sequence ini SENGAJA independen dari nomor SPK
+// (rekap.id_spk) - direnumber ulang khusus utk daftar petugas yang bisa dicairkan termin ini.
+// Format: B-{bulan(2)}.{tanggal(2)}.{seq(3)}/....
 // kind: "pernyataan_ppl" | "pernyataan_pml" | "bapp"
-func suratNomorSE2026(idSpk, kind string, termin int, tahun string, tgl time.Time) (string, error) {
-	m := suratNomorSeqRe.FindStringSubmatch(idSpk)
-	if m == nil {
-		return "", fmt.Errorf("nomor SPK tidak dikenali: %s", idSpk)
-	}
-	tgd := fmt.Sprintf("%02d.%02d.%s", int(tgl.Month()), tgl.Day(), m[1])
+func suratNomorSE2026(seq int, kind string, termin int, tahun string, tgl time.Time) (string, error) {
+	tgd := fmt.Sprintf("%02d.%02d.%03d", int(tgl.Month()), tgl.Day(), seq)
 	switch kind {
 	case "bapp":
 		roman := "I"
@@ -69,6 +62,22 @@ func suratNomorSE2026(idSpk, kind string, termin int, tahun string, tgl time.Tim
 	}
 }
 
+// getPayableSeq mengembalikan nomor urut petugas di lk_ppk_payable_se2026 - juga dipakai
+// sebagai whitelist "bisa dicairkan": ok=false berarti petugas ini TIDAK ada di daftar
+// resmi yang bisa dibayarkan termin ini.
+// seq = nomor urut per role (1..215 PPL / 1..14 PML), dipakai utk nomor Surat Pernyataan
+// (formatnya beda suffix Super.PPL/Super.PML jadi aman walau seq sama antar role).
+// seqAll = nomor urut gabungan PML(1-14) lalu PPL(15-229), WAJIB dipakai utk nomor BAPP
+// karena format BAPP sama persis utk PPL & PML (harus unik silang role).
+func getPayableSeq(idsobat string, isPML bool) (seq int, seqAll int, ok bool) {
+	role := "ppl"
+	if isPML {
+		role = "pml"
+	}
+	err := database.DB.QueryRow(`SELECT seq, seq_all FROM lk_ppk_payable_se2026 WHERE idsobat = ? AND role = ?`, idsobat, role).Scan(&seq, &seqAll)
+	return seq, seqAll, err == nil
+}
+
 // kepalaNomorSE2026 membangun nomor Surat Pernyataan Kepala BPS - dokumen tunggal (bukan
 // per-petugas), jadi sequence-nya selalu 001 per termin/tahun, bukan diturunkan dari SPK.
 func kepalaNomorSE2026(tahun string, tgl time.Time) string {
@@ -83,32 +92,42 @@ func jenisPetugasSE2026(kegiatan string) string {
 	return "pcl"
 }
 
-// buildBAPPSE2026 mengambil data rekap+NIK dan menyusun map penggantian placeholder.
+// buildBAPPSE2026 mengambil data rekap+NIK dan menyusun map penggantian placeholder -
+// TargetSLS/RealisasiSLS dihitung dari lk_ppk_termin1_se2026 (SLS PRIORITAS saja).
 func buildBAPPSE2026(rekapID, termin int, tanggalBAPP string) (bappSE2026Data, string, error) {
 	var d bappSE2026Data
-	var honorStr, idSpk, kegiatan, tahun, jumlahSLSStr string
+	var idsobat, honorStr, idSpk, kegiatan, tahun string
 
 	row := database.DB.QueryRow(`
-		SELECT r.namamitra, r.honor, COALESCE(r.id_spk,''), r.kegiatan, r.tahun,
-		       COALESCE(NULLIF(r.jumlah_sls,''),'0'), r.realisasi_sls
+		SELECT r.idsobat, r.namamitra, r.honor, COALESCE(r.id_spk,''), r.kegiatan, r.tahun
 		FROM rekap r WHERE r.id = ?`, rekapID)
-	if err := row.Scan(&d.NamaPetugas, &honorStr, &idSpk, &kegiatan, &tahun, &jumlahSLSStr, &d.RealisasiSLS); err != nil {
+	if err := row.Scan(&idsobat, &d.NamaPetugas, &honorStr, &idSpk, &kegiatan, &tahun); err != nil {
 		return d, "", fmt.Errorf("rekap id %d tidak ditemukan", rekapID)
 	}
 	d.NamaPetugas = properCase(d.NamaPetugas)
-	d.TargetSLS, _ = strconv.Atoi(strings.TrimSpace(jumlahSLSStr))
 
 	if idSpk == "" {
 		return d, "", fmt.Errorf("petugas ini belum memiliki nomor SPK")
 	}
 	jenis := jenisPetugasSE2026(kegiatan)
+	isPML := jenis == "pml"
+
+	_, seqAll, ok := getPayableSeq(idsobat, isPML)
+	if !ok {
+		return d, jenis, fmt.Errorf("'%s' tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)", d.NamaPetugas)
+	}
+	_, _, targetSLS, realisasiSLS, err := computeUsahaKeluargaSE2026(idsobat, isPML)
+	if err != nil {
+		return d, jenis, fmt.Errorf("gagal menghitung SLS prioritas: %v", err)
+	}
+	d.TargetSLS, d.RealisasiSLS = targetSLS, realisasiSLS
 
 	tgl, err := time.Parse("2006-01-02", tanggalBAPP)
 	if err != nil {
-		tgl, _ = time.Parse("2006-01-02", "2026-08-15")
+		tgl, _ = time.Parse("2006-01-02", "2026-07-17")
 	}
 
-	nomor, err := suratNomorSE2026(idSpk, "bapp", termin, tahun, tgl)
+	nomor, err := suratNomorSE2026(seqAll, "bapp", termin, tahun, tgl)
 	if err != nil {
 		return d, jenis, err
 	}
@@ -182,11 +201,11 @@ func assignBAPPNumber(rekapID, termin int, tanggal string) error {
 		idCol, tglCol = "id_bapp2", "tgl_bapp2"
 	}
 
-	var idSpk, tahun string
+	var idsobat, idSpk, tahun, kegiatan string
 	var existing sql.NullString
 	err := database.DB.QueryRow(fmt.Sprintf(
-		`SELECT COALESCE(id_spk,''), tahun, %s FROM rekap WHERE id=?`, idCol), rekapID,
-	).Scan(&idSpk, &tahun, &existing)
+		`SELECT idsobat, COALESCE(id_spk,''), tahun, kegiatan, %s FROM rekap WHERE id=?`, idCol), rekapID,
+	).Scan(&idsobat, &idSpk, &tahun, &kegiatan, &existing)
 	if err != nil {
 		return fmt.Errorf("rekap id %d tidak ditemukan", rekapID)
 	}
@@ -196,12 +215,16 @@ func assignBAPPNumber(rekapID, termin int, tanggal string) error {
 	if idSpk == "" {
 		return fmt.Errorf("petugas belum memiliki nomor SPK")
 	}
+	_, seqAll, ok := getPayableSeq(idsobat, jenisPetugasSE2026(kegiatan) == "pml")
+	if !ok {
+		return fmt.Errorf("petugas tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)")
+	}
 
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
 		return fmt.Errorf("format tanggal salah, gunakan YYYY-MM-DD")
 	}
-	nomor, err := suratNomorSE2026(idSpk, "bapp", termin, tahun, tgl)
+	nomor, err := suratNomorSE2026(seqAll, "bapp", termin, tahun, tgl)
 	if err != nil {
 		return err
 	}
@@ -271,6 +294,9 @@ func DownloadBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	tanggal := r.URL.Query().Get("tanggal")
 	if tanggal == "" {
 		tanggal = "2026-08-15"
+		if termin == 1 {
+			tanggal = "2026-07-17"
+		}
 	}
 
 	d, jenis, err := buildBAPPSE2026(rekapID, termin, tanggal)
@@ -307,6 +333,9 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	tanggal := r.URL.Query().Get("tanggal")
 	if tanggal == "" {
 		tanggal = "2026-08-15"
+		if termin == 1 {
+			tanggal = "2026-07-17"
+		}
 	}
 
 	var kegiatanFilter string
