@@ -179,18 +179,19 @@ func persentase(realisasi, target int) float64 {
 }
 
 // computeUsahaKeluargaSE2026 mengambil dari lk_ppk_termin1_se2026 (arahan user):
-//   - target/realisasi (usaha+keluarga, dipakai tabel Pernyataan PML/Kepala) = HANYA
-//     baris SLS PRIORITAS (prioritas=1).
+//   - target/realisasi (usaha+keluarga, dipakai tabel Pernyataan PML/Kepala/PPL) = SEMUA
+//     SLS (prioritas + bukan prioritas) - direvisi dari versi sebelumnya yg cuma prioritas.
 //   - targetSLS (dipakai BAPP) = jumlah SEMUA SLS (prioritas + bukan prioritas).
-//   - realisasiSLS (dipakai BAPP) = jumlah SLS PRIORITAS saja.
+//   - realisasiSLS (dipakai BAPP) = jumlah SLS PRIORITAS saja (tetap, ini beda konteks -
+//     hitungan JUMLAH SLS, bukan Usaha+Keluarga).
 func computeUsahaKeluargaSE2026(idsobat string, isPML bool) (target, realisasi, targetSLS, realisasiSLS int, err error) {
 	col := "ppl_idsobat"
 	if isPML {
 		col = "pml_idsobat"
 	}
 	q := fmt.Sprintf(`
-		SELECT COALESCE(SUM(CASE WHEN prioritas = 1 THEN target ELSE 0 END),0),
-		       COALESCE(SUM(CASE WHEN prioritas = 1 THEN realisasi ELSE 0 END),0),
+		SELECT COALESCE(SUM(target),0),
+		       COALESCE(SUM(realisasi),0),
 		       COUNT(*),
 		       COALESCE(SUM(CASE WHEN prioritas = 1 THEN 1 ELSE 0 END),0)
 		FROM lk_ppk_termin1_se2026 WHERE %s = ?`, col)
