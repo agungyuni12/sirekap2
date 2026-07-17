@@ -134,12 +134,10 @@ func buildBAPPSE2026(rekapID, termin int, tanggalBAPP string) (bappSE2026Data, s
 	d.Nomor = nomor
 	d.NomorSPK = idSpk
 
-	// NIK asli ada di seleksimitra.pegawai (mitra.nik kosong utk baris SE2026), dicari
-	// live by nama tiap generate (bukan disimpan) - lihat internal/handlers/se2026_import.go.
-	database.DB.QueryRow(`
-		SELECT nip FROM pegawai
-		WHERE UPPER(CONVERT(nama USING utf8mb4)) COLLATE utf8mb4_unicode_ci = UPPER(?) COLLATE utf8mb4_unicode_ci
-		LIMIT 1`, d.NamaPetugas).Scan(&d.NIKPetugas)
+	// NIK diambil dari mitra.nik by idsobat (diisi dari BPJS - Petugas SE.xlsx, lihat
+	// migrations/update_nik_mitra_se2026.sql) - jauh lebih andal drpd cari by nama ke
+	// tabel pegawai (89 dari 229 petugas gagal ketemu krn beda ejaan nama).
+	database.DB.QueryRow(`SELECT nik FROM mitra WHERE idsobat = ? AND nik IS NOT NULL AND nik != '' LIMIT 1`, idsobat).Scan(&d.NIKPetugas)
 
 	d.Hari = hariIndonesia[tgl.Weekday().String()]
 	d.TglTeks = dayToTeks(tgl.Day())
