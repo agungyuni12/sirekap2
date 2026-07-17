@@ -175,19 +175,22 @@ func persentase(realisasi, target int) float64 {
 	return float64(realisasi) / float64(target) * 100
 }
 
-// computeUsahaKeluargaSE2026 menjumlahkan target & realisasi hasil pendataan usaha+keluarga
-// dari lk_ppk_termin1_se2026, HANYA baris SLS PRIORITAS (prioritas=1, sesuai arahan user) -
-// juga mengembalikan hitungan SLS (target_sls = jumlah SLS prioritas, realisasi_sls = jumlah
-// SLS prioritas yang realisasinya sudah >= target-nya sendiri).
+// computeUsahaKeluargaSE2026 mengambil dari lk_ppk_termin1_se2026 (arahan user):
+//   - target/realisasi (usaha+keluarga, dipakai tabel Pernyataan PML/Kepala) = HANYA
+//     baris SLS PRIORITAS (prioritas=1).
+//   - targetSLS (dipakai BAPP) = jumlah SEMUA SLS (prioritas + bukan prioritas).
+//   - realisasiSLS (dipakai BAPP) = jumlah SLS PRIORITAS saja.
 func computeUsahaKeluargaSE2026(idsobat string, isPML bool) (target, realisasi, targetSLS, realisasiSLS int, err error) {
 	col := "ppl_idsobat"
 	if isPML {
 		col = "pml_idsobat"
 	}
 	q := fmt.Sprintf(`
-		SELECT COALESCE(SUM(target),0), COALESCE(SUM(realisasi),0),
-		       COUNT(*), COALESCE(SUM(CASE WHEN realisasi >= target THEN 1 ELSE 0 END),0)
-		FROM lk_ppk_termin1_se2026 WHERE %s = ? AND prioritas = 1`, col)
+		SELECT COALESCE(SUM(CASE WHEN prioritas = 1 THEN target ELSE 0 END),0),
+		       COALESCE(SUM(CASE WHEN prioritas = 1 THEN realisasi ELSE 0 END),0),
+		       COUNT(*),
+		       COALESCE(SUM(CASE WHEN prioritas = 1 THEN 1 ELSE 0 END),0)
+		FROM lk_ppk_termin1_se2026 WHERE %s = ?`, col)
 	err = database.DB.QueryRow(q, idsobat).Scan(&target, &realisasi, &targetSLS, &realisasiSLS)
 	return
 }
