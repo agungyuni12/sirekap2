@@ -298,14 +298,33 @@ func tcOpen(widthDxa int) string {
 	return fmt.Sprintf(`<w:tc><w:tcPr><w:tcW w:w="%d" w:type="dxa"/>`+tcBordersXML+`</w:tcPr>`, widthDxa)
 }
 
+// cellParaPPr adalah properti paragraf persis seperti tiap sel di tabel contoh asli
+// (pStyle normal1, widowControl false, line spacing 1.15/276) - dipakai supaya tabel
+// yang di-generate dinamis nyatu dgn ritme baris & gaya sisa dokumen (bukan cuma font-nya).
+const cellParaPPr = `<w:pStyle w:val="normal1"/><w:widowControl w:val="false"/><w:spacing w:lineRule="auto" w:line="276" w:before="0" w:after="0"/>`
+
+// cellP membangun satu <w:p> isi sel tabel, lengkap dgn pPr high-fidelity (lihat cellParaPPr).
+func cellP(text string, bold, center bool) string {
+	font := docFontRPr
+	if bold {
+		font = docFontRPrBold
+	}
+	jc := ""
+	if center {
+		jc = `<w:jc w:val="center"/>`
+	}
+	return fmt.Sprintf(`<w:p><w:pPr>`+cellParaPPr+`%s<w:rPr>%s</w:rPr></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>%s</w:t></w:r></w:p>`,
+		jc, font, font, text)
+}
+
 // pmlColW adalah lebar kolom (twips/dxa) persis seperti tabel contoh di
 // surat_pernyataan_pml_se2026.docx asli (930/3630/1634/2326/2100, total 10620 dxa).
 var pmlColW = [5]int{930, 3630, 1634, 2326, 2100}
 
 // generateLampiranTableXML membangun <w:tbl> "No | Nama Petugas Lapangan | Target Prelist |
 // Realisasi Hasil Pendataan (Usaha+Keluarga) | Presentase (%)" + baris "Jumlah" di akhir -
-// lebar kolom & tblLayout=fixed disamakan dengan tabel contoh di template aslinya, dan
-// tabel ditengahkan (jc=center) di halaman.
+// lebar kolom, font, spacing paragraf & tblLayout=fixed disamakan dengan tabel contoh di
+// template aslinya (high-fidelity), dan tabel ditengahkan (jc=center) di halaman.
 func generateLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 	c := pmlColW
 	var rowXML strings.Builder
@@ -315,23 +334,29 @@ func generateLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 		totalRealisasi += r.Realisasi
 		rowXML.WriteString(fmt.Sprintf(`
 <w:tr>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
 </w:tr>`,
-			tcOpen(c[0]), i+1, tcOpen(c[1]), escapeXML(r.Nama), tcOpen(c[2]), r.TargetPrelist,
-			tcOpen(c[3]), r.Realisasi, tcOpen(c[4]), persentase(r.Realisasi, r.TargetPrelist)))
+			tcOpen(c[0]), cellP(fmt.Sprintf("%d", i+1), false, true),
+			tcOpen(c[1]), cellP(escapeXML(r.Nama), false, false),
+			tcOpen(c[2]), cellP(fmt.Sprintf("%d", r.TargetPrelist), false, true),
+			tcOpen(c[3]), cellP(fmt.Sprintf("%d", r.Realisasi), false, true),
+			tcOpen(c[4]), cellP(fmt.Sprintf("%.1f", persentase(r.Realisasi, r.TargetPrelist)), false, true)))
 	}
 	rowXML.WriteString(fmt.Sprintf(`
 <w:tr>
-<w:tc><w:tcPr><w:tcW w:w="%d" w:type="dxa"/><w:gridSpan w:val="2"/>`+tcBordersXML+`</w:tcPr><w:p><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>Jumlah</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+<w:tc><w:tcPr><w:tcW w:w="%d" w:type="dxa"/><w:gridSpan w:val="2"/>`+tcBordersXML+`</w:tcPr>%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
 </w:tr>`,
-		c[0]+c[1], tcOpen(c[2]), totalTarget, tcOpen(c[3]), totalRealisasi, tcOpen(c[4]), persentase(totalRealisasi, totalTarget)))
+		c[0]+c[1], cellP("Jumlah", true, false),
+		tcOpen(c[2]), cellP(fmt.Sprintf("%d", totalTarget), true, true),
+		tcOpen(c[3]), cellP(fmt.Sprintf("%d", totalRealisasi), true, true),
+		tcOpen(c[4]), cellP(fmt.Sprintf("%.1f", persentase(totalRealisasi, totalTarget)), true, true)))
 
 	return fmt.Sprintf(`<w:tbl>
 <w:tblPr>
@@ -356,15 +381,18 @@ func generateLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 <w:gridCol w:w="%d"/>
 </w:tblGrid>
 <w:tr>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Nama Petugas Lapangan</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Presentase (%%)</w:t></w:r></w:p></w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
 </w:tr>`,
 		c[0]+c[1]+c[2]+c[3]+c[4], c[0], c[1], c[2], c[3], c[4],
-		tcOpen(c[0]), docFontRPrBold, tcOpen(c[1]), docFontRPrBold, tcOpen(c[2]), docFontRPrBold,
-		tcOpen(c[3]), docFontRPrBold, tcOpen(c[4]), docFontRPrBold,
+		tcOpen(c[0]), cellP("No", true, true),
+		tcOpen(c[1]), cellP("Nama Petugas Lapangan", true, true),
+		tcOpen(c[2]), cellP("Target Prelist", true, true),
+		tcOpen(c[3]), cellP("Realisasi Hasil Pendataan (Usaha+Keluarga)", true, true),
+		tcOpen(c[4]), cellP("Presentase (%)", true, true),
 	) + rowXML.String() + `</w:tbl>`
 }
 

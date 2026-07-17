@@ -101,24 +101,31 @@ func generateKepalaLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 		totalRealisasi += r.Realisasi
 		rowXML += fmt.Sprintf(`
 <w:tr>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%s</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPr+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
 </w:tr>`,
-			tcOpen(c[0]), i+1, tcOpen(c[1]), escapeXML(r.Nama), tcOpen(c[2]), escapeXML(r.Jabatan),
-			tcOpen(c[3]), r.TargetPrelist, tcOpen(c[4]), r.Realisasi, tcOpen(c[5]), persentase(r.Realisasi, r.TargetPrelist))
+			tcOpen(c[0]), cellP(fmt.Sprintf("%d", i+1), false, true),
+			tcOpen(c[1]), cellP(escapeXML(r.Nama), false, false),
+			tcOpen(c[2]), cellP(escapeXML(r.Jabatan), false, true),
+			tcOpen(c[3]), cellP(fmt.Sprintf("%d", r.TargetPrelist), false, true),
+			tcOpen(c[4]), cellP(fmt.Sprintf("%d", r.Realisasi), false, true),
+			tcOpen(c[5]), cellP(fmt.Sprintf("%.1f", persentase(r.Realisasi, r.TargetPrelist)), false, true))
 	}
 	rowXML += fmt.Sprintf(`
 <w:tr>
-<w:tc><w:tcPr><w:tcW w:w="%d" w:type="dxa"/><w:gridSpan w:val="3"/>`+tcBordersXML+`</w:tcPr><w:p><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>Jumlah</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%d</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>`+docFontRPrBold+`</w:rPr><w:t>%.1f</w:t></w:r></w:p></w:tc>
+<w:tc><w:tcPr><w:tcW w:w="%d" w:type="dxa"/><w:gridSpan w:val="3"/>`+tcBordersXML+`</w:tcPr>%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
 </w:tr>`,
-		c[0]+c[1]+c[2], tcOpen(c[3]), totalTarget, tcOpen(c[4]), totalRealisasi, tcOpen(c[5]), persentase(totalRealisasi, totalTarget))
+		c[0]+c[1]+c[2], cellP("Jumlah", true, false),
+		tcOpen(c[3]), cellP(fmt.Sprintf("%d", totalTarget), true, true),
+		tcOpen(c[4]), cellP(fmt.Sprintf("%d", totalRealisasi), true, true),
+		tcOpen(c[5]), cellP(fmt.Sprintf("%.1f", persentase(totalRealisasi, totalTarget)), true, true))
 
 	return fmt.Sprintf(`<w:tbl>
 <w:tblPr>
@@ -144,16 +151,20 @@ func generateKepalaLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 <w:gridCol w:w="%d"/>
 </w:tblGrid>
 <w:tr>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Nama Petugas</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Jabatan</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
-%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Presentase (%%)</w:t></w:r></w:p></w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
+%s%s</w:tc>
 </w:tr>`,
 		c[0]+c[1]+c[2]+c[3]+c[4]+c[5], c[0], c[1], c[2], c[3], c[4], c[5],
-		tcOpen(c[0]), docFontRPrBold, tcOpen(c[1]), docFontRPrBold, tcOpen(c[2]), docFontRPrBold,
-		tcOpen(c[3]), docFontRPrBold, tcOpen(c[4]), docFontRPrBold, tcOpen(c[5]), docFontRPrBold,
+		tcOpen(c[0]), cellP("No", true, true),
+		tcOpen(c[1]), cellP("Nama Petugas", true, true),
+		tcOpen(c[2]), cellP("Jabatan", true, true),
+		tcOpen(c[3]), cellP("Target Prelist", true, true),
+		tcOpen(c[4]), cellP("Realisasi Hasil Pendataan (Usaha+Keluarga)", true, true),
+		tcOpen(c[5]), cellP("Presentase (%)", true, true),
 	) + rowXML + `</w:tbl>`
 }
 
