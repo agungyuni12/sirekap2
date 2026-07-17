@@ -138,12 +138,12 @@ func generateKepalaLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 <w:gridCol w:w="%d"/>
 </w:tblGrid>
 <w:tr>
-%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
-%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Nama Petugas</w:t></w:r></w:p></w:tc>
-%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Jabatan</w:t></w:r></w:p></w:tc>
-%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
-%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
-%s<w:p><w:r><w:rPr>%s</w:rPr><w:t>Presentase (%%)</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>No</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Nama Petugas</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Jabatan</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Target Prelist</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Realisasi Hasil Pendataan (Usaha+Keluarga)</w:t></w:r></w:p></w:tc>
+%s<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>%s</w:rPr><w:t>Presentase (%%)</w:t></w:r></w:p></w:tc>
 </w:tr>`,
 		c[0]+c[1]+c[2]+c[3]+c[4]+c[5], c[0], c[1], c[2], c[3], c[4], c[5],
 		tcOpen(c[0]), docFontRPrBold, tcOpen(c[1]), docFontRPrBold, tcOpen(c[2]), docFontRPrBold,
