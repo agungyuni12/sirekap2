@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"archive/zip"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -491,4 +492,68 @@ func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 	w.Header().Set("Content-Length", strconv.Itoa(len(docx)))
 	w.Write(docx)
+}
+
+// DownloadAllPernyataanSE2026Handler GET /api/rekap/spk/se2026/pernyataan/download-all?jenis=pcl&tanggal=2026-07-16
+func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
+	jenisFlt := strings.TrimSpace(r.URL.Query().Get("jenis"))
+	tanggal := r.URL.Query().Get("tanggal")
+	if tanggal == "" {
+		tanggal = "2026-07-16"
+	}
+
+	var kegiatanFilter string
+	switch jenisFlt {
+	case "pml":
+		kegiatanFilter = "%Pemeriksa Lapangan Sensus Ekonomi%"
+	case "pcl":
+		kegiatanFilter = "%Pendataan Sensus Ekonomi%"
+	default:
+		kegiatanFilter = "%Sensus Ekonomi 2026%"
+	}
+
+	rows, err := database.DB.Query(`
+		SELECT r.id FROM rekap r
+		WHERE r.kegiatan LIKE ? AND r.id_pernyataan1 IS NOT NULL AND r.id_pernyataan1 != ''
+		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`, kegiatanFilter)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var ids []int
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err == nil {
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) == 0 {
+		http.Error(w, "Tidak ada Surat Pernyataan dengan nomor surat", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="Surat_Pernyataan_SE2026_%s.zip"`, jenisFlt))
+
+	zw := zip.NewWriter(w)
+	defer zw.Close()
+
+	for _, id := range ids {
+		d, jenis, lampiran, err := buildSuratPernyataanSE2026(id, tanggal)
+		if err != nil {
+			continue
+		}
+		docx, err := generateSuratPernyataanDocx(d, jenis, lampiran)
+		if err != nil {
+			continue
+		}
+		fname := fmt.Sprintf("Surat_Pernyataan_%s_%s.docx", safeName(d.Nomor), safeName(d.NamaPetugas))
+		f, err := zw.Create(fname)
+		if err != nil {
+			continue
+		}
+		f.Write(docx)
+	}
 }

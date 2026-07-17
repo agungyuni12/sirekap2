@@ -46,6 +46,12 @@
                 <i class="fas fa-file-zipper"></i>
                 <span>BAPP II (ZIP)</span>
             </a>
+            <a :href="`/api/rekap/spk/se2026/pernyataan/download-all?jenis=${tab}&tanggal=2026-07-16`"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
+                       bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30">
+                <i class="fas fa-file-zipper"></i>
+                <span>Pernyataan (ZIP)</span>
+            </a>
             <a x-show="kepalaNomor" x-cloak
                 :href="`/api/rekap/spk/se2026/pernyataan-kepala/download?tanggal=2026-07-17`"
                 class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
