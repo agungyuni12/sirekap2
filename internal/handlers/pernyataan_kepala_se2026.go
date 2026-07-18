@@ -20,6 +20,7 @@ type kepalaSE2026Data struct {
 	Nomor    string
 	Hari     string
 	TglTeks  string
+	TglHari  string
 	BlnTeks  string
 	TglAngka string
 }
@@ -37,6 +38,7 @@ func buildPernyataanKepalaSE2026(tanggal string) (kepalaSE2026Data, []usahaKelua
 	}
 	d.Hari = hariIndonesia[tgl.Weekday().String()]
 	d.TglTeks = dayToTeks(tgl.Day())
+	d.TglHari = strconv.Itoa(tgl.Day())
 	d.BlnTeks = bulanTeksSE[tgl.Month()]
 	d.TglAngka = fmt.Sprintf("%02d-%02d", tgl.Day(), int(tgl.Month()))
 	d.Nomor = kepalaNomorSE2026("2026", tgl)
@@ -173,6 +175,7 @@ func generatePernyataanKepalaDocx(d kepalaSE2026Data, lampiran []usahaKeluargaLa
 		"nomor":       d.Nomor,
 		"hari":        d.Hari,
 		"tgl_teks":    d.TglTeks,
+		"tgl_hari":    d.TglHari,
 		"bln_teks":    d.BlnTeks,
 		"tgl_angka":   d.TglAngka,
 		"nama_kepala": kepalaNamaSE2026,

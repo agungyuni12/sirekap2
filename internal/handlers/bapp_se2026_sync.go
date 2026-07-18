@@ -247,6 +247,7 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 
 	d.Hari = hariIndonesia[tgl.Weekday().String()]
 	d.TglTeks = dayToTeks(tgl.Day())
+	d.TglHari = strconv.Itoa(tgl.Day())
 	d.BlnTeks = bulanTeksSE[tgl.Month()]
 	d.TglAngka = fmt.Sprintf("%02d-%02d", tgl.Day(), int(tgl.Month()))
 
@@ -409,6 +410,7 @@ func generateSuratPernyataanDocx(d bappSE2026Data, jenis string, lampiran []usah
 			"nomor":          d.Nomor,
 			"nomor_spk":      d.NomorSPK,
 			"tgl_teks":       d.TglTeks,
+			"tgl_hari":       d.TglHari,
 			"bln_teks":       d.BlnTeks,
 			"nama_petugas":   d.NamaPetugas,
 			"nik_petugas":    d.NIKPetugas,
@@ -426,6 +428,7 @@ func generateSuratPernyataanDocx(d bappSE2026Data, jenis string, lampiran []usah
 		"nomor":               d.Nomor,
 		"nomor_spk":           d.NomorSPK,
 		"tgl_teks":            d.TglTeks,
+		"tgl_hari":            d.TglHari,
 		"bln_teks":            d.BlnTeks,
 		"nama_petugas":        d.NamaPetugas,
 		"nik_petugas":         d.NIKPetugas,

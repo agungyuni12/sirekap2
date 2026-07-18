@@ -28,6 +28,7 @@ type bappSE2026Data struct {
 	NomorSPK       string
 	Hari           string
 	TglTeks        string
+	TglHari        string
 	BlnTeks        string
 	TglAngka       string
 	NamaPetugas    string
