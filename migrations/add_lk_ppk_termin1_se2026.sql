@@ -1,10 +1,15 @@
 -- ============================================================
--- LK PPK Termin 1 - Kabupaten Dompu (Realisasi Fasih) SE2026
+-- LK PPK Termin 1 - Kabupaten Dompu (Realisasi Fasih) SE2026 (v2 - direvisi 2026-07-18)
 -- Sumber: LK PPK Termin 1 - Kabupaten Dompu (Realisasi Fasih).xlsx
--- Data ditarik dari se2026 per 2026-07-17 (sudah termasuk koreksi manual 8 SLS).
--- Baris prioritas=1 = SLS PRIORITAS (berlatar kuning di file asli) - 715 dari 1522 baris.
--- Ini adalah daftar resmi nama petugas yang BISA DIBAYARKAN termin I,
--- dan dasar perhitungan target/realisasi usaha+keluarga & SLS di semua surat SE2026.
+-- Data ditarik dari se2026, sudah termasuk koreksi 8 SLS.
+-- Baris prioritas=1 = SLS PRIORITAS (berlatar kuning di file asli) - 698 dari 1484 baris.
+--
+-- PERUBAHAN dari versi sebelumnya: 7 PPL di bawah PML HAERUDDIN (Bahril Qamar,
+-- Husnul Wahyu Lestari, Moh Ma'ruf, Nurlailah, Rachmad Soebari, Sri Handayani,
+-- Triana Amalia ND) DIKELUARKAN dari daftar ini krn dibayar terpisah tgl 20.
+-- HAERUDDIN sendiri juga hilang dari sheet krn semua PPL binaannya dikeluarkan.
+--
+-- Jalankan migrasi ini utk REPLACE data lama (TRUNCATE dulu).
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS lk_ppk_termin1_se2026 (
@@ -299,9 +304,9 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522100016','ajwar anas','520525110064','Junaiddin','010','006','000800',98,124,1),
 ('520522100016','ajwar anas','520525110064','Junaiddin','010','006','200300',0,0,0),
 ('520522100016','ajwar anas','520526050235','Nurmiftahul jannah','010','002','000200',150,0,0),
-('520522100016','ajwar anas','520526050235','Nurmiftahul jannah','010','006','000100',92,64,0),
+('520522100016','ajwar anas','520526050235','Nurmiftahul jannah','010','006','000100',92,64,1),
 ('520522100016','ajwar anas','520526050235','Nurmiftahul jannah','010','006','000300',101,120,1),
-('520522100016','ajwar anas','520526050235','Nurmiftahul jannah','010','006','001200',78,102,1),
+('520522100016','ajwar anas','520526050235','Nurmiftahul jannah','010','006','001200',78,102,0),
 ('520522100016','ajwar anas','520526050235','Nurmiftahul jannah','010','006','100100',0,2,1),
 ('520522100016','ajwar anas','520526050235','Nurmiftahul jannah','010','007','100100',5,6,0),
 ('520523110033','amin khairi','520526050208','AL BIMA','051','005','001300',105,119,1),
@@ -438,44 +443,6 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522100095','Emi Faridah','520523070002','TIRANI APRILIA','020','006','000900',186,208,1),
 ('520522100095','Emi Faridah','520523070002','TIRANI APRILIA','020','006','001100',94,5,0),
 ('520522100095','Emi Faridah','520523070002','TIRANI APRILIA','020','006','001300',105,120,1),
-('520522030054','HAERUDDIN','520522100013','Bahril Qamar','020','016','000100',130,136,1),
-('520522030054','HAERUDDIN','520522100013','Bahril Qamar','020','016','000200',74,79,1),
-('520522030054','HAERUDDIN','520522100013','Bahril Qamar','020','016','000300',81,0,0),
-('520522030054','HAERUDDIN','520522100013','Bahril Qamar','020','016','000400',90,0,0),
-('520522030054','HAERUDDIN','520522100013','Bahril Qamar','020','016','000500',122,145,1),
-('520522030054','HAERUDDIN','520522100013','Bahril Qamar','020','016','000600',133,33,0),
-('520522030054','HAERUDDIN','520522100013','Bahril Qamar','020','016','100100',14,0,0),
-('520522030054','HAERUDDIN','520526050273','Husnul Wahyu Lestari','020','008','001000',109,8,0),
-('520522030054','HAERUDDIN','520526050273','Husnul Wahyu Lestari','020','008','001100',166,1,0),
-('520522030054','HAERUDDIN','520526050273','Husnul Wahyu Lestari','020','008','001200',329,374,1),
-('520522030054','HAERUDDIN','520526050273','Husnul Wahyu Lestari','020','013','100200',1,1,1),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','000700',64,10,0),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','000900',50,21,0),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','001000',67,92,1),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','001100',87,95,1),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','001200',52,60,1),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','001300',81,94,1),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','001400',40,0,0),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','001500',44,0,0),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','001600',63,0,0),
-('520522030054','HAERUDDIN','520525110198','Moh Ma''ruf','020','016','100200',47,0,0),
-('520522030054','HAERUDDIN','520525110108','Nurlailah','020','010','000600',194,208,1),
-('520522030054','HAERUDDIN','520525110108','Nurlailah','020','010','000700',105,1,0),
-('520522030054','HAERUDDIN','520525110108','Nurlailah','020','010','000800',175,0,0),
-('520522030054','HAERUDDIN','520525110108','Nurlailah','020','010','000900',132,152,1),
-('520522030054','HAERUDDIN','520522030024','Rachmad Soebari','020','008','000100',149,3,0),
-('520522030054','HAERUDDIN','520522030024','Rachmad Soebari','020','008','001300',102,102,1),
-('520522030054','HAERUDDIN','520522030024','Rachmad Soebari','020','008','001500',246,257,1),
-('520522030054','HAERUDDIN','520522030024','Rachmad Soebari','020','008','001600',112,0,0),
-('520522030054','HAERUDDIN','520526050218','Sri Handayani','020','002','001500',202,16,0),
-('520522030054','HAERUDDIN','520526050218','Sri Handayani','020','008','000300',102,68,0),
-('520522030054','HAERUDDIN','520526050218','Sri Handayani','020','008','000400',66,78,1),
-('520522030054','HAERUDDIN','520526050218','Sri Handayani','020','008','000800',220,256,1),
-('520522030054','HAERUDDIN','520526050243','Triana Amalia ND','020','002','001100',86,97,1),
-('520522030054','HAERUDDIN','520526050243','Triana Amalia ND','020','002','001600',130,147,1),
-('520522030054','HAERUDDIN','520526050243','Triana Amalia ND','020','008','000200',176,0,0),
-('520522030054','HAERUDDIN','520526050243','Triana Amalia ND','020','008','000600',40,42,0),
-('520522030054','HAERUDDIN','520526050243','Triana Amalia ND','020','008','000700',168,22,0),
 ('520522030018','Hanafi','520526050147','Aida rahayu','010','004','000800',87,0,0),
 ('520522030018','Hanafi','520526050147','Aida rahayu','010','004','001100',78,61,0),
 ('520522030018','Hanafi','520526050147','Aida rahayu','010','004','001300',113,12,0),
@@ -629,9 +596,7 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522100030','JULKARNAIN','520522090014','Hadijah','050','010','002200',74,18,0),
 ('520522100030','JULKARNAIN','520522100186','Indah putri sari','050','014','000300',182,229,1),
 ('520522100030','JULKARNAIN','520522100186','Indah putri sari','050','014','000400',102,112,1),
-('520522100030','JULKARNAIN','520522100186','Indah putri sari','050','014','000900',147,1,1);
-
-INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
+('520522100030','JULKARNAIN','520522100186','Indah putri sari','050','014','000900',147,1,1),
 ('520522100030','JULKARNAIN','520522100186','Indah putri sari','050','014','001000',113,0,0),
 ('520522100030','JULKARNAIN','520522090003','MAYA AYUNDARI','050','010','000600',68,75,1),
 ('520522100030','JULKARNAIN','520522090003','MAYA AYUNDARI','050','010','000700',126,153,1),
@@ -669,7 +634,9 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522050001','Kurniawan','520525050001','ESA ARIANI','030','012','000500',96,103,1),
 ('520522050001','Kurniawan','520523030007','KHALIFAH ADRIANI PUTRI','030','001','000200',115,0,0),
 ('520522050001','Kurniawan','520523030007','KHALIFAH ADRIANI PUTRI','030','001','000300',95,24,0),
-('520522050001','Kurniawan','520523030007','KHALIFAH ADRIANI PUTRI','030','001','000400',88,107,1),
+('520522050001','Kurniawan','520523030007','KHALIFAH ADRIANI PUTRI','030','001','000400',88,107,1);
+
+INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
 ('520522050001','Kurniawan','520523030007','KHALIFAH ADRIANI PUTRI','030','001','000800',205,234,1),
 ('520522050001','Kurniawan','520523030007','KHALIFAH ADRIANI PUTRI','030','001','100100',0,5,0),
 ('520522050001','Kurniawan','520523030007','KHALIFAH ADRIANI PUTRI','030','001','100400',0,1,1),
@@ -831,9 +798,7 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520525050028','Melinda Susilarini','520525110046','Bela Safira','040','005','000100',60,66,1),
 ('520525050028','Melinda Susilarini','520525110046','Bela Safira','040','006','000100',72,84,1),
 ('520525050028','Melinda Susilarini','520525110046','Bela Safira','040','006','000700',51,72,1),
-('520525050028','Melinda Susilarini','520525110046','Bela Safira','040','006','000900',41,53,1);
-
-INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
+('520525050028','Melinda Susilarini','520525110046','Bela Safira','040','006','000900',41,53,1),
 ('520525050028','Melinda Susilarini','520525110046','Bela Safira','040','006','001000',29,37,1),
 ('520525050028','Melinda Susilarini','520525110066','Indra Wulan','040','003','000400',51,76,1),
 ('520525050028','Melinda Susilarini','520525110066','Indra Wulan','040','003','000800',41,65,1),
@@ -871,7 +836,9 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520525050028','Melinda Susilarini','520525110252','SRI MARYAM ULFAH','040','005','001400',45,69,1),
 ('520525050028','Melinda Susilarini','520525110252','SRI MARYAM ULFAH','040','006','001100',54,0,0),
 ('520525050028','Melinda Susilarini','520525110252','SRI MARYAM ULFAH','040','006','001300',19,0,0),
-('520525050028','Melinda Susilarini','520525110025','TRI PUSPA KARTININGSIH','040','001','001500',35,41,1),
+('520525050028','Melinda Susilarini','520525110025','TRI PUSPA KARTININGSIH','040','001','001500',35,41,1);
+
+INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
 ('520525050028','Melinda Susilarini','520525110025','TRI PUSPA KARTININGSIH','040','003','001800',19,23,1),
 ('520525050028','Melinda Susilarini','520525110025','TRI PUSPA KARTININGSIH','040','004','000500',79,0,0),
 ('520525050028','Melinda Susilarini','520525110025','TRI PUSPA KARTININGSIH','040','004','000900',105,0,0),
@@ -1033,9 +1000,7 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522090013','MUSLIMIN AKBAR ARS','520522100027','NURJANAH','051','009','600300',0,1,1),
 ('520522090013','MUSLIMIN AKBAR ARS','520523110098','Sofian Halidin','051','004','000101',120,62,0),
 ('520522090013','MUSLIMIN AKBAR ARS','520523110098','Sofian Halidin','051','004','000102',119,249,1),
-('520522090013','MUSLIMIN AKBAR ARS','520523110098','Sofian Halidin','051','004','000103',106,31,0);
-
-INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
+('520522090013','MUSLIMIN AKBAR ARS','520523110098','Sofian Halidin','051','004','000103',106,31,0),
 ('520522090013','MUSLIMIN AKBAR ARS','520523110098','Sofian Halidin','051','004','100200',0,9,1),
 ('520522090013','MUSLIMIN AKBAR ARS','520523110098','Sofian Halidin','051','004','200500',0,1,1),
 ('520522090013','MUSLIMIN AKBAR ARS','520526050238','SUMIATI','051','001','100300',0,5,1),
@@ -1058,10 +1023,10 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','006','002200',40,0,0),
 ('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','000900',87,108,1),
 ('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','001000',41,55,1),
-('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','001100',38,3,0),
-('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','001200',67,82,1),
-('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','001300',55,59,1),
-('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','001400',50,46,0),
+('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','001100',38,3,1),
+('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','001200',67,82,0),
+('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','001300',55,59,0),
+('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','001400',50,46,1),
 ('520523010001','NILA UTAMA','520525110086','Mita Rahmatullah','051','009','100100',1,0,0),
 ('520523010001','NILA UTAMA','520523030037','NURWAHIDAH','051','001','100200',0,0,0),
 ('520523010001','NILA UTAMA','520523030037','NURWAHIDAH','051','001','101000',0,0,0),
@@ -1073,7 +1038,9 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520523010001','NILA UTAMA','520523110079','Sri Rahmawati','051','006','002000',58,0,0),
 ('520523010001','NILA UTAMA','520523110079','Sri Rahmawati','051','009','000100',48,0,0),
 ('520523010001','NILA UTAMA','520523110079','Sri Rahmawati','051','009','000200',49,0,0),
-('520523010001','NILA UTAMA','520523110079','Sri Rahmawati','051','009','000300',49,40,0),
+('520523010001','NILA UTAMA','520523110079','Sri Rahmawati','051','009','000300',49,40,0);
+
+INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
 ('520523010001','NILA UTAMA','520523110079','Sri Rahmawati','051','009','000400',43,4,0),
 ('520523010001','NILA UTAMA','520523110079','Sri Rahmawati','051','009','000500',52,61,1),
 ('520523010001','NILA UTAMA','520523110079','Sri Rahmawati','051','009','000600',72,76,1),
@@ -1235,9 +1202,7 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522030014','SUHERMAN','520525110205','LIDYA SRI RAHAYU','020','002','300200',5,0,0),
 ('520522030014','SUHERMAN','520525110241','Maraatun Hasanah','020','001','000100',163,180,1),
 ('520522030014','SUHERMAN','520525110241','Maraatun Hasanah','020','001','000200',162,116,0),
-('520522030014','SUHERMAN','520525110241','Maraatun Hasanah','020','001','000300',168,200,1);
-
-INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
+('520522030014','SUHERMAN','520525110241','Maraatun Hasanah','020','001','000300',168,200,1),
 ('520522030014','SUHERMAN','520525110241','Maraatun Hasanah','020','001','000400',124,53,0),
 ('520522030014','SUHERMAN','520525050005','Qori prisita','020','001','000500',95,115,1),
 ('520522030014','SUHERMAN','520525050005','Qori prisita','020','001','000700',185,138,0),
@@ -1275,7 +1240,9 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520523050009','Syahril Sidik','520526050223','Nurdin','051','012','000500',69,72,1),
 ('520523050009','Syahril Sidik','520526050223','Nurdin','051','012','000900',98,107,1),
 ('520523050009','Syahril Sidik','520526050023','Rangga Barani Satria','051','001','000100',84,0,0),
-('520523050009','Syahril Sidik','520526050023','Rangga Barani Satria','051','001','000200',73,0,0),
+('520523050009','Syahril Sidik','520526050023','Rangga Barani Satria','051','001','000200',73,0,0);
+
+INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
 ('520523050009','Syahril Sidik','520526050023','Rangga Barani Satria','051','001','000300',59,66,1),
 ('520523050009','Syahril Sidik','520526050023','Rangga Barani Satria','051','001','000400',61,36,1),
 ('520523050009','Syahril Sidik','520526050023','Rangga Barani Satria','051','001','000600',79,101,1),
@@ -1437,9 +1404,7 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522100175','Yulianti','520525110280','HANAFIA','010','001','000501',328,100,0),
 ('520522100175','Yulianti','520525110280','HANAFIA','010','002','000400',63,99,1),
 ('520522100175','Yulianti','520525110280','HANAFIA','010','002','000900',93,110,1),
-('520522100175','Yulianti','520525110280','HANAFIA','010','002','001300',48,63,1);
-
-INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
+('520522100175','Yulianti','520525110280','HANAFIA','010','002','001300',48,63,1),
 ('520522100175','Yulianti','520525110280','HANAFIA','010','002','001500',60,78,0),
 ('520522100175','Yulianti','520525110280','HANAFIA','010','002','100100',1,3,0),
 ('520522100175','Yulianti','520526050022','Herman','010','001','000302',141,80,0),
@@ -1464,9 +1429,9 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522100175','Yulianti','520526050047','Weni Rahayu','010','008','000600',150,206,1),
 ('520522100175','Yulianti','520526050047','Weni Rahayu','010','008','100100',0,1,0),
 ('520522100175','Yulianti','520526050047','Weni Rahayu','010','008','200200',0,1,0),
-('520522030006','YUSUF','520525110003','Alfi sahrir','030','010','000300',70,15,0),
+('520522030006','YUSUF','520525110003','Alfi sahrir','030','010','000300',70,15,1),
 ('520522030006','YUSUF','520525110003','Alfi sahrir','030','010','000400',66,0,0),
-('520522030006','YUSUF','520525110003','Alfi sahrir','030','010','000600',46,44,1),
+('520522030006','YUSUF','520525110003','Alfi sahrir','030','010','000600',46,44,0),
 ('520522030006','YUSUF','520525110003','Alfi sahrir','030','010','001200',69,94,1),
 ('520522030006','YUSUF','520525110003','Alfi sahrir','030','010','001500',73,86,1),
 ('520522030006','YUSUF','520525110003','Alfi sahrir','030','010','001800',61,77,1),
@@ -1477,7 +1442,9 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522030006','YUSUF','520526050105','ARIFIN','030','010','001000',63,70,1),
 ('520522030006','YUSUF','520526050105','ARIFIN','030','010','001300',89,106,1),
 ('520522030006','YUSUF','520526050105','ARIFIN','030','010','001600',82,30,0),
-('520522030006','YUSUF','520526050105','ARIFIN','030','010','100100',1,0,0),
+('520522030006','YUSUF','520526050105','ARIFIN','030','010','100100',1,0,0);
+
+INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama, kode_kec, kode_desa, kode_sls, target, realisasi, prioritas) VALUES
 ('520522030006','YUSUF','520526050105','ARIFIN','030','014','000800',125,0,0),
 ('520522030006','YUSUF','520526050105','ARIFIN','030','014','000900',98,0,0),
 ('520522030006','YUSUF','520526050257','Fathurrahman Hazairin','030','007','001500',108,0,0),
@@ -1563,4 +1530,4 @@ INSERT INTO lk_ppk_termin1_se2026 (pml_idsobat, pml_nama, ppl_idsobat, ppl_nama,
 ('520522020015','ZORDIAN','520525110208','Subhan','060','001','001800',37,59,1),
 ('520522020015','ZORDIAN','520525110208','Subhan','060','001','001900',131,0,0);
 
-SELECT 'Migration add_lk_ppk_termin1_se2026 selesai.' AS status, COUNT(*) AS total_baris FROM lk_ppk_termin1_se2026;
+SELECT 'Migration add_lk_ppk_termin1_se2026 (v2) selesai.' AS status, COUNT(*) AS total_baris FROM lk_ppk_termin1_se2026;
