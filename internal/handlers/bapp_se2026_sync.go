@@ -219,14 +219,17 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 	jenis := jenisPetugasSE2026(kegiatan)
 	isPML := jenis == "pml"
 
-	seq, _, ok := getPayableSeq(idsobat, isPML)
+	seq, _, batch, ok := getPayableSeq(idsobat, isPML)
 	if !ok {
 		return d, jenis, nil, fmt.Errorf("'%s' tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)", d.NamaPetugas)
 	}
 
+	if tanggal == "" {
+		tanggal = batchTanggalDefault(batch, "pernyataan")
+	}
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
-		tgl, _ = time.Parse("2006-01-02", "2026-07-16")
+		tgl, _ = time.Parse("2006-01-02", batchTanggalDefault(batch, "pernyataan"))
 	}
 
 	kind := "pernyataan_ppl"
@@ -458,9 +461,12 @@ func assignPernyataanNumber(rekapID int, tanggal string) error {
 		return fmt.Errorf("petugas belum memiliki nomor SPK")
 	}
 	isPML := jenisPetugasSE2026(kegiatan) == "pml"
-	seq, _, ok := getPayableSeq(idsobat, isPML)
+	seq, _, batch, ok := getPayableSeq(idsobat, isPML)
 	if !ok {
 		return fmt.Errorf("petugas tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)")
+	}
+	if tanggal == "" {
+		tanggal = batchTanggalDefault(batch, "pernyataan")
 	}
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
@@ -505,9 +511,7 @@ func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tanggal := r.URL.Query().Get("tanggal")
-	if tanggal == "" {
-		tanggal = "2026-07-16"
-	}
+	// kalau tidak dikirim eksplisit, buildSuratPernyataanSE2026 pilih tanggal sesuai batch.
 
 	d, jenis, lampiran, err := buildSuratPernyataanSE2026(rekapID, tanggal)
 	if err != nil {
@@ -536,9 +540,7 @@ func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	jenisFlt := strings.TrimSpace(r.URL.Query().Get("jenis"))
 	tanggal := r.URL.Query().Get("tanggal")
-	if tanggal == "" {
-		tanggal = "2026-07-16"
-	}
+	// kalau tidak dikirim eksplisit, buildSuratPernyataanSE2026 pilih tanggal sesuai batch.
 
 	var kegiatanFilter string
 	switch jenisFlt {

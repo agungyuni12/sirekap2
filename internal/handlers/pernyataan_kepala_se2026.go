@@ -25,27 +25,32 @@ type kepalaSE2026Data struct {
 	TglAngka string
 }
 
-// buildPernyataanKepalaSE2026 mengagregasi SEMUA petugas SE2026 (PML lalu PPL) yang ada
-// di lk_ppk_payable_se2026 - daftar resmi "yang bisa dicairkan" termin ini (215 PPL +
-// 14 PML terkonfirmasi, lihat migrations/add_lk_ppk_payable_se2026.sql), diurutkan
-// sesuai seq (alfabetis per role).
-func buildPernyataanKepalaSE2026(tanggal string) (kepalaSE2026Data, []usahaKeluargaLampiranRow, error) {
+// buildPernyataanKepalaSE2026 mengagregasi petugas SE2026 (PML lalu PPL) secara
+// KUMULATIF dari batch 1 s/d batch yg diminta di lk_ppk_payable_se2026 - daftar
+// resmi "yang bisa dicairkan" (lihat migrations/add_lk_ppk_payable_se2026.sql &
+// add_lk_ppk_payable_batch2_se2026.sql), diurutkan sesuai seq (alfabetis per role).
+// Kumulatif: surat Kepala BPS batch 2 memuat juga seluruh petugas batch 1 (bukan
+// cuma tambahan batch 2 saja).
+func buildPernyataanKepalaSE2026(batch int, tanggal string) (kepalaSE2026Data, []usahaKeluargaLampiranRow, error) {
 	var d kepalaSE2026Data
 
+	if tanggal == "" {
+		tanggal = batchTanggalDefault(batch, "kepala")
+	}
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
-		tgl, _ = time.Parse("2006-01-02", "2026-07-17")
+		tgl, _ = time.Parse("2006-01-02", batchTanggalDefault(batch, "kepala"))
 	}
 	d.Hari = hariIndonesia[tgl.Weekday().String()]
 	d.TglTeks = dayToTeks(tgl.Day())
 	d.TglHari = strconv.Itoa(tgl.Day())
 	d.BlnTeks = bulanTeksSE[tgl.Month()]
 	d.TglAngka = fmt.Sprintf("%02d-%02d", tgl.Day(), int(tgl.Month()))
-	d.Nomor = kepalaNomorSE2026("2026", tgl)
+	d.Nomor = kepalaNomorSE2026(batch, "2026", tgl)
 
 	var lampiran []usahaKeluargaLampiranRow
 
-	pmlRows, err := database.DB.Query(`SELECT idsobat, nama FROM lk_ppk_payable_se2026 WHERE role='pml' ORDER BY seq`)
+	pmlRows, err := database.DB.Query(`SELECT idsobat, nama FROM lk_ppk_payable_se2026 WHERE role='pml' AND batch<=? ORDER BY seq`, batch)
 	if err != nil {
 		return d, nil, fmt.Errorf("gagal mengambil daftar PML: %v", err)
 	}
@@ -64,7 +69,7 @@ func buildPernyataanKepalaSE2026(tanggal string) (kepalaSE2026Data, []usahaKelua
 	}
 	pmlRows.Close()
 
-	pplRows, err := database.DB.Query(`SELECT idsobat, nama FROM lk_ppk_payable_se2026 WHERE role='ppl' ORDER BY seq`)
+	pplRows, err := database.DB.Query(`SELECT idsobat, nama FROM lk_ppk_payable_se2026 WHERE role='ppl' AND batch<=? ORDER BY seq`, batch)
 	if err != nil {
 		return d, nil, fmt.Errorf("gagal mengambil daftar PPL: %v", err)
 	}
@@ -185,11 +190,12 @@ func generatePernyataanKepalaDocx(d kepalaSE2026Data, lampiran []usahaKeluargaLa
 }
 
 // assignKepalaNomor menetapkan (idempotent) nomor Surat Pernyataan Kepala BPS untuk
-// termin/tahun tertentu - dokumen tunggal, disimpan di tabel surat_kepala_se2026, bukan
-// di rekap (rekap itu per-petugas, dokumen ini bukan milik petugas manapun).
-func assignKepalaNomor(termin int, tahun, tanggal string) (string, error) {
+// termin/tahun/batch tertentu - dokumen tunggal per batch, disimpan di tabel
+// surat_kepala_se2026, bukan di rekap (rekap itu per-petugas, dokumen ini bukan milik
+// petugas manapun).
+func assignKepalaNomor(termin, batch int, tahun, tanggal string) (string, error) {
 	var existing sql.NullString
-	err := database.DB.QueryRow(`SELECT nomor FROM surat_kepala_se2026 WHERE termin=? AND tahun=?`, termin, tahun).Scan(&existing)
+	err := database.DB.QueryRow(`SELECT nomor FROM surat_kepala_se2026 WHERE termin=? AND tahun=? AND batch=?`, termin, tahun, batch).Scan(&existing)
 	if err == nil && existing.Valid && existing.String != "" {
 		return existing.String, nil
 	}
@@ -197,13 +203,16 @@ func assignKepalaNomor(termin int, tahun, tanggal string) (string, error) {
 		return "", err
 	}
 
+	if tanggal == "" {
+		tanggal = batchTanggalDefault(batch, "kepala")
+	}
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
 		return "", fmt.Errorf("format tanggal salah, gunakan YYYY-MM-DD")
 	}
-	nomor := kepalaNomorSE2026(tahun, tgl)
-	_, err = database.DB.Exec(`INSERT INTO surat_kepala_se2026 (termin, tahun, nomor, tanggal) VALUES (?, ?, ?, ?)`,
-		termin, tahun, nomor, tgl.Format("2006-01-02"))
+	nomor := kepalaNomorSE2026(batch, tahun, tgl)
+	_, err = database.DB.Exec(`INSERT INTO surat_kepala_se2026 (termin, tahun, batch, nomor, tanggal) VALUES (?, ?, ?, ?, ?)`,
+		termin, tahun, batch, nomor, tgl.Format("2006-01-02"))
 	if err != nil {
 		return "", err
 	}
@@ -213,16 +222,17 @@ func assignKepalaNomor(termin int, tahun, tanggal string) (string, error) {
 // CreatePernyataanKepalaHandler POST /api/rekap/spk/se2026/pernyataan-kepala/create
 func CreatePernyataanKepalaHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
+		Batch   int    `json:"batch"`
 		Tanggal string `json:"tanggal"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
-	if req.Tanggal == "" {
-		req.Tanggal = "2026-08-15"
+	if req.Batch != 2 {
+		req.Batch = 1
 	}
-	nomor, err := assignKepalaNomor(1, "2026", req.Tanggal)
+	nomor, err := assignKepalaNomor(1, req.Batch, "2026", req.Tanggal)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -231,21 +241,22 @@ func CreatePernyataanKepalaHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "nomor": nomor})
 }
 
-// DownloadPernyataanKepalaSE2026Handler GET /api/rekap/spk/se2026/pernyataan-kepala/download?tanggal=2026-08-15
+// DownloadPernyataanKepalaSE2026Handler GET /api/rekap/spk/se2026/pernyataan-kepala/download?batch=1&tanggal=2026-07-17
 func DownloadPernyataanKepalaSE2026Handler(w http.ResponseWriter, r *http.Request) {
-	tanggal := r.URL.Query().Get("tanggal")
-	if tanggal == "" {
-		tanggal = "2026-07-17"
+	batch, _ := strconv.Atoi(r.URL.Query().Get("batch"))
+	if batch != 2 {
+		batch = 1
 	}
+	tanggal := r.URL.Query().Get("tanggal")
 
 	var existing sql.NullString
-	database.DB.QueryRow(`SELECT nomor FROM surat_kepala_se2026 WHERE termin=1 AND tahun='2026'`).Scan(&existing)
+	database.DB.QueryRow(`SELECT nomor FROM surat_kepala_se2026 WHERE termin=1 AND tahun='2026' AND batch=?`, batch).Scan(&existing)
 	if !existing.Valid || existing.String == "" {
-		http.Error(w, "Surat Pernyataan Kepala BPS belum memiliki nomor - buat nomornya dulu", http.StatusBadRequest)
+		http.Error(w, "Surat Pernyataan Kepala BPS batch ini belum memiliki nomor - buat nomornya dulu", http.StatusBadRequest)
 		return
 	}
 
-	d, lampiran, err := buildPernyataanKepalaSE2026(tanggal)
+	d, lampiran, err := buildPernyataanKepalaSE2026(batch, tanggal)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -258,17 +269,21 @@ func DownloadPernyataanKepalaSE2026Handler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	fname := "Surat_Pernyataan_Kepala_BPS_SE2026.docx"
+	fname := fmt.Sprintf("Surat_Pernyataan_Kepala_BPS_SE2026_Batch%d.docx", batch)
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, fname))
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 	w.Header().Set("Content-Length", strconv.Itoa(len(docx)))
 	w.Write(docx)
 }
 
-// StatusPernyataanKepalaSE2026Handler GET /api/rekap/spk/se2026/pernyataan-kepala/status
+// StatusPernyataanKepalaSE2026Handler GET /api/rekap/spk/se2026/pernyataan-kepala/status?batch=1
 func StatusPernyataanKepalaSE2026Handler(w http.ResponseWriter, r *http.Request) {
+	batch, _ := strconv.Atoi(r.URL.Query().Get("batch"))
+	if batch != 2 {
+		batch = 1
+	}
 	var nomor sql.NullString
-	database.DB.QueryRow(`SELECT nomor FROM surat_kepala_se2026 WHERE termin=1 AND tahun='2026'`).Scan(&nomor)
+	database.DB.QueryRow(`SELECT nomor FROM surat_kepala_se2026 WHERE termin=1 AND tahun='2026' AND batch=?`, batch).Scan(&nomor)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"sudah_ada": nomor.Valid && nomor.String != "",

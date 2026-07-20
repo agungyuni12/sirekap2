@@ -63,26 +63,45 @@ func suratNomorSE2026(seq int, kind string, termin int, tahun string, tgl time.T
 	}
 }
 
+// batchTanggalDefault mengembalikan tanggal default per batch & jenis dokumen (dipakai
+// kalau tanggal tidak dikirim eksplisit dari UI).
+//
+//	batch 1: Pernyataan 16 Juli 2026, BAPP/Kepala 17 Juli 2026
+//	batch 2: Pernyataan 18 Juli 2026, BAPP/Kepala 19 Juli 2026
+func batchTanggalDefault(batch int, kind string) string {
+	pernyataan, bappKepala := "2026-07-16", "2026-07-17"
+	if batch == 2 {
+		pernyataan, bappKepala = "2026-07-18", "2026-07-19"
+	}
+	if kind == "pernyataan" {
+		return pernyataan
+	}
+	return bappKepala
+}
+
 // getPayableSeq mengembalikan nomor urut petugas di lk_ppk_payable_se2026 - juga dipakai
 // sebagai whitelist "bisa dicairkan": ok=false berarti petugas ini TIDAK ada di daftar
 // resmi yang bisa dibayarkan termin ini.
-// seq = nomor urut per role (1..215 PPL / 1..14 PML), dipakai utk nomor Surat Pernyataan
-// (formatnya beda suffix Super.PPL/Super.PML jadi aman walau seq sama antar role).
-// seqAll = nomor urut gabungan PML(1-14) lalu PPL(15-229), WAJIB dipakai utk nomor BAPP
-// karena format BAPP sama persis utk PPL & PML (harus unik silang role).
-func getPayableSeq(idsobat string, isPML bool) (seq int, seqAll int, ok bool) {
+// seq = nomor urut per role, LANJUT antar batch (1..208 PPL batch 1, 209..225 batch 2 dst /
+// 1..14 PML batch 1, 15..20 batch 2 dst), dipakai utk nomor Surat Pernyataan (formatnya
+// beda suffix Super.PPL/Super.PML jadi aman walau seq sama antar role).
+// seqAll = nomor urut gabungan PML lalu PPL, LANJUT antar batch juga, WAJIB dipakai utk
+// nomor BAPP karena format BAPP sama persis utk PPL & PML (harus unik silang role & batch).
+// batch = 1 atau 2, dipakai utk pilih tanggal default dokumen (lihat batchTanggalDefault).
+func getPayableSeq(idsobat string, isPML bool) (seq int, seqAll int, batch int, ok bool) {
 	role := "ppl"
 	if isPML {
 		role = "pml"
 	}
-	err := database.DB.QueryRow(`SELECT seq, seq_all FROM lk_ppk_payable_se2026 WHERE idsobat = ? AND role = ?`, idsobat, role).Scan(&seq, &seqAll)
-	return seq, seqAll, err == nil
+	err := database.DB.QueryRow(`SELECT seq, seq_all, batch FROM lk_ppk_payable_se2026 WHERE idsobat = ? AND role = ?`, idsobat, role).Scan(&seq, &seqAll, &batch)
+	return seq, seqAll, batch, err == nil
 }
 
-// kepalaNomorSE2026 membangun nomor Surat Pernyataan Kepala BPS - dokumen tunggal (bukan
-// per-petugas), jadi sequence-nya selalu 001 per termin/tahun, bukan diturunkan dari SPK.
-func kepalaNomorSE2026(tahun string, tgl time.Time) string {
-	return fmt.Sprintf("B-%02d.%02d.001/SE2026/5205/Super.KPL/%s", int(tgl.Month()), tgl.Day(), tahun)
+// kepalaNomorSE2026 membangun nomor Surat Pernyataan Kepala BPS - dokumen tunggal per
+// batch (bukan per-petugas), jadi sequence-nya = nomor batch (001 utk batch 1, 002 utk
+// batch 2, dst), bukan diturunkan dari SPK.
+func kepalaNomorSE2026(batch int, tahun string, tgl time.Time) string {
+	return fmt.Sprintf("B-%02d.%02d.%03d/SE2026/5205/Super.KPL/%s", int(tgl.Month()), tgl.Day(), batch, tahun)
 }
 
 // jenisPetugasSE2026 menentukan pcl/pml dari teks kegiatan, sama seperti buildSPKSE2026.
@@ -113,7 +132,7 @@ func buildBAPPSE2026(rekapID, termin int, tanggalBAPP string) (bappSE2026Data, s
 	jenis := jenisPetugasSE2026(kegiatan)
 	isPML := jenis == "pml"
 
-	_, seqAll, ok := getPayableSeq(idsobat, isPML)
+	_, seqAll, batch, ok := getPayableSeq(idsobat, isPML)
 	if !ok {
 		return d, jenis, fmt.Errorf("'%s' tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)", d.NamaPetugas)
 	}
@@ -123,9 +142,12 @@ func buildBAPPSE2026(rekapID, termin int, tanggalBAPP string) (bappSE2026Data, s
 	}
 	d.TargetSLS, d.RealisasiSLS = targetSLS, realisasiSLS
 
+	if tanggalBAPP == "" {
+		tanggalBAPP = batchTanggalDefault(batch, "bapp")
+	}
 	tgl, err := time.Parse("2006-01-02", tanggalBAPP)
 	if err != nil {
-		tgl, _ = time.Parse("2006-01-02", "2026-07-17")
+		tgl, _ = time.Parse("2006-01-02", batchTanggalDefault(batch, "bapp"))
 	}
 
 	nomor, err := suratNomorSE2026(seqAll, "bapp", termin, tahun, tgl)
@@ -214,9 +236,12 @@ func assignBAPPNumber(rekapID, termin int, tanggal string) error {
 	if idSpk == "" {
 		return fmt.Errorf("petugas belum memiliki nomor SPK")
 	}
-	_, seqAll, ok := getPayableSeq(idsobat, jenisPetugasSE2026(kegiatan) == "pml")
+	_, seqAll, batch, ok := getPayableSeq(idsobat, jenisPetugasSE2026(kegiatan) == "pml")
 	if !ok {
 		return fmt.Errorf("petugas tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)")
+	}
+	if tanggal == "" && termin == 1 {
+		tanggal = batchTanggalDefault(batch, "bapp")
 	}
 
 	tgl, err := time.Parse("2006-01-02", tanggal)
@@ -291,12 +316,11 @@ func DownloadBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tanggal := r.URL.Query().Get("tanggal")
-	if tanggal == "" {
+	if tanggal == "" && termin == 2 {
 		tanggal = "2026-08-15"
-		if termin == 1 {
-			tanggal = "2026-07-17"
-		}
 	}
+	// termin==1: dibiarkan kosong kalau tidak dikirim eksplisit - buildBAPPSE2026 akan
+	// pilih tanggal default sesuai batch (1 atau 2) petugas ybs.
 
 	d, jenis, err := buildBAPPSE2026(rekapID, termin, tanggal)
 	if err != nil {
@@ -330,12 +354,11 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tanggal := r.URL.Query().Get("tanggal")
-	if tanggal == "" {
+	if tanggal == "" && termin == 2 {
 		tanggal = "2026-08-15"
-		if termin == 1 {
-			tanggal = "2026-07-17"
-		}
 	}
+	// termin==1: dibiarkan kosong kalau tidak dikirim eksplisit - buildBAPPSE2026 pilih
+	// tanggal per petugas sesuai batch-nya masing-masing.
 
 	var kegiatanFilter string
 	switch jenisFlt {
