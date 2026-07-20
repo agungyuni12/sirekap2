@@ -559,7 +559,7 @@ func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) 
 		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`
 	args := []interface{}{kegiatanFilter}
 	if batch == 1 || batch == 2 {
-		query += ` AND EXISTS (SELECT 1 FROM lk_ppk_payable_se2026 p WHERE p.idsobat = r.idsobat AND p.batch = ?)`
+		query += ` AND EXISTS (SELECT 1 FROM lk_ppk_payable_se2026 p WHERE p.idsobat COLLATE utf8mb4_general_ci = r.idsobat AND p.batch = ?)`
 		args = append(args, batch)
 	}
 
