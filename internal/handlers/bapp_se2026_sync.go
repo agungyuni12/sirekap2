@@ -540,6 +540,7 @@ func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	jenisFlt := strings.TrimSpace(r.URL.Query().Get("jenis"))
 	tanggal := r.URL.Query().Get("tanggal")
+	batch, _ := strconv.Atoi(r.URL.Query().Get("batch"))
 	// kalau tidak dikirim eksplisit, buildSuratPernyataanSE2026 pilih tanggal sesuai batch.
 
 	var kegiatanFilter string
@@ -552,10 +553,17 @@ func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) 
 		kegiatanFilter = "%Sensus Ekonomi 2026%"
 	}
 
-	rows, err := database.DB.Query(`
+	query := `
 		SELECT r.id FROM rekap r
 		WHERE r.kegiatan LIKE ? AND r.id_pernyataan1 IS NOT NULL AND r.id_pernyataan1 != ''
-		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`, kegiatanFilter)
+		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`
+	args := []interface{}{kegiatanFilter}
+	if batch == 1 || batch == 2 {
+		query += ` AND EXISTS (SELECT 1 FROM lk_ppk_payable_se2026 p WHERE p.idsobat = r.idsobat AND p.batch = ?)`
+		args = append(args, batch)
+	}
+
+	rows, err := database.DB.Query(query, args...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -574,8 +582,12 @@ func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	batchSuffix := ""
+	if batch == 1 || batch == 2 {
+		batchSuffix = fmt.Sprintf("_Batch%d", batch)
+	}
 	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="Surat_Pernyataan_SE2026_%s.zip"`, jenisFlt))
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="Surat_Pernyataan_SE2026_%s%s.zip"`, jenisFlt, batchSuffix))
 
 	zw := zip.NewWriter(w)
 	defer zw.Close()

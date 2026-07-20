@@ -359,6 +359,7 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	// termin==1: dibiarkan kosong kalau tidak dikirim eksplisit - buildBAPPSE2026 pilih
 	// tanggal per petugas sesuai batch-nya masing-masing.
+	batch, _ := strconv.Atoi(r.URL.Query().Get("batch"))
 
 	var kegiatanFilter string
 	switch jenisFlt {
@@ -374,10 +375,17 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	if termin == 2 {
 		idCol = "id_bapp2"
 	}
-	rows, err := database.DB.Query(fmt.Sprintf(`
+	query := fmt.Sprintf(`
 		SELECT r.id FROM rekap r
 		WHERE r.kegiatan LIKE ? AND r.%s IS NOT NULL AND r.%s != ''
-		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`, idCol, idCol), kegiatanFilter)
+		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`, idCol, idCol)
+	args := []interface{}{kegiatanFilter}
+	if termin == 1 && (batch == 1 || batch == 2) {
+		query += ` AND EXISTS (SELECT 1 FROM lk_ppk_payable_se2026 p WHERE p.idsobat = r.idsobat AND p.batch = ?)`
+		args = append(args, batch)
+	}
+
+	rows, err := database.DB.Query(query, args...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -396,8 +404,12 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	batchSuffix := ""
+	if termin == 1 && (batch == 1 || batch == 2) {
+		batchSuffix = fmt.Sprintf("_Batch%d", batch)
+	}
 	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="BAPP_Termin%d_SE2026_%s.zip"`, termin, jenisFlt))
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="BAPP_Termin%d_SE2026_%s%s.zip"`, termin, jenisFlt, batchSuffix))
 
 	zw := zip.NewWriter(w)
 	defer zw.Close()
