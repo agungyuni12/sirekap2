@@ -558,7 +558,7 @@ func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) 
 		WHERE r.kegiatan LIKE ? AND r.id_pernyataan1 IS NOT NULL AND r.id_pernyataan1 != ''
 		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`
 	args := []interface{}{kegiatanFilter}
-	if batch == 1 || batch == 2 {
+	if batch == 1 || batch == 2 || batch == 3 {
 		query += ` AND EXISTS (SELECT 1 FROM lk_ppk_payable_se2026 p WHERE p.idsobat COLLATE utf8mb4_general_ci = r.idsobat AND p.batch = ?)`
 		args = append(args, batch)
 	}
@@ -583,7 +583,7 @@ func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	batchSuffix := ""
-	if batch == 1 || batch == 2 {
+	if batch == 1 || batch == 2 || batch == 3 {
 		batchSuffix = fmt.Sprintf("_Batch%d", batch)
 	}
 	w.Header().Set("Content-Type", "application/zip")

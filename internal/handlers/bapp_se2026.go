@@ -68,10 +68,14 @@ func suratNomorSE2026(seq int, kind string, termin int, tahun string, tgl time.T
 //
 //	batch 1: Pernyataan 16 Juli 2026, BAPP/Kepala 17 Juli 2026
 //	batch 2: Pernyataan 18 Juli 2026, BAPP/Kepala 19 Juli 2026
+//	batch 3: Pernyataan 20 Juli 2026, BAPP/Kepala 21 Juli 2026
 func batchTanggalDefault(batch int, kind string) string {
 	pernyataan, bappKepala := "2026-07-16", "2026-07-17"
-	if batch == 2 {
+	switch batch {
+	case 2:
 		pernyataan, bappKepala = "2026-07-18", "2026-07-19"
+	case 3:
+		pernyataan, bappKepala = "2026-07-20", "2026-07-21"
 	}
 	if kind == "pernyataan" {
 		return pernyataan
@@ -87,7 +91,7 @@ func batchTanggalDefault(batch int, kind string) string {
 // beda suffix Super.PPL/Super.PML jadi aman walau seq sama antar role).
 // seqAll = nomor urut gabungan PML lalu PPL, LANJUT antar batch juga, WAJIB dipakai utk
 // nomor BAPP karena format BAPP sama persis utk PPL & PML (harus unik silang role & batch).
-// batch = 1 atau 2, dipakai utk pilih tanggal default dokumen (lihat batchTanggalDefault).
+// batch = 1, 2, atau 3, dipakai utk pilih tanggal default dokumen (lihat batchTanggalDefault).
 func getPayableSeq(idsobat string, isPML bool) (seq int, seqAll int, batch int, ok bool) {
 	role := "ppl"
 	if isPML {
@@ -380,7 +384,7 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		WHERE r.kegiatan LIKE ? AND r.%s IS NOT NULL AND r.%s != ''
 		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`, idCol, idCol)
 	args := []interface{}{kegiatanFilter}
-	if termin == 1 && (batch == 1 || batch == 2) {
+	if termin == 1 && (batch == 1 || batch == 2 || batch == 3) {
 		query += ` AND EXISTS (SELECT 1 FROM lk_ppk_payable_se2026 p WHERE p.idsobat COLLATE utf8mb4_general_ci = r.idsobat AND p.batch = ?)`
 		args = append(args, batch)
 	}
@@ -405,7 +409,7 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	batchSuffix := ""
-	if termin == 1 && (batch == 1 || batch == 2) {
+	if termin == 1 && (batch == 1 || batch == 2 || batch == 3) {
 		batchSuffix = fmt.Sprintf("_Batch%d", batch)
 	}
 	w.Header().Set("Content-Type", "application/zip")
