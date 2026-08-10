@@ -619,19 +619,16 @@ func buildUserOwnershipClause(userNIP, userName string) (string, []interface{}) 
 	userNIP = strings.TrimSpace(userNIP)
 	userName = strings.TrimSpace(userName)
 
-	conditions := make([]string, 0, 2)
-	args := make([]interface{}, 0, 2)
-
+	// NIP adalah identifier yang lebih andal (unik per pegawai), jadi jadikan
+	// satu-satunya syarat saat tersedia. Mewajibkan nama ikut cocok persis
+	// (AND) membuat laporan hilang dari listing begitu ada selisih spasi atau
+	// kapitalisasi antara data login dan hasil import CSV matriks.
 	if userNIP != "" {
-		conditions = append(conditions, "REPLACE(COALESCE(m.nip, ''), ' ', '') = ?")
-		args = append(args, strings.ReplaceAll(userNIP, " ", ""))
+		return "REPLACE(COALESCE(m.nip, ''), ' ', '') = ?", []interface{}{strings.ReplaceAll(userNIP, " ", "")}
 	}
 	if userName != "" {
-		conditions = append(conditions, "m.nama = ?")
-		args = append(args, userName)
+		return "LOWER(REPLACE(COALESCE(m.nama, ''), ' ', '')) = LOWER(REPLACE(?, ' ', ''))", []interface{}{userName}
 	}
 
-	// Gunakan AND agar kedua kondisi harus terpenuhi — mencegah akses silang
-	// jika hanya salah satu identifier kebetulan cocok dengan data pengguna lain.
-	return strings.Join(conditions, " AND "), args
+	return "", nil
 }
