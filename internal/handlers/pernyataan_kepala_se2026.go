@@ -229,7 +229,7 @@ func CreatePernyataanKepalaHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
-	if req.Batch != 2 && req.Batch != 3 {
+	if req.Batch < 1 || req.Batch > 4 {
 		req.Batch = 1
 	}
 	nomor, err := assignKepalaNomor(1, req.Batch, "2026", req.Tanggal)
@@ -244,7 +244,7 @@ func CreatePernyataanKepalaHandler(w http.ResponseWriter, r *http.Request) {
 // DownloadPernyataanKepalaSE2026Handler GET /api/rekap/spk/se2026/pernyataan-kepala/download?batch=1&tanggal=2026-07-17
 func DownloadPernyataanKepalaSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	batch, _ := strconv.Atoi(r.URL.Query().Get("batch"))
-	if batch != 2 && batch != 3 {
+	if batch < 1 || batch > 4 {
 		batch = 1
 	}
 	tanggal := r.URL.Query().Get("tanggal")
@@ -279,7 +279,7 @@ func DownloadPernyataanKepalaSE2026Handler(w http.ResponseWriter, r *http.Reques
 // StatusPernyataanKepalaSE2026Handler GET /api/rekap/spk/se2026/pernyataan-kepala/status?batch=1
 func StatusPernyataanKepalaSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	batch, _ := strconv.Atoi(r.URL.Query().Get("batch"))
-	if batch != 2 && batch != 3 {
+	if batch < 1 || batch > 4 {
 		batch = 1
 	}
 	var nomor sql.NullString

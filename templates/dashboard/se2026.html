@@ -34,11 +34,11 @@
                 <i class="fas fa-file-zipper"></i>
                 <span>SPK (ZIP)</span>
             </a>
-            <template x-for="b in [1, 2, 3]" :key="'bapp1-'+b">
+            <template x-for="b in [1, 2, 3, 4]" :key="'bapp1-'+b">
                 <a :href="`/api/rekap/spk/se2026/bapp/download-all?jenis=${tab}&termin=1&batch=${b}`"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
                            bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/30"
-                    :title="`Batch ${b}, tanggal ${ {1:'17',2:'19',3:'21'}[b] } Juli`">
+                    :title="`Batch ${b}, tanggal ${ {1:'17 Juli',2:'19 Juli',3:'21 Juli',4:'9 Agustus'}[b] }`">
                     <i class="fas fa-file-zipper"></i>
                     <span x-text="`BAPP I Batch ${b} (ZIP)`"></span>
                 </a>
@@ -49,16 +49,16 @@
                 <i class="fas fa-file-zipper"></i>
                 <span>BAPP II (ZIP)</span>
             </a>
-            <template x-for="b in [1, 2, 3]" :key="'pernyataan-'+b">
+            <template x-for="b in [1, 2, 3, 4]" :key="'pernyataan-'+b">
                 <a :href="`/api/rekap/spk/se2026/pernyataan/download-all?jenis=${tab}&batch=${b}`"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
                            bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30"
-                    :title="`Batch ${b}, tanggal ${ {1:'16',2:'18',3:'20'}[b] } Juli`">
+                    :title="`Batch ${b}, tanggal ${ {1:'16 Juli',2:'18 Juli',3:'20 Juli',4:'8 Agustus'}[b] }`">
                     <i class="fas fa-file-zipper"></i>
                     <span x-text="`Pernyataan Batch ${b} (ZIP)`"></span>
                 </a>
             </template>
-            <template x-for="b in [1, 2, 3]" :key="b">
+            <template x-for="b in [1, 2, 3, 4]" :key="b">
                 <span>
                     <a x-show="kepalaNomor[b]" x-cloak
                         :href="`/api/rekap/spk/se2026/pernyataan-kepala/download?batch=${b}`"
@@ -287,10 +287,10 @@ function se2026() {
         metode: '1',
         unmatched: [],
         search: '',
-        kepalaNomor: { 1: '', 2: '', 3: '' },
+        kepalaNomor: { 1: '', 2: '', 3: '', 4: '' },
         toast: { show: false, message: '', type: 'success' },
 
-        init() { this.load(); this.loadKepalaStatus(1); this.loadKepalaStatus(2); this.loadKepalaStatus(3); },
+        init() { this.load(); this.loadKepalaStatus(1); this.loadKepalaStatus(2); this.loadKepalaStatus(3); this.loadKepalaStatus(4); },
 
         async loadKepalaStatus(batch) {
             try {

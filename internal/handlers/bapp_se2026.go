@@ -69,6 +69,7 @@ func suratNomorSE2026(seq int, kind string, termin int, tahun string, tgl time.T
 //	batch 1: Pernyataan 16 Juli 2026, BAPP/Kepala 17 Juli 2026
 //	batch 2: Pernyataan 18 Juli 2026, BAPP/Kepala 19 Juli 2026
 //	batch 3: Pernyataan 20 Juli 2026, BAPP/Kepala 21 Juli 2026
+//	batch 4: Pernyataan 8 Agustus 2026, BAPP/Kepala 9 Agustus 2026
 func batchTanggalDefault(batch int, kind string) string {
 	pernyataan, bappKepala := "2026-07-16", "2026-07-17"
 	switch batch {
@@ -76,6 +77,8 @@ func batchTanggalDefault(batch int, kind string) string {
 		pernyataan, bappKepala = "2026-07-18", "2026-07-19"
 	case 3:
 		pernyataan, bappKepala = "2026-07-20", "2026-07-21"
+	case 4:
+		pernyataan, bappKepala = "2026-08-08", "2026-08-09"
 	}
 	if kind == "pernyataan" {
 		return pernyataan
@@ -384,7 +387,7 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		WHERE r.kegiatan LIKE ? AND r.%s IS NOT NULL AND r.%s != ''
 		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`, idCol, idCol)
 	args := []interface{}{kegiatanFilter}
-	if termin == 1 && (batch == 1 || batch == 2 || batch == 3) {
+	if termin == 1 && (batch >= 1 && batch <= 4) {
 		query += ` AND EXISTS (SELECT 1 FROM lk_ppk_payable_se2026 p WHERE p.idsobat COLLATE utf8mb4_general_ci = r.idsobat AND p.batch = ?)`
 		args = append(args, batch)
 	}
@@ -409,7 +412,7 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	batchSuffix := ""
-	if termin == 1 && (batch == 1 || batch == 2 || batch == 3) {
+	if termin == 1 && (batch >= 1 && batch <= 4) {
 		batchSuffix = fmt.Sprintf("_Batch%d", batch)
 	}
 	w.Header().Set("Content-Type", "application/zip")
