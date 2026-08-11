@@ -181,7 +181,7 @@ func GetRekapPenilaian(kegiatanID int) ([]RekapPenilaianItem, error) {
 			SELECT yang_dinilai_idsobat,
 				(skor_kualitas + skor_ketepatan_waktu + skor_kepatuhan_sop + skor_komunikasi + skor_sikap) / 5 AS avg_skor
 			FROM evaluasi_petugas WHERE kegiatan_id = ? AND tahap = 2
-		) e ON e.yang_dinilai_idsobat = r.idsobat
+		) e ON e.yang_dinilai_idsobat COLLATE utf8mb4_general_ci = r.idsobat
 		ORDER BY r.namamitra
 	`
 	rows, err := database.DB.Query(query, kegiatanNama, kegiatanID)
