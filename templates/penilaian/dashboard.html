@@ -1,0 +1,369 @@
+{{ define "content" }}
+<div class="space-y-6 md:space-y-8" x-data="penilaianDashboardPage()" x-init="init()">
+
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">Dashboard Penilaian Kinerja Mitra</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm md:text-base">Sebaran skor, kelulusan, dan rekap gabungan Tahap 1 &amp; Tahap 2</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a :href="exportUrl()"
+                class="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition font-medium shadow-lg shadow-emerald-600/30 text-sm md:text-base">
+                <i class="fas fa-file-excel mr-2"></i>
+                <span>Export Excel</span>
+            </a>
+        </div>
+    </div>
+
+    <template x-if="flash.message">
+        <div class="rounded-2xl border px-4 py-3 text-sm font-medium"
+            :class="flash.type === 'error' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300' : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300'">
+            <span x-text="flash.message"></span>
+        </div>
+    </template>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+            <div class="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3">
+                <i class="fas fa-users text-amber-500"></i>
+            </div>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white" x-text="stats.total_dinilai"></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Mitra Dinilai</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+            <div class="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                <i class="fas fa-chart-line text-primary"></i>
+            </div>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white" x-text="stats.rata_rata_skor.toFixed(1)"></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Rata-rata Skor Gabungan</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+            <div class="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3">
+                <i class="fas fa-award text-emerald-500"></i>
+            </div>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white" x-text="stats.distribusi_kelulusan.sangat_baik + stats.distribusi_kelulusan.baik"></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Predikat Baik ke Atas</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+            <div class="w-11 h-11 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-3">
+                <i class="fas fa-triangle-exclamation text-red-500"></i>
+            </div>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white" x-text="stats.distribusi_kelulusan.perlu_pembinaan"></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Perlu Pembinaan</p>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid lg:grid-cols-5 gap-5">
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 md:p-6">
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Distribusi Predikat Kelulusan</h3>
+            <div class="relative h-64">
+                <canvas x-ref="predikatChart"></canvas>
+            </div>
+        </div>
+        <div class="lg:col-span-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 md:p-6">
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Rata-rata Skor per Aspek</h3>
+            <div class="relative h-64">
+                <canvas x-ref="aspekChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 md:p-6">
+        <div class="grid md:grid-cols-5 gap-4">
+            <div class="md:col-span-2 relative">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Kegiatan</label>
+                <input type="text" x-model="filters.kegiatanSearch" @input="showKegiatanDropdown = true"
+                    @focus="showKegiatanDropdown = true" @click.away="showKegiatanDropdown = false"
+                    class="w-full input-with-icon" placeholder="Semua kegiatan...">
+                <div x-show="showKegiatanDropdown && filteredKegiatanList().length > 0" x-cloak
+                    class="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-600 max-h-60 overflow-y-auto">
+                    <button type="button" @click="selectKegiatan(null)"
+                        class="w-full px-4 py-2.5 text-left hover:bg-blue-50 dark:hover:bg-gray-700 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                        Semua kegiatan
+                    </button>
+                    <template x-for="k in filteredKegiatanList()" :key="k.id">
+                        <button type="button" @click="selectKegiatan(k)"
+                            class="w-full px-4 py-2.5 text-left hover:bg-blue-50 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <span x-text="k.nama"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Tahun</label>
+                <select x-model="filters.tahun" @change="loadAll()" class="w-full">
+                    <option value="">Semua</option>
+                    <template x-for="y in tahunOptions" :key="y">
+                        <option :value="y" x-text="y"></option>
+                    </template>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Peran</label>
+                <select x-model="filters.peran" @change="loadAll()" class="w-full">
+                    <option value="">Semua</option>
+                    <option value="ppl">PPL</option>
+                    <option value="pml">PML</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Predikat</label>
+                <select x-model="filters.predikat" @change="loadAll()" class="w-full">
+                    <option value="">Semua</option>
+                    <option value="Sangat Baik">Sangat Baik</option>
+                    <option value="Baik">Baik</option>
+                    <option value="Cukup">Cukup</option>
+                    <option value="Perlu Pembinaan">Perlu Pembinaan</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-4 relative max-w-sm">
+            <span class="form-icon"><i class="fas fa-magnifying-glass"></i></span>
+            <input type="text" x-model="filters.search" @input.debounce.400ms="loadRekap()"
+                class="w-full input-with-icon" placeholder="Cari nama / ID Sobat mitra...">
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900 dark:text-white">Rekapitulasi Nilai Mitra</h3>
+            <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                x-text="totalData + ' data'"></span>
+        </div>
+
+        <template x-if="loading">
+            <div class="p-6 text-sm text-primary inline-flex items-center">
+                <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data...
+            </div>
+        </template>
+
+        <template x-if="!loading && rekapList.length === 0">
+            <div class="p-10 text-center">
+                <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-inbox text-2xl text-gray-400"></i>
+                </div>
+                <h3 class="text-base font-semibold text-gray-700 dark:text-gray-200">Belum Ada Data</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tidak ada rekap penilaian sesuai filter saat ini.</p>
+            </div>
+        </template>
+
+        <div class="overflow-x-auto" x-show="!loading && rekapList.length > 0">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold">Nama Mitra</th>
+                        <th class="px-4 py-3 text-left font-semibold">ID Sobat</th>
+                        <th class="px-4 py-3 text-left font-semibold">Kegiatan</th>
+                        <th class="px-4 py-3 text-center font-semibold">Peran</th>
+                        <th class="px-4 py-3 text-right font-semibold">Tahap 1</th>
+                        <th class="px-4 py-3 text-right font-semibold">Tahap 2</th>
+                        <th class="px-4 py-3 text-right font-semibold">Skor Akhir</th>
+                        <th class="px-4 py-3 text-center font-semibold">Predikat</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <template x-for="item in rekapList" :key="item.idsobat + item.kegiatan">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40">
+                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white" x-text="item.nama_mitra"></td>
+                            <td class="px-4 py-3 text-gray-500 dark:text-gray-400" x-text="item.idsobat"></td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-300" x-text="item.kegiatan"></td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                    x-text="item.peran"></span>
+                            </td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300" x-text="item.skor_tahap1 ?? '-'"></td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300" x-text="item.skor_tahap2 ?? '-'"></td>
+                            <td class="px-4 py-3 text-right font-bold text-primary" x-text="item.skor_akhir.toFixed(1)"></td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" :class="predikatClass(item.predikat)" x-text="item.predikat"></span>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    function penilaianDashboardPage() {
+        return {
+            stats: {
+                total_dinilai: 0,
+                rata_rata_skor: 0,
+                distribusi_kelulusan: { sangat_baik: 0, baik: 0, cukup: 0, perlu_pembinaan: 0 },
+                rata_per_aspek: { kualitas: 0, ketepatan_waktu: 0, kepatuhan_sop: 0, komunikasi: 0, sikap: 0 },
+            },
+            rekapList: [],
+            totalData: 0,
+            kegiatanList: [],
+            tahunOptions: [],
+            filters: { kegiatanId: '', kegiatanSearch: '', tahun: '', peran: '', predikat: '', search: '' },
+            showKegiatanDropdown: false,
+            loading: false,
+            flash: { type: '', message: '' },
+            _predikatChart: null,
+            _aspekChart: null,
+
+            init() {
+                this.renderCharts();
+                this.loadKegiatan();
+                this.loadAll();
+                for (let y = new Date().getFullYear(); y >= new Date().getFullYear() - 4; y--) {
+                    this.tahunOptions.push(String(y));
+                }
+            },
+
+            async loadKegiatan() {
+                try {
+                    const response = await fetch('/api/penilaian/kegiatan');
+                    if (!response.ok) throw new Error('Gagal memuat kegiatan');
+                    const result = await response.json();
+                    this.kegiatanList = (result.data || []).map(k => ({ id: k.id, nama: k.nama }));
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
+                }
+            },
+
+            filteredKegiatanList() {
+                const q = this.filters.kegiatanSearch.trim().toLowerCase();
+                if (!q) return this.kegiatanList;
+                return this.kegiatanList.filter(k => k.nama.toLowerCase().includes(q));
+            },
+
+            selectKegiatan(k) {
+                this.filters.kegiatanId = k ? k.id : '';
+                this.filters.kegiatanSearch = k ? k.nama : '';
+                this.showKegiatanDropdown = false;
+                this.loadAll();
+            },
+
+            predikatClass(predikat) {
+                switch (predikat) {
+                    case 'Sangat Baik': return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300';
+                    case 'Baik': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
+                    case 'Cukup': return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300';
+                    default: return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
+                }
+            },
+
+            exportUrl() {
+                const params = new URLSearchParams();
+                if (this.filters.kegiatanId) params.set('kegiatan_id', this.filters.kegiatanId);
+                if (this.filters.tahun) params.set('tahun', this.filters.tahun);
+                if (this.filters.peran) params.set('peran', this.filters.peran);
+                if (this.filters.predikat) params.set('predikat', this.filters.predikat);
+                return '/api/penilaian/rekap-dashboard/export?' + params.toString();
+            },
+
+            renderCharts() {
+                const isDark = document.documentElement.classList.contains('dark');
+                const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+                const labelColor = isDark ? '#cbd5e1' : '#475569';
+
+                if (this._predikatChart) this._predikatChart.destroy();
+                this._predikatChart = new Chart(this.$refs.predikatChart, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Sangat Baik', 'Baik', 'Cukup', 'Perlu Pembinaan'],
+                        datasets: [{
+                            data: [
+                                this.stats.distribusi_kelulusan.sangat_baik,
+                                this.stats.distribusi_kelulusan.baik,
+                                this.stats.distribusi_kelulusan.cukup,
+                                this.stats.distribusi_kelulusan.perlu_pembinaan,
+                            ],
+                            backgroundColor: ['#10b981', '#2563eb', '#f59e0b', '#ef4444'],
+                            borderWidth: 0,
+                        }],
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { color: labelColor, boxWidth: 12, padding: 14 } } },
+                    },
+                });
+
+                if (this._aspekChart) this._aspekChart.destroy();
+                this._aspekChart = new Chart(this.$refs.aspekChart, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Kualitas', 'Ketepatan Waktu', 'Kepatuhan SOP', 'Komunikasi', 'Sikap'],
+                        datasets: [{
+                            label: 'Rata-rata Skor',
+                            data: [
+                                this.stats.rata_per_aspek.kualitas,
+                                this.stats.rata_per_aspek.ketepatan_waktu,
+                                this.stats.rata_per_aspek.kepatuhan_sop,
+                                this.stats.rata_per_aspek.komunikasi,
+                                this.stats.rata_per_aspek.sikap,
+                            ],
+                            backgroundColor: '#2563eb',
+                            borderRadius: 6,
+                        }],
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, max: 100, ticks: { color: labelColor }, grid: { color: gridColor } },
+                            x: { ticks: { color: labelColor }, grid: { display: false } },
+                        },
+                        plugins: { legend: { display: false } },
+                    },
+                });
+            },
+
+            dashboardParams() {
+                const params = new URLSearchParams();
+                if (this.filters.kegiatanId) params.set('kegiatan_id', this.filters.kegiatanId);
+                if (this.filters.tahun) params.set('tahun', this.filters.tahun);
+                return params;
+            },
+
+            rekapParams() {
+                const params = this.dashboardParams();
+                if (this.filters.peran) params.set('peran', this.filters.peran);
+                if (this.filters.predikat) params.set('predikat', this.filters.predikat);
+                if (this.filters.search) params.set('search', this.filters.search);
+                return params;
+            },
+
+            async loadAll() {
+                this.loading = true;
+                try {
+                    await Promise.all([this.loadStats(), this.loadRekap()]);
+                } finally {
+                    this.loading = false;
+                    this.renderCharts();
+                }
+            },
+
+            async loadStats() {
+                try {
+                    const response = await fetch('/api/penilaian/dashboard?' + this.dashboardParams().toString());
+                    if (!response.ok) throw new Error('Gagal memuat statistik penilaian');
+                    this.stats = await response.json();
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
+                }
+            },
+
+            async loadRekap() {
+                try {
+                    const response = await fetch('/api/penilaian/rekap-dashboard?' + this.rekapParams().toString());
+                    if (!response.ok) throw new Error('Gagal memuat rekapitulasi penilaian');
+                    const result = await response.json();
+                    this.rekapList = result.data || [];
+                    this.totalData = result.total_data || 0;
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
+                }
+            },
+        };
+    }
+</script>
+{{ end }}

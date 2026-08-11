@@ -770,6 +770,11 @@
                                 <i class="fas fa-clipboard-check w-5 mr-3 {{ if eq .ActivePage "penilaian-rekap" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
                                 <span>Nilai PML Mitra</span>
                             </a>
+                            <a href="/penilaian/dashboard" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-dashboard" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-chart-pie w-5 mr-3 {{ if eq .ActivePage "penilaian-dashboard" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Dashboard &amp; Rekap</span>
+                            </a>
                         </div>
                     </div>
 

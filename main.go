@@ -483,10 +483,29 @@ func main() {
 		)
 	}))
 
+	// Dashboard & rekap gabungan (Tahap 1 + Tahap 2) — admin-only, sama seperti /penilaian/rekap.
+	r.HandleFunc("/penilaian/dashboard", middleware.RequireAdmin(func(w http.ResponseWriter, r *http.Request) {
+		data := mergeUserData(r, map[string]interface{}{
+			"Title":       "Dashboard Penilaian Kinerja",
+			"PageTitle":   "Dashboard Penilaian Kinerja",
+			"ShowSidebar": true,
+			"ActivePage":  "penilaian-dashboard",
+		})
+
+		tmpl(w, "layouts/base.html", data,
+			"templates/layouts/base.html",
+			"templates/partials/sidebar.html",
+			"templates/penilaian/dashboard.html",
+		)
+	}))
+
 	r.HandleFunc("/api/penilaian/kegiatan", middleware.RequireAuth(handlers.ListKegiatanForPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/petugas", middleware.RequireAuth(handlers.ListPetugasPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian", middleware.RequireAuth(handlers.SubmitPenilaianHandler)).Methods("POST")
 	r.HandleFunc("/api/penilaian/rekap", middleware.RequireAdmin(handlers.RekapPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/dashboard", middleware.RequireAdmin(handlers.DashboardPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/rekap-dashboard", middleware.RequireAdmin(handlers.RekapDashboardHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/rekap-dashboard/export", middleware.RequireAdmin(handlers.ExportRekapDashboardHandler)).Methods("GET")
 
 	// API Routes (protected - admin only)
 	r.HandleFunc("/api/kegiatan/search", middleware.RequireAdmin(handlers.SearchKegiatanHandler)).Methods("GET")
