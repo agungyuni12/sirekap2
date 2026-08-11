@@ -53,6 +53,12 @@
                         <i class="fas fa-file-contract w-5 mr-3 text-teal-500"></i>
                         <span>Download BAST</span>
                     </a>
+                    <a :href="downloadRekapExcelUrl()" @click="actionMenuOpen = false"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
+                        :class="{ 'opacity-50 pointer-events-none': totalData === 0 }">
+                        <i class="fas fa-file-excel w-5 mr-3 text-green-600"></i>
+                        <span>Export Rekap Excel</span>
+                    </a>
                 </div>
             </div>
             <a href="/dashboard/input"
@@ -638,6 +644,10 @@
 
             downloadBastUrl() {
                 return this.buildDownloadUrl('/api/rekap/bast/download-all');
+            },
+
+            downloadRekapExcelUrl() {
+                return this.buildDownloadUrl('/api/rekap/export');
             },
 
             spkItemKey(item) {

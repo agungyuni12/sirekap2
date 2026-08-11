@@ -178,9 +178,12 @@ func renderLogin(w http.ResponseWriter, data LoginPageData) {
 }
 
 func redirectByLevel(w http.ResponseWriter, r *http.Request, level string) {
-	if level == "admin" {
+	switch level {
+	case "admin":
 		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-	} else {
+	case "pml_mitra":
+		http.Redirect(w, r, "/penilaian", http.StatusSeeOther)
+	default:
 		http.Redirect(w, r, "/lapor", http.StatusSeeOther)
 	}
 }

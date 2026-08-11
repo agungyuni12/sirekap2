@@ -1,0 +1,247 @@
+{{ define "content" }}
+<div class="space-y-6 md:space-y-8" x-data="penilaianTahap1Page()" x-init="init()">
+
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Penilaian Kinerja PPL</h2>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Evaluasi Tahap 1 &mdash; nilai kualitas data, ketepatan waktu, dan etika kerja petugas pendataan lapangan (PPL) yang Anda awasi.</p>
+        </div>
+        {{ if eq .UserRole "admin" }}
+        <a href="/penilaian/rekap"
+            class="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium shadow-sm">
+            <i class="fas fa-clipboard-check mr-2 text-primary"></i> Rekap &amp; Finalisasi
+        </a>
+        {{ end }}
+    </div>
+
+    <template x-if="flash.message">
+        <div class="rounded-2xl border px-4 py-3 text-sm font-medium"
+            :class="flash.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'">
+            <div class="flex items-start justify-between gap-3">
+                <span x-text="flash.message"></span>
+                <button type="button" class="text-current/70 hover:text-current" @click="flash.message = ''">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-6">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Kegiatan Statistik</label>
+        <select x-model="kegiatanId" @change="loadPetugas()" class="w-full md:max-w-lg">
+            <option value="">Pilih kegiatan...</option>
+            <template x-for="k in kegiatanList" :key="k.id">
+                <option :value="k.id" x-text="k.nama"></option>
+            </template>
+        </select>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <div class="flex items-center justify-between gap-3">
+                    <h3 class="font-semibold text-gray-900">Daftar PPL Diawasi</h3>
+                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700"
+                        x-text="petugasList.length + ' orang'"></span>
+                </div>
+            </div>
+
+            <template x-if="loadingPetugas">
+                <div class="p-6 text-sm text-primary inline-flex items-center">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Memuat petugas...
+                </div>
+            </template>
+
+            <template x-if="!loadingPetugas && kegiatanId && petugasList.length === 0">
+                <div class="p-8 text-center">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user-slash text-2xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-gray-700">Tidak Ada PPL</h3>
+                    <p class="text-sm text-gray-500 mt-1">Tidak ada petugas PPL pada kegiatan ini.</p>
+                </div>
+            </template>
+
+            <template x-if="!kegiatanId">
+                <div class="p-8 text-center">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-arrow-up text-2xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-gray-700">Pilih Kegiatan</h3>
+                    <p class="text-sm text-gray-500 mt-1">Pilih kegiatan statistik untuk melihat daftar PPL.</p>
+                </div>
+            </template>
+
+            <div class="divide-y divide-gray-100 max-h-[560px] overflow-y-auto">
+                <template x-for="p in petugasList" :key="p.mitra_id">
+                    <button type="button" @click="selectPetugas(p)"
+                        class="w-full text-left px-5 py-4 transition hover:bg-gray-50 flex items-center justify-between gap-3"
+                        :class="selected && selected.mitra_id === p.mitra_id ? 'bg-blue-50' : ''">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow flex-shrink-0"
+                                x-text="initials(p.nama)"></div>
+                            <div class="min-w-0">
+                                <p class="font-semibold text-gray-900 truncate" x-text="p.nama"></p>
+                                <p class="text-xs text-gray-500 mt-0.5" x-text="p.peran.toUpperCase()"></p>
+                            </div>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
+                            :class="p.status_penilaian === 'selesai' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                            x-text="p.status_penilaian === 'selesai' ? 'Selesai' : 'Belum Dinilai'"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-gray-900">Formulir Evaluasi</h3>
+                <p class="text-sm text-gray-500 mt-1">Rentang nilai 1&ndash;100 untuk tiap kriteria.</p>
+            </div>
+
+            <template x-if="!selected">
+                <div class="p-8 md:p-12 text-center">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-hand-pointer text-2xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-gray-700">Belum Ada PPL Dipilih</h3>
+                    <p class="text-sm text-gray-500 mt-1">Klik salah satu nama PPL di sebelah kiri untuk mulai menilai.</p>
+                </div>
+            </template>
+
+            <form x-show="selected" @submit.prevent="submitPenilaian()" class="p-5 md:p-6 space-y-6">
+                <div class="bg-gray-50 rounded-2xl p-4 flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold shadow flex-shrink-0"
+                        x-text="selected ? initials(selected.nama) : ''"></div>
+                    <div>
+                        <p class="font-semibold text-gray-900" x-text="selected?.nama"></p>
+                        <p class="text-xs text-gray-500 mt-0.5">PPL &middot; <span x-text="selectedKegiatanNama()"></span></p>
+                    </div>
+                </div>
+
+                <template x-for="crit in criteria" :key="crit.key">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-sm font-semibold text-gray-700" x-text="crit.label"></label>
+                            <span class="text-lg font-bold text-primary" x-text="form[crit.key]"></span>
+                        </div>
+                        <input type="range" min="1" max="100" x-model.number="form[crit.key]" class="w-full accent-primary">
+                    </div>
+                </template>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">Catatan (opsional)</label>
+                    <textarea x-model="form.catatan" rows="4"
+                        placeholder="Catatan singkat mengenai kinerja PPL ini..."
+                        class="w-full"></textarea>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="submit" :disabled="submitting"
+                        class="inline-flex items-center justify-center px-5 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed">
+                        <i class="fas mr-2" :class="submitting ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+                        <span x-text="submitting ? 'Menyimpan...' : 'Simpan Penilaian'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function penilaianTahap1Page() {
+        return {
+            kegiatanId: '',
+            kegiatanList: [],
+            petugasList: [],
+            loadingPetugas: false,
+            selected: null,
+            submitting: false,
+            flash: { type: '', message: '' },
+            criteria: [
+                { key: 'skor_kualitas', label: 'Kualitas Data' },
+                { key: 'skor_ketepatan_waktu', label: 'Ketepatan Waktu' },
+                { key: 'skor_etika', label: 'Etika / Sikap Kerja' },
+            ],
+            form: { skor_kualitas: 80, skor_ketepatan_waktu: 80, skor_etika: 80, catatan: '' },
+
+            init() {
+                this.loadKegiatan();
+            },
+
+            async loadKegiatan() {
+                try {
+                    const response = await fetch('/api/penilaian/kegiatan');
+                    if (!response.ok) throw new Error('Gagal memuat kegiatan');
+                    const result = await response.json();
+                    this.kegiatanList = (result.data || []).map(k => ({ id: k.id, nama: k.nama }));
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
+                }
+            },
+
+            selectedKegiatanNama() {
+                const k = this.kegiatanList.find(k => String(k.id) === String(this.kegiatanId));
+                return k ? k.nama : '-';
+            },
+
+            async loadPetugas() {
+                if (!this.kegiatanId) { this.petugasList = []; return; }
+                this.loadingPetugas = true;
+                this.selected = null;
+                try {
+                    const response = await fetch(`/api/penilaian/petugas?kegiatan_id=${this.kegiatanId}&tahap=1`);
+                    if (!response.ok) throw new Error('Gagal memuat daftar petugas');
+                    const result = await response.json();
+                    this.petugasList = result.data || [];
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
+                } finally {
+                    this.loadingPetugas = false;
+                }
+            },
+
+            selectPetugas(p) {
+                this.selected = p;
+                this.form = { skor_kualitas: 80, skor_ketepatan_waktu: 80, skor_etika: 80, catatan: '' };
+            },
+
+            initials(nama) {
+                if (!nama) return '?';
+                const parts = nama.trim().split(/\s+/);
+                return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+            },
+
+            async submitPenilaian() {
+                if (!this.selected) return;
+                this.submitting = true;
+                this.flash = { type: '', message: '' };
+                try {
+                    const response = await fetch('/api/penilaian', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            kegiatan_id: Number(this.kegiatanId),
+                            yang_dinilai_id: this.selected.mitra_id,
+                            tahap: 1,
+                            skor_kualitas: this.form.skor_kualitas,
+                            skor_ketepatan_waktu: this.form.skor_ketepatan_waktu,
+                            skor_etika: this.form.skor_etika,
+                            catatan: this.form.catatan,
+                        }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result?.error?.message || 'Gagal menyimpan penilaian');
+                    this.flash = { type: 'success', message: 'Penilaian tersimpan.' };
+                    await this.loadPetugas();
+                    this.selected = null;
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
+                } finally {
+                    this.submitting = false;
+                }
+            },
+        };
+    }
+</script>
+{{ end }}

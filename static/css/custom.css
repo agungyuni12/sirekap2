@@ -1,3 +1,39 @@
+/* BPS Dompu design tokens (PRD palette) — used by new modules (e.g. Penilaian Kinerja)
+   without repainting the existing app's established blue theme. */
+:root {
+    --bps-primary: #0284C7;
+    --bps-accent: #F59E0B;
+    --bps-neutral-900: #0F172A;
+    --bps-neutral-50: #F8FAFC;
+    --bps-success: #10B981;
+    --bps-danger: #EF4444;
+    --bps-border-light: #E2E8F0;
+    --bps-card-dark: #1E293B;
+    --bps-border-dark: #334155;
+}
+
+/* Glassmorphism per PRD spec: 12px blur, translucent surface, thin border */
+.glass-nav {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.dark .glass-nav {
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 /* Custom styles if needed to override Tailwind */
 .glass {
     background: rgba(255, 255, 255, 0.7);

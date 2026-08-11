@@ -136,7 +136,14 @@ func main() {
 
 	// Initialize Router
 	r := mux.NewRouter()
+	r.Use(middleware.Recover)
 	r.Use(middleware.SecurityHeaders)
+
+	// Health check (used by Docker/orchestrator liveness probes)
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"status":"ok"}`))
+	}).Methods("GET")
 
 	// Static Assets
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -412,7 +419,7 @@ func main() {
 		)
 	}))
 
-	r.HandleFunc("/lapor/sppd", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/lapor/sppd", middleware.RequireNotPMLMitra(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
 			"Title":       "Lapor SPPD",
 			"PageTitle":   "Lapor SPPD",
@@ -427,7 +434,7 @@ func main() {
 		)
 	}))
 
-	r.HandleFunc("/lapor/sppd/history", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/lapor/sppd/history", middleware.RequireNotPMLMitra(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
 			"Title":       "Riwayat Lapor SPPD",
 			"PageTitle":   "Riwayat Lapor SPPD",
@@ -441,6 +448,45 @@ func main() {
 			"templates/user/lapor_sppd_history.html",
 		)
 	}))
+
+	// Protected Routes - Penilaian Kinerja PPL & PML
+	// Tahap 1 (PML menilai PPL) is open to any authenticated role, since PML
+	// may be organik (admin) or mitra (pml_mitra/generic level).
+	r.HandleFunc("/penilaian", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+		data := mergeUserData(r, map[string]interface{}{
+			"Title":       "Penilaian Kinerja PPL",
+			"PageTitle":   "Penilaian Kinerja PPL",
+			"ShowSidebar": true,
+			"ActivePage":  "penilaian",
+		})
+
+		tmpl(w, "layouts/base.html", data,
+			"templates/layouts/base.html",
+			"templates/partials/sidebar.html",
+			"templates/penilaian/form.html",
+		)
+	}))
+
+	// Tahap 2 (finalisasi Subject Matter) is admin-only.
+	r.HandleFunc("/penilaian/rekap", middleware.RequireAdmin(func(w http.ResponseWriter, r *http.Request) {
+		data := mergeUserData(r, map[string]interface{}{
+			"Title":       "Rekap Penilaian Kinerja",
+			"PageTitle":   "Rekap Penilaian Kinerja",
+			"ShowSidebar": true,
+			"ActivePage":  "penilaian-rekap",
+		})
+
+		tmpl(w, "layouts/base.html", data,
+			"templates/layouts/base.html",
+			"templates/partials/sidebar.html",
+			"templates/penilaian/rekap.html",
+		)
+	}))
+
+	r.HandleFunc("/api/penilaian/kegiatan", middleware.RequireAuth(handlers.ListKegiatanForPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/petugas", middleware.RequireAuth(handlers.ListPetugasPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian", middleware.RequireAuth(handlers.SubmitPenilaianHandler)).Methods("POST")
+	r.HandleFunc("/api/penilaian/rekap", middleware.RequireAdmin(handlers.RekapPenilaianHandler)).Methods("GET")
 
 	// API Routes (protected - admin only)
 	r.HandleFunc("/api/kegiatan/search", middleware.RequireAdmin(handlers.SearchKegiatanHandler)).Methods("GET")
@@ -473,15 +519,16 @@ func main() {
 	r.HandleFunc("/api/mitra/search", middleware.RequireAdmin(handlers.SearchMitraHandler)).Methods("GET")
 	r.HandleFunc("/api/mitra/submit", middleware.RequireAdmin(handlers.SubmitMitraHandler)).Methods("POST")
 	r.HandleFunc("/api/rekap/filter", middleware.RequireAdmin(handlers.FilterRekapHandler)).Methods("GET")
+	r.HandleFunc("/api/rekap/export", middleware.RequireAdmin(handlers.ExportRekapExcelHandler)).Methods("GET")
 	r.HandleFunc("/api/rekap/kegiatan", middleware.RequireAdmin(handlers.GetMitraKegiatanHandler)).Methods("GET")
 
 	// API Routes (protected - user)
 	r.HandleFunc("/api/lapor/translok/pending", middleware.RequireAuth(handlers.ListPendingTransportReportsHandler)).Methods("GET")
 	r.HandleFunc("/api/lapor/translok/history", middleware.RequireAuth(handlers.ListSubmittedTransportReportsHandler)).Methods("GET")
 	r.HandleFunc("/api/lapor/translok/submit", middleware.RequireAuth(handlers.SubmitTransportReportHandler)).Methods("POST")
-	r.HandleFunc("/api/lapor/sppd/pending", middleware.RequireAuth(handlers.ListPendingSPPDReportsHandler)).Methods("GET")
-	r.HandleFunc("/api/lapor/sppd/history", middleware.RequireAuth(handlers.ListSubmittedSPPDReportsHandler)).Methods("GET")
-	r.HandleFunc("/api/lapor/sppd/submit", middleware.RequireAuth(handlers.SubmitSPPDReportHandler)).Methods("POST")
+	r.HandleFunc("/api/lapor/sppd/pending", middleware.RequireNotPMLMitra(handlers.ListPendingSPPDReportsHandler)).Methods("GET")
+	r.HandleFunc("/api/lapor/sppd/history", middleware.RequireNotPMLMitra(handlers.ListSubmittedSPPDReportsHandler)).Methods("GET")
+	r.HandleFunc("/api/lapor/sppd/submit", middleware.RequireNotPMLMitra(handlers.SubmitSPPDReportHandler)).Methods("POST")
 	r.HandleFunc("/lapor/print/translok", middleware.RequireAuth(handlers.DownloadOwnTransportReportHandler)).Methods("GET")
 	r.HandleFunc("/lapor/print/sppd", middleware.RequireAuth(handlers.DownloadOwnSPPDReportHandler)).Methods("GET")
 	r.HandleFunc("/media/report-photo", middleware.RequireAuth(handlers.ServeReportPhotoHandler)).Methods("GET")
