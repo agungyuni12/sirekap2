@@ -166,7 +166,8 @@ func GetRekapDashboard(kegiatanID int, tahun, peran, predikat, search string) ([
 		FROM evaluasi_petugas e
 		JOIN kegiatan k ON k.id = e.kegiatan_id
 		LEFT JOIN (SELECT DISTINCT kegiatan, idsobat, namamitra FROM rekap) r
-			ON r.kegiatan = k.nama AND r.idsobat = e.yang_dinilai_idsobat
+			ON r.kegiatan COLLATE utf8mb4_general_ci = k.nama
+			AND r.idsobat COLLATE utf8mb4_general_ci = e.yang_dinilai_idsobat
 		WHERE %s
 		ORDER BY e.kegiatan_id, e.yang_dinilai_idsobat, e.tahap
 	`, where), args...)
