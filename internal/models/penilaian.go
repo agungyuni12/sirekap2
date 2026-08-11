@@ -17,14 +17,13 @@ type PetugasPenilaianItem struct {
 	StatusPenilaian string `json:"status_penilaian"` // "belum" | "selesai"
 }
 
-// RekapPenilaianItem represents the combined Tahap 1 + Tahap 2 score for one petugas.
+// RekapPenilaianItem represents one PML Mitra's score, as scored directly by
+// Subject Matter. PPL doesn't appear here — a PPL's score comes solely from
+// their PML and is final the moment PML submits it, with no review step.
 type RekapPenilaianItem struct {
 	MitraID         string   `json:"mitra_id"`
 	MitraName       string   `json:"mitra_name"`
-	Peran           string   `json:"peran"`
-	NilaiTahap1     *float64 `json:"nilai_tahap1"`
-	NilaiTahap2     *float64 `json:"nilai_tahap2"`
-	NilaiAkhir      *float64 `json:"nilai_akhir"`
+	Nilai           *float64 `json:"nilai"`
 	StatusKelulusan string   `json:"status_kelulusan"` // "belum" | "lulus" | "perlu_perhatian"
 }
 
@@ -64,7 +63,10 @@ func GetKegiatanNama(kegiatanID int) (string, error) {
 
 // ListKegiatanIDName returns a lightweight {id, nama} list, safe to expose to
 // non-admin roles (unlike /api/master-kegiatan, it carries no budget figures).
-func ListKegiatanIDName() ([]Kegiatan, error) {
+// When peran is "ppl" or "pml", only kegiatan classified as that peran are
+// returned — e.g. the PML scoring form only needs to offer PPL-designated
+// kegiatan, and the Subject Matter page only needs PML-designated ones.
+func ListKegiatanIDName(peran string) ([]Kegiatan, error) {
 	rows, err := database.DB.Query("SELECT id, nama FROM kegiatan ORDER BY id DESC LIMIT 500")
 	if err != nil {
 		return nil, err
@@ -76,6 +78,9 @@ func ListKegiatanIDName() ([]Kegiatan, error) {
 		var k Kegiatan
 		if err := rows.Scan(&k.ID, &k.Nama); err != nil {
 			return nil, err
+		}
+		if peran != "" && classifyPeranFromKegiatan(k.Nama) != peran {
+			continue
 		}
 		items = append(items, k)
 	}
@@ -141,19 +146,6 @@ func PeranForPetugas(kegiatanID int) (string, error) {
 	return classifyPeranFromKegiatan(nama), nil
 }
 
-// HasTahap1 reports whether a Tahap 1 score already exists for this petugas.
-func HasTahap1(kegiatanID int, idsobat string) (bool, error) {
-	var count int
-	err := database.DB.QueryRow(
-		`SELECT COUNT(*) FROM evaluasi_petugas WHERE kegiatan_id = ? AND yang_dinilai_idsobat = ? AND tahap = 1`,
-		kegiatanID, idsobat,
-	).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}
-
 // UpsertEvaluasi saves (or overwrites) one petugas' score for one tahap.
 func UpsertEvaluasi(penilaiID int, peran string, in EvaluasiInput) error {
 	_, err := database.DB.Exec(`
@@ -174,33 +166,25 @@ func UpsertEvaluasi(penilaiID int, peran string, in EvaluasiInput) error {
 	return err
 }
 
-// GetRekapPenilaian returns the combined Tahap 1 / Tahap 2 view for every
-// petugas on a kegiatan, used by the Subject Matter finalization screen.
+// GetRekapPenilaian returns each PML Mitra's score on a kegiatan, as scored
+// directly by Subject Matter (tahap 2). Used by the Penilaian PML Mitra screen.
 func GetRekapPenilaian(kegiatanID int) ([]RekapPenilaianItem, error) {
 	kegiatanNama, err := GetKegiatanNama(kegiatanID)
 	if err != nil {
 		return nil, err
 	}
-	peran := classifyPeranFromKegiatan(kegiatanNama)
 
 	query := `
-		SELECT r.idsobat, r.namamitra,
-			e1.avg_skor AS nilai_tahap1,
-			e2.avg_skor AS nilai_tahap2
+		SELECT r.idsobat, r.namamitra, e.avg_skor
 		FROM (SELECT DISTINCT idsobat, namamitra FROM rekap WHERE kegiatan = ? AND idsobat != '') r
 		LEFT JOIN (
 			SELECT yang_dinilai_idsobat,
 				(skor_kualitas + skor_ketepatan_waktu + skor_kepatuhan_sop + skor_komunikasi + skor_sikap) / 5 AS avg_skor
-			FROM evaluasi_petugas WHERE kegiatan_id = ? AND tahap = 1
-		) e1 ON e1.yang_dinilai_idsobat = r.idsobat
-		LEFT JOIN (
-			SELECT yang_dinilai_idsobat,
-				(skor_kualitas + skor_ketepatan_waktu + skor_kepatuhan_sop + skor_komunikasi + skor_sikap) / 5 AS avg_skor
 			FROM evaluasi_petugas WHERE kegiatan_id = ? AND tahap = 2
-		) e2 ON e2.yang_dinilai_idsobat = r.idsobat
+		) e ON e.yang_dinilai_idsobat = r.idsobat
 		ORDER BY r.namamitra
 	`
-	rows, err := database.DB.Query(query, kegiatanNama, kegiatanID, kegiatanID)
+	rows, err := database.DB.Query(query, kegiatanNama, kegiatanID)
 	if err != nil {
 		return nil, err
 	}
@@ -209,33 +193,16 @@ func GetRekapPenilaian(kegiatanID int) ([]RekapPenilaianItem, error) {
 	var items []RekapPenilaianItem
 	for rows.Next() {
 		var idsobat, nama string
-		var nilai1, nilai2 sql.NullFloat64
-		if err := rows.Scan(&idsobat, &nama, &nilai1, &nilai2); err != nil {
+		var nilai sql.NullFloat64
+		if err := rows.Scan(&idsobat, &nama, &nilai); err != nil {
 			return nil, err
 		}
 
-		item := RekapPenilaianItem{MitraID: idsobat, MitraName: nama, Peran: peran, StatusKelulusan: "belum"}
-		if nilai1.Valid {
-			v := nilai1.Float64
-			item.NilaiTahap1 = &v
-		}
-		if nilai2.Valid {
-			v := nilai2.Float64
-			item.NilaiTahap2 = &v
-		}
-
-		// Tahap 2 is the authoritative final review for PPL; PML Mitra is
-		// scored directly in Tahap 2 with no Tahap 1 step.
-		if item.NilaiTahap2 != nil {
-			item.NilaiAkhir = item.NilaiTahap2
-		} else if peran == "pml" {
-			item.NilaiAkhir = nil
-		} else if item.NilaiTahap1 != nil {
-			item.NilaiAkhir = item.NilaiTahap1
-		}
-
-		if item.NilaiAkhir != nil {
-			if *item.NilaiAkhir >= 70 {
+		item := RekapPenilaianItem{MitraID: idsobat, MitraName: nama, StatusKelulusan: "belum"}
+		if nilai.Valid {
+			v := nilai.Float64
+			item.Nilai = &v
+			if v >= 70 {
 				item.StatusKelulusan = "lulus"
 			} else {
 				item.StatusKelulusan = "perlu_perhatian"

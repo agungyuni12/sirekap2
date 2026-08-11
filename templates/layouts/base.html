@@ -742,7 +742,7 @@
                         </div>
                     </div>
 
-                    <!-- PENILAIAN KINERJA (admin can act as PML organik / Subject Matter) -->
+                    <!-- PENILAIAN (admin can act as PML organik / Subject Matter) -->
                     <div>
                         <button @click="expandedPenilaian = !expandedPenilaian"
                             class="flex items-center w-full py-3 text-gray-300 rounded-xl transition hover:bg-white/10"
@@ -752,7 +752,7 @@
                                 <i class="fas fa-star-half-stroke text-amber-400"></i>
                             </div>
                             <span x-show="!sidebarCollapsed || isMobile"
-                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">PENILAIAN KINERJA</span>
+                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">PENILAIAN</span>
                             <i x-show="!sidebarCollapsed || isMobile"
                                 class="fas fa-chevron-down ml-1 flex-shrink-0 text-sm transition-transform duration-200"
                                 :class="expandedPenilaian && 'rotate-180'"></i>
@@ -763,12 +763,12 @@
                             <a href="/penilaian" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-user w-5 mr-3 {{ if eq .ActivePage "penilaian" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>Tahap 1 (Nilai PPL)</span>
+                                <span>Nilai PPL</span>
                             </a>
                             <a href="/penilaian/rekap" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-rekap" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-check w-5 mr-3 {{ if eq .ActivePage "penilaian-rekap" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>Rekap &amp; Finalisasi</span>
+                                <span>Nilai PML Mitra</span>
                             </a>
                         </div>
                     </div>
@@ -785,7 +785,7 @@
                                 <i class="fas fa-star-half-stroke text-amber-400"></i>
                             </div>
                             <span x-show="!sidebarCollapsed || isMobile"
-                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">PENILAIAN KINERJA</span>
+                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">PENILAIAN</span>
                             <i x-show="!sidebarCollapsed || isMobile"
                                 class="fas fa-chevron-down ml-1 flex-shrink-0 text-sm transition-transform duration-200"
                                 :class="expandedPenilaian && 'rotate-180'"></i>
@@ -796,7 +796,7 @@
                             <a href="/penilaian" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-user w-5 mr-3 {{ if eq .ActivePage "penilaian" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>Penilaian Kinerja PPL</span>
+                                <span>Nilai PPL</span>
                             </a>
                         </div>
                     </div>
@@ -810,7 +810,7 @@
                                 <i class="fas fa-bullhorn text-green-400"></i>
                             </div>
                             <span x-show="!sidebarCollapsed || isMobile"
-                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">LAPOR TRANSLOK</span>
+                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">TRANSLOK</span>
                             <i x-show="!sidebarCollapsed || isMobile"
                                 class="fas fa-chevron-down ml-1 flex-shrink-0 text-sm transition-transform duration-200"
                                 :class="expandedLapor && 'rotate-180'"></i>
@@ -821,7 +821,7 @@
                             <a href="/lapor" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "lapor" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-plus w-5 mr-3 {{ if eq .ActivePage "lapor" }}text-green-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>Lapor Translok Mandiri</span>
+                                <span>Lapor Translok</span>
                             </a>
                             <a href="/lapor/history" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "lapor-history" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
@@ -874,7 +874,7 @@
                         </div>
                     </div>
 
-                    <!-- PENILAIAN KINERJA (untuk PML organik yang login dengan level non-admin) -->
+                    <!-- PENILAIAN (untuk PML organik yang login dengan level non-admin) -->
                     <div>
                         <button @click="expandedPenilaian = !expandedPenilaian"
                             class="flex items-center w-full py-3 text-gray-300 rounded-xl transition hover:bg-white/10"
@@ -884,7 +884,7 @@
                                 <i class="fas fa-star-half-stroke text-amber-400"></i>
                             </div>
                             <span x-show="!sidebarCollapsed || isMobile"
-                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">PENILAIAN KINERJA</span>
+                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">PENILAIAN</span>
                             <i x-show="!sidebarCollapsed || isMobile"
                                 class="fas fa-chevron-down ml-1 flex-shrink-0 text-sm transition-transform duration-200"
                                 :class="expandedPenilaian && 'rotate-180'"></i>
@@ -895,7 +895,7 @@
                             <a href="/penilaian" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-user w-5 mr-3 {{ if eq .ActivePage "penilaian" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>Penilaian Kinerja PPL</span>
+                                <span>Nilai PPL</span>
                             </a>
                         </div>
                     </div>

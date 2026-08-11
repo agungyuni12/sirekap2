@@ -20,11 +20,12 @@ func apiError(w http.ResponseWriter, status int, code, message string) {
 	})
 }
 
-// ListKegiatanForPenilaianHandler GET /api/penilaian/kegiatan
+// ListKegiatanForPenilaianHandler GET /api/penilaian/kegiatan?peran=ppl|pml
 // A lightweight {id, nama} kegiatan list — unlike /api/master-kegiatan it
 // carries no budget figures, so it's safe for non-admin roles (PML/PML Mitra).
+// peran filters to only kegiatan designated for that position.
 func ListKegiatanForPenilaianHandler(w http.ResponseWriter, r *http.Request) {
-	items, err := models.ListKegiatanIDName()
+	items, err := models.ListKegiatanIDName(r.URL.Query().Get("peran"))
 	if err != nil {
 		log.Printf("Error listing kegiatan for penilaian: %v", err)
 		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memuat daftar kegiatan")
@@ -68,9 +69,9 @@ type penilaianPayload struct {
 }
 
 // SubmitPenilaianHandler POST /api/penilaian
-// Tahap 1: PML (organik atau mitra) menilai PPL yang diawasi.
-// Tahap 2: Admin/Subject Matter memfinalisasi nilai PPL (wajib Tahap 1 lunas
-// dulu) atau menilai langsung PML Mitra (tanpa prasyarat Tahap 1).
+// Tahap 1: PML (organik atau mitra) menilai PPL yang diawasi — nilai ini FINAL
+// begitu disimpan, tidak ada review/finalisasi lanjutan oleh admin.
+// Tahap 2: Subject Matter menilai PML Mitra secara langsung (independen dari Tahap 1).
 func SubmitPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 	var payload penilaianPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -102,18 +103,10 @@ func SubmitPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if payload.Tahap == 2 && peran == "ppl" {
-		done, err := models.HasTahap1(payload.KegiatanID, payload.YangDinilaiID)
-		if err != nil {
-			log.Printf("Error checking tahap1 completeness: %v", err)
-			apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memvalidasi kelengkapan Tahap 1")
-			return
-		}
-		if !done {
-			apiError(w, http.StatusUnprocessableEntity, "TAHAP1_INCOMPLETE",
-				"Penilaian Tahap 1 oleh PML wajib diisi lengkap sebelum Tahap 2 dapat difinalisasi")
-			return
-		}
+	if payload.Tahap == 2 && peran != "pml" {
+		apiError(w, http.StatusUnprocessableEntity, "INVALID_PERAN_TAHAP2",
+			"PPL hanya dinilai oleh PML (Tahap 1); tidak ada tahap penilaian lanjutan untuk PPL")
+		return
 	}
 
 	userData := GetUserFromSession(r)

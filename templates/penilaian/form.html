@@ -4,12 +4,12 @@
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
             <h2 class="text-xl md:text-2xl font-bold text-gray-800">Penilaian Kinerja PPL</h2>
-            <p class="text-gray-500 mt-1 text-sm md:text-base">Evaluasi Tahap 1 &mdash; nilai kualitas data, ketepatan waktu, dan etika kerja petugas pendataan lapangan (PPL) yang Anda awasi.</p>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Nilai kualitas hasil kerja, ketepatan waktu, kepatuhan SOP, komunikasi, dan sikap kerja petugas pendataan lapangan (PPL) yang Anda awasi. Nilai ini final begitu disimpan.</p>
         </div>
         {{ if eq .UserRole "admin" }}
         <a href="/penilaian/rekap"
             class="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium shadow-sm">
-            <i class="fas fa-clipboard-check mr-2 text-primary"></i> Rekap &amp; Finalisasi
+            <i class="fas fa-user-check mr-2 text-primary"></i> Nilai PML Mitra
         </a>
         {{ end }}
     </div>
@@ -28,21 +28,40 @@
 
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-6">
         <label class="block text-sm font-semibold text-gray-700 mb-2">Kegiatan Statistik</label>
-        <select x-model="kegiatanId" @change="loadPetugas()" class="w-full md:max-w-lg">
-            <option value="">Pilih kegiatan...</option>
-            <template x-for="k in kegiatanList" :key="k.id">
-                <option :value="k.id" x-text="k.nama"></option>
-            </template>
-        </select>
+        <div class="relative max-w-lg">
+            <span class="form-icon"><i class="fas fa-magnifying-glass"></i></span>
+            <input type="text" x-model="kegiatanSearch" @input="showKegiatanDropdown = true"
+                @focus="showKegiatanDropdown = true; $el.select()" @click.away="showKegiatanDropdown = false"
+                class="w-full input-with-icon" placeholder="Ketik untuk cari kegiatan...">
+            <div x-show="showKegiatanDropdown && filteredKegiatanList().length > 0" x-cloak
+                class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 max-h-64 overflow-y-auto">
+                <template x-for="k in filteredKegiatanList()" :key="k.id">
+                    <button type="button" @click="selectKegiatan(k)"
+                        class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0"
+                        :class="String(k.id) === String(kegiatanId) ? 'bg-blue-50 font-semibold' : ''">
+                        <span x-text="k.nama"></span>
+                    </button>
+                </template>
+            </div>
+            <div x-show="showKegiatanDropdown && kegiatanSearch && filteredKegiatanList().length === 0" x-cloak
+                class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-500">
+                Tidak ada kegiatan yang cocok.
+            </div>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-6">
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100">
+            <div class="px-5 py-4 border-b border-gray-100 space-y-3">
                 <div class="flex items-center justify-between gap-3">
                     <h3 class="font-semibold text-gray-900">Daftar PPL Diawasi</h3>
                     <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700"
-                        x-text="petugasList.length + ' orang'"></span>
+                        x-text="filteredPetugasList().length + ' / ' + petugasList.length + ' orang'"></span>
+                </div>
+                <div class="relative" x-show="petugasList.length > 5">
+                    <span class="form-icon"><i class="fas fa-magnifying-glass"></i></span>
+                    <input type="text" x-model="petugasSearch" class="w-full input-with-icon text-sm"
+                        placeholder="Cari nama PPL...">
                 </div>
             </div>
 
@@ -62,6 +81,16 @@
                 </div>
             </template>
 
+            <template x-if="!loadingPetugas && petugasList.length > 0 && filteredPetugasList().length === 0">
+                <div class="p-8 text-center">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-magnifying-glass text-2xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-gray-700">Tidak Ditemukan</h3>
+                    <p class="text-sm text-gray-500 mt-1">Tidak ada PPL dengan nama tersebut.</p>
+                </div>
+            </template>
+
             <template x-if="!kegiatanId">
                 <div class="p-8 text-center">
                     <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
@@ -73,7 +102,7 @@
             </template>
 
             <div class="divide-y divide-gray-100 max-h-[560px] overflow-y-auto">
-                <template x-for="p in petugasList" :key="p.mitra_id">
+                <template x-for="p in filteredPetugasList()" :key="p.mitra_id">
                     <button type="button" @click="selectPetugas(p)"
                         class="w-full text-left px-5 py-4 transition hover:bg-gray-50 flex items-center justify-between gap-3"
                         :class="selected && selected.mitra_id === p.mitra_id ? 'bg-blue-50' : ''">
@@ -152,8 +181,11 @@
     function penilaianTahap1Page() {
         return {
             kegiatanId: '',
+            kegiatanSearch: '',
+            showKegiatanDropdown: false,
             kegiatanList: [],
             petugasList: [],
+            petugasSearch: '',
             loadingPetugas: false,
             selected: null,
             submitting: false,
@@ -173,13 +205,27 @@
 
             async loadKegiatan() {
                 try {
-                    const response = await fetch('/api/penilaian/kegiatan');
+                    const response = await fetch('/api/penilaian/kegiatan?peran=ppl');
                     if (!response.ok) throw new Error('Gagal memuat kegiatan');
                     const result = await response.json();
                     this.kegiatanList = (result.data || []).map(k => ({ id: k.id, nama: k.nama }));
                 } catch (error) {
                     this.flash = { type: 'error', message: error.message };
                 }
+            },
+
+            filteredKegiatanList() {
+                const query = this.kegiatanSearch.trim().toLowerCase();
+                if (!query) return this.kegiatanList;
+                return this.kegiatanList.filter(k => k.nama.toLowerCase().includes(query));
+            },
+
+            selectKegiatan(k) {
+                this.kegiatanId = k.id;
+                this.kegiatanSearch = k.nama;
+                this.showKegiatanDropdown = false;
+                this.petugasSearch = '';
+                this.loadPetugas();
             },
 
             selectedKegiatanNama() {
@@ -201,6 +247,12 @@
                 } finally {
                     this.loadingPetugas = false;
                 }
+            },
+
+            filteredPetugasList() {
+                const query = this.petugasSearch.trim().toLowerCase();
+                if (!query) return this.petugasList;
+                return this.petugasList.filter(p => p.nama.toLowerCase().includes(query));
             },
 
             selectPetugas(p) {
