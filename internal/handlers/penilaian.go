@@ -61,7 +61,9 @@ type penilaianPayload struct {
 	Tahap              int     `json:"tahap"`
 	SkorKualitas       float64 `json:"skor_kualitas"`
 	SkorKetepatanWaktu float64 `json:"skor_ketepatan_waktu"`
-	SkorEtika          float64 `json:"skor_etika"`
+	SkorKepatuhanSOP   float64 `json:"skor_kepatuhan_sop"`
+	SkorKomunikasi     float64 `json:"skor_komunikasi"`
+	SkorSikap          float64 `json:"skor_sikap"`
 	Catatan            string  `json:"catatan"`
 }
 
@@ -84,7 +86,7 @@ func SubmitPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 		apiError(w, http.StatusUnprocessableEntity, "INVALID_TAHAP", "tahap harus 1 atau 2")
 		return
 	}
-	if msg := models.ValidateSkor(payload.SkorKualitas, payload.SkorKetepatanWaktu, payload.SkorEtika); msg != "" {
+	if msg := models.ValidateSkor(payload.SkorKualitas, payload.SkorKetepatanWaktu, payload.SkorKepatuhanSOP, payload.SkorKomunikasi, payload.SkorSikap); msg != "" {
 		apiError(w, http.StatusUnprocessableEntity, "INVALID_SKOR_RANGE", msg)
 		return
 	}
@@ -127,7 +129,9 @@ func SubmitPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 		Tahap:              payload.Tahap,
 		SkorKualitas:       payload.SkorKualitas,
 		SkorKetepatanWaktu: payload.SkorKetepatanWaktu,
-		SkorEtika:          payload.SkorEtika,
+		SkorKepatuhanSOP:   payload.SkorKepatuhanSOP,
+		SkorKomunikasi:     payload.SkorKomunikasi,
+		SkorSikap:          payload.SkorSikap,
 		Catatan:            payload.Catatan,
 	})
 	if err != nil {

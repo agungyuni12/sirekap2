@@ -29,13 +29,17 @@ type RekapPenilaianItem struct {
 }
 
 // EvaluasiInput is the payload for saving one Tahap 1 or Tahap 2 score.
+// 5 aspek penilaian: kualitas hasil kerja, ketepatan waktu, kepatuhan
+// terhadap SOP, komunikasi dan koordinasi, sikap dan perilaku.
 type EvaluasiInput struct {
 	KegiatanID         int
 	YangDinilaiIDSobat string
 	Tahap              int
 	SkorKualitas       float64
 	SkorKetepatanWaktu float64
-	SkorEtika          float64
+	SkorKepatuhanSOP   float64
+	SkorKomunikasi     float64
+	SkorSikap          float64
 	Catatan            string
 }
 
@@ -154,16 +158,19 @@ func HasTahap1(kegiatanID int, idsobat string) (bool, error) {
 func UpsertEvaluasi(penilaiID int, peran string, in EvaluasiInput) error {
 	_, err := database.DB.Exec(`
 		INSERT INTO evaluasi_petugas
-			(kegiatan_id, penilai_id, yang_dinilai_idsobat, peran_yang_dinilai, tahap, skor_kualitas, skor_ketepatan_waktu, skor_etika, catatan)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			(kegiatan_id, penilai_id, yang_dinilai_idsobat, peran_yang_dinilai, tahap,
+			 skor_kualitas, skor_ketepatan_waktu, skor_kepatuhan_sop, skor_komunikasi, skor_sikap, catatan)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
 			penilai_id = VALUES(penilai_id),
 			skor_kualitas = VALUES(skor_kualitas),
 			skor_ketepatan_waktu = VALUES(skor_ketepatan_waktu),
-			skor_etika = VALUES(skor_etika),
+			skor_kepatuhan_sop = VALUES(skor_kepatuhan_sop),
+			skor_komunikasi = VALUES(skor_komunikasi),
+			skor_sikap = VALUES(skor_sikap),
 			catatan = VALUES(catatan)
 	`, in.KegiatanID, penilaiID, in.YangDinilaiIDSobat, peran, in.Tahap,
-		in.SkorKualitas, in.SkorKetepatanWaktu, in.SkorEtika, in.Catatan)
+		in.SkorKualitas, in.SkorKetepatanWaktu, in.SkorKepatuhanSOP, in.SkorKomunikasi, in.SkorSikap, in.Catatan)
 	return err
 }
 
@@ -182,11 +189,13 @@ func GetRekapPenilaian(kegiatanID int) ([]RekapPenilaianItem, error) {
 			e2.avg_skor AS nilai_tahap2
 		FROM (SELECT DISTINCT idsobat, namamitra FROM rekap WHERE kegiatan = ? AND idsobat != '') r
 		LEFT JOIN (
-			SELECT yang_dinilai_idsobat, (skor_kualitas + skor_ketepatan_waktu + skor_etika) / 3 AS avg_skor
+			SELECT yang_dinilai_idsobat,
+				(skor_kualitas + skor_ketepatan_waktu + skor_kepatuhan_sop + skor_komunikasi + skor_sikap) / 5 AS avg_skor
 			FROM evaluasi_petugas WHERE kegiatan_id = ? AND tahap = 1
 		) e1 ON e1.yang_dinilai_idsobat = r.idsobat
 		LEFT JOIN (
-			SELECT yang_dinilai_idsobat, (skor_kualitas + skor_ketepatan_waktu + skor_etika) / 3 AS avg_skor
+			SELECT yang_dinilai_idsobat,
+				(skor_kualitas + skor_ketepatan_waktu + skor_kepatuhan_sop + skor_komunikasi + skor_sikap) / 5 AS avg_skor
 			FROM evaluasi_petugas WHERE kegiatan_id = ? AND tahap = 2
 		) e2 ON e2.yang_dinilai_idsobat = r.idsobat
 		ORDER BY r.namamitra
@@ -239,8 +248,8 @@ func GetRekapPenilaian(kegiatanID int) ([]RekapPenilaianItem, error) {
 }
 
 // ValidateSkor returns an error message if any score is outside 1-100.
-func ValidateSkor(kualitas, ketepatan, etika float64) string {
-	for _, s := range []float64{kualitas, ketepatan, etika} {
+func ValidateSkor(kualitas, ketepatan, kepatuhanSOP, komunikasi, sikap float64) string {
+	for _, s := range []float64{kualitas, ketepatan, kepatuhanSOP, komunikasi, sikap} {
 		if s < 1 || s > 100 {
 			return fmt.Sprintf("Skor harus berada pada rentang 1-100 (nilai diterima: %.2f)", s)
 		}

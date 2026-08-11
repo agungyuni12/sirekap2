@@ -159,11 +159,13 @@
             submitting: false,
             flash: { type: '', message: '' },
             criteria: [
-                { key: 'skor_kualitas', label: 'Kualitas Data' },
+                { key: 'skor_kualitas', label: 'Kualitas Hasil Kerja' },
                 { key: 'skor_ketepatan_waktu', label: 'Ketepatan Waktu' },
-                { key: 'skor_etika', label: 'Etika / Sikap Kerja' },
+                { key: 'skor_kepatuhan_sop', label: 'Kepatuhan terhadap SOP' },
+                { key: 'skor_komunikasi', label: 'Komunikasi dan Koordinasi' },
+                { key: 'skor_sikap', label: 'Sikap dan Perilaku' },
             ],
-            form: { skor_kualitas: 80, skor_ketepatan_waktu: 80, skor_etika: 80, catatan: '' },
+            form: { skor_kualitas: 80, skor_ketepatan_waktu: 80, skor_kepatuhan_sop: 80, skor_komunikasi: 80, skor_sikap: 80, catatan: '' },
 
             init() {
                 this.loadKegiatan();
@@ -203,7 +205,7 @@
 
             selectPetugas(p) {
                 this.selected = p;
-                this.form = { skor_kualitas: 80, skor_ketepatan_waktu: 80, skor_etika: 80, catatan: '' };
+                this.form = { skor_kualitas: 80, skor_ketepatan_waktu: 80, skor_kepatuhan_sop: 80, skor_komunikasi: 80, skor_sikap: 80, catatan: '' };
             },
 
             initials(nama) {
@@ -226,7 +228,9 @@
                             tahap: 1,
                             skor_kualitas: this.form.skor_kualitas,
                             skor_ketepatan_waktu: this.form.skor_ketepatan_waktu,
-                            skor_etika: this.form.skor_etika,
+                            skor_kepatuhan_sop: this.form.skor_kepatuhan_sop,
+                            skor_komunikasi: this.form.skor_komunikasi,
+                            skor_sikap: this.form.skor_sikap,
                             catatan: this.form.catatan,
                         }),
                     });
