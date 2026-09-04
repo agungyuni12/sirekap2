@@ -183,8 +183,6 @@ func redirectByLevel(w http.ResponseWriter, r *http.Request, level string) {
 		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	case "pml_mitra":
 		http.Redirect(w, r, "/penilaian", http.StatusSeeOther)
-	case "korwil":
-		http.Redirect(w, r, "/penilaian/korwil", http.StatusSeeOther)
 	default:
 		http.Redirect(w, r, "/lapor", http.StatusSeeOther)
 	}

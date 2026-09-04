@@ -22,22 +22,68 @@ func apiError(w http.ResponseWriter, status int, code, message string) {
 	})
 }
 
-// peranForRole maps the logged-in user's role to the peran they're allowed to
-// score in Tahap 1 — "korwil" (atasan langsung organik / PJK-Korwil) scores
-// PML Mitra, everyone else with penilaian access (organik PML, PML Mitra
-// scoring the PPL they supervise) scores PPL. This is decided server-side
-// from the session, never trusted from the request body.
-func peranForRole(level string) string {
-	if level == "korwil" {
-		return "pml"
+// errNotAssigned is returned by resolvePenilaiPeran when an organik account
+// has no assignment for the kegiatan they're trying to score.
+var errNotAssigned = errors.New("penilai belum ditugaskan untuk kegiatan ini")
+
+// resolvePenilaiPeran decides the peran ("ppl" | "pml") a logged-in user is
+// allowed to score in Tahap 1, for one specific kegiatan. PML Mitra
+// (level "pml_mitra") always scores PPL, unchanged. Everyone else — organik
+// accounts, and admin if they ever try — must have been explicitly assigned
+// a peran ("pml" scores PPL, "korwil" scores PML Mitra) for that kegiatan via
+// Kelola Petugas; without an assignment, access is denied (errNotAssigned).
+// This is decided server-side from the session, never trusted from the
+// request body.
+func resolvePenilaiPeran(userID int, level string, kegiatanID int) (string, error) {
+	if level == "pml_mitra" {
+		return "ppl", nil
 	}
-	return "ppl"
+	assigned, err := models.GetPenilaiPeranForUser(kegiatanID, userID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", errNotAssigned
+	}
+	if err != nil {
+		return "", err
+	}
+	if assigned == "korwil" {
+		return "pml", nil
+	}
+	return "ppl", nil
 }
 
-// ListKegiatanForPenilaianHandler GET /api/penilaian/kegiatan
+// ListKegiatanForPenilaianHandler GET /api/penilaian/kegiatan[?mine=1]
 // Kegiatan list dedicated to Penilaian Mitra (seeded from
 // Daftar_Nama_Kegiatan_Rapi.xlsx), separate from the budget `kegiatan` table.
+// With ?mine=1, returns only the kegiatan the logged-in organik account has
+// been assigned to (each tagged with their peran) — used to drive the
+// kegiatan dropdown on Input Penilaian for organik accounts, since their
+// peran (and thus access) is now per-kegiatan, not global.
 func ListKegiatanForPenilaianHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("mine") == "1" {
+		userData := GetUserFromSession(r)
+		userID, _ := userData["UserID"].(int)
+		level, _ := userData["UserRole"].(string)
+		if level == "pml_mitra" {
+			// PML Mitra always scores PPL for every kegiatan — unchanged, unrestricted.
+			items, err := models.ListPenilaianKegiatan()
+			if err != nil {
+				log.Printf("Error listing kegiatan for penilaian: %v", err)
+				apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memuat daftar kegiatan")
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]interface{}{"data": items})
+			return
+		}
+		items, err := models.ListKegiatanSayaForOrganik(userID)
+		if err != nil {
+			log.Printf("Error listing kegiatan saya: %v", err)
+			apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memuat daftar kegiatan")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]interface{}{"data": items})
+		return
+	}
+
 	items, err := models.ListPenilaianKegiatan()
 	if err != nil {
 		log.Printf("Error listing kegiatan for penilaian: %v", err)
@@ -134,7 +180,16 @@ func SubmitPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	level, _ := userData["UserRole"].(string)
-	peran := peranForRole(level)
+	peran, err := resolvePenilaiPeran(penilaiID, level, payload.KegiatanID)
+	if errors.Is(err, errNotAssigned) {
+		apiError(w, http.StatusForbidden, "NOT_ASSIGNED", "Anda belum ditugaskan untuk kegiatan ini. Hubungi admin.")
+		return
+	}
+	if err != nil {
+		log.Printf("Error resolving penilai peran: %v", err)
+		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memeriksa penugasan")
+		return
+	}
 
 	if err := models.UpsertEvaluasiTahap1(penilaiID, payload.toInput(payload.KegiatanID, peran)); err != nil {
 		log.Printf("Error saving penilaian: %v", err)
@@ -189,7 +244,7 @@ func KonfirmasiPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := models.KonfirmasiPenilaianPMLMitra(payload.KegiatanID, payload.IDSobat, payload.Setuju, subjectMatterID, payload.Catatan)
+	err := models.KonfirmasiPenilaian(payload.KegiatanID, payload.IDSobat, payload.Setuju, subjectMatterID, payload.Catatan)
 	if errors.Is(err, sql.ErrNoRows) {
 		apiError(w, http.StatusNotFound, "NOT_FOUND", "Penilaian PML Mitra tidak ditemukan")
 		return
@@ -216,7 +271,7 @@ func SubmitPenilaianUlangHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, err := models.GetStatusKonfirmasi(payload.KegiatanID, payload.YangDinilaiID)
+	_, status, err := models.GetTahap1Status(payload.KegiatanID, payload.YangDinilaiID)
 	if errors.Is(err, sql.ErrNoRows) {
 		apiError(w, http.StatusNotFound, "NOT_FOUND", "Penilaian PML Mitra tidak ditemukan")
 		return
@@ -328,20 +383,37 @@ func ListRosterPetugasHandler(w http.ResponseWriter, r *http.Request) {
 type rosterPayload struct {
 	KegiatanID int    `json:"kegiatan_id"`
 	IDSobat    string `json:"idsobat"`
+	UserID     int    `json:"user_id"`
 	Peran      string `json:"peran"`
 }
 
 // AddRosterPetugasHandler POST /api/penilaian/kegiatan/petugas — admin-only.
-// Menambahkan mitra ke roster kegiatan; Korwil dan PML tidak boleh menambah
-// sendiri karena "gk nentu siapa aja" yang sah bertugas di kegiatan itu.
+// Menambahkan satu entri ke roster kegiatan: mitra (idsobat, peran ppl/pml —
+// yang dinilai) ATAU akun organik (user_id, peran pml/korwil — penugasan
+// penilai). Korwil dan PML tidak boleh menambah sendiri karena "gk nentu
+// siapa aja" yang sah bertugas di kegiatan itu.
 func AddRosterPetugasHandler(w http.ResponseWriter, r *http.Request) {
 	var payload rosterPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		apiError(w, http.StatusBadRequest, "INVALID_BODY", "Payload tidak valid")
 		return
 	}
-	if payload.KegiatanID <= 0 || payload.IDSobat == "" || (payload.Peran != "ppl" && payload.Peran != "pml") {
-		apiError(w, http.StatusUnprocessableEntity, "MISSING_FIELDS", "kegiatan_id, idsobat, dan peran (ppl/pml) wajib diisi")
+	if payload.KegiatanID <= 0 {
+		apiError(w, http.StatusUnprocessableEntity, "MISSING_FIELDS", "kegiatan_id wajib diisi")
+		return
+	}
+	hasIDSobat := payload.IDSobat != ""
+	hasUserID := payload.UserID > 0
+	if hasIDSobat == hasUserID {
+		apiError(w, http.StatusUnprocessableEntity, "MISSING_FIELDS", "isi salah satu: idsobat (mitra) atau user_id (organik)")
+		return
+	}
+	if hasIDSobat && payload.Peran != "ppl" && payload.Peran != "pml" {
+		apiError(w, http.StatusUnprocessableEntity, "INVALID_PERAN", "Peran mitra harus ppl atau pml")
+		return
+	}
+	if hasUserID && payload.Peran != "pml" && payload.Peran != "korwil" {
+		apiError(w, http.StatusUnprocessableEntity, "INVALID_PERAN", "Peran organik harus pml atau korwil")
 		return
 	}
 	if _, err := models.GetPenilaianKegiatanNama(payload.KegiatanID); err != nil {
@@ -356,7 +428,7 @@ func AddRosterPetugasHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := models.AddPetugasKeKegiatan(payload.KegiatanID, payload.IDSobat, payload.Peran, adminID); err != nil {
+	if err := models.AddPetugasKeKegiatan(payload.KegiatanID, payload.IDSobat, payload.UserID, payload.Peran, adminID); err != nil {
 		log.Printf("Error adding roster petugas: %v", err)
 		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal menambahkan petugas")
 		return
@@ -364,7 +436,7 @@ func AddRosterPetugasHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]interface{}{"status": "created", "message": "Petugas ditambahkan ke kegiatan"})
 }
 
-// RemoveRosterPetugasHandler DELETE /api/penilaian/kegiatan/petugas?kegiatan_id=&idsobat= — admin-only.
+// RemoveRosterPetugasHandler DELETE /api/penilaian/kegiatan/petugas?kegiatan_id=&idsobat=|user_id= — admin-only.
 func RemoveRosterPetugasHandler(w http.ResponseWriter, r *http.Request) {
 	kegiatanID, err := strconv.Atoi(r.URL.Query().Get("kegiatan_id"))
 	if err != nil || kegiatanID <= 0 {
@@ -372,12 +444,13 @@ func RemoveRosterPetugasHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	idsobat := r.URL.Query().Get("idsobat")
-	if idsobat == "" {
-		apiError(w, http.StatusBadRequest, "INVALID_IDSOBAT", "idsobat tidak valid")
+	userID, _ := strconv.Atoi(r.URL.Query().Get("user_id"))
+	if idsobat == "" && userID <= 0 {
+		apiError(w, http.StatusBadRequest, "INVALID_TARGET", "idsobat atau user_id wajib diisi")
 		return
 	}
 
-	err = models.RemovePetugasDariKegiatan(kegiatanID, idsobat)
+	err = models.RemovePetugasDariKegiatan(kegiatanID, idsobat, userID)
 	if errors.Is(err, sql.ErrNoRows) {
 		apiError(w, http.StatusNotFound, "NOT_FOUND", "Petugas tidak ditemukan di kegiatan ini")
 		return
@@ -388,4 +461,17 @@ func RemoveRosterPetugasHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{"status": "ok", "message": "Petugas dihapus dari kegiatan"})
+}
+
+// SearchPenilaiOrganikHandler GET /api/penilaian/penilai/search?q= — admin-only.
+// Autocomplete akun organik untuk tab PML/Korwil di Kelola Petugas.
+func SearchPenilaiOrganikHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	results, err := models.SearchPenilaiOrganik(query)
+	if err != nil {
+		log.Printf("Error searching penilai organik: %v", err)
+		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal mencari akun organik")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{"data": results})
 }

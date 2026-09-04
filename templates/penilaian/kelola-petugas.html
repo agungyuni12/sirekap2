@@ -4,7 +4,7 @@
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
             <h2 class="text-xl md:text-2xl font-bold text-gray-800">Kelola Petugas</h2>
-            <p class="text-gray-500 mt-1 text-sm md:text-base">Daftarkan PPL & PML Mitra yang boleh dinilai untuk tiap kegiatan. Hanya admin yang bisa menambah/menghapus di sini — Korwil dan PML hanya memilih dari daftar ini saat menilai.</p>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Daftarkan PPL, PML Mitra, dan tugaskan akun organik (PML/Korwil) untuk tiap kegiatan. Hanya admin yang bisa menambah/menghapus di sini — akun organik tidak bisa menilai kegiatan sampai ditugaskan di sini.</p>
         </div>
     </div>
 
@@ -51,11 +51,14 @@
     </template>
 
     <template x-if="kegiatanId">
-        <div class="grid lg:grid-cols-2 gap-6">
-            <template x-for="peranTab in ['ppl', 'pml']" :key="peranTab">
+        <div class="grid lg:grid-cols-3 gap-6">
+            <template x-for="peranTab in ['ppl', 'pml', 'korwil']" :key="peranTab">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <h3 class="font-semibold text-gray-900" x-text="peranTab === 'ppl' ? 'Daftar PPL' : 'Daftar PML Mitra'"></h3>
+                        <div>
+                            <h3 class="font-semibold text-gray-900" x-text="tabLabel(peranTab)"></h3>
+                            <p class="text-xs text-gray-400 mt-0.5" x-text="tabHint(peranTab)"></p>
+                        </div>
                         <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700"
                             x-text="rosterFor(peranTab).length + ' orang'"></span>
                     </div>
@@ -63,18 +66,24 @@
                     <div class="p-4 border-b border-gray-100 space-y-3">
                         <div class="relative">
                             <span class="form-icon"><i class="fas fa-magnifying-glass"></i></span>
-                            <input type="text" x-model="addSearch[peranTab]" @input="searchMitra(peranTab)"
-                                class="w-full input-with-icon text-sm" placeholder="Cari nama / ID Sobat mitra untuk ditambahkan...">
+                            <input type="text" x-model="addSearch[peranTab]" @input="searchFor(peranTab)"
+                                class="w-full input-with-icon text-sm"
+                                :placeholder="peranTab === 'ppl' ? 'Cari nama / ID Sobat mitra...' : 'Cari mitra atau akun organik...'">
                         </div>
                         <div x-show="addResults[peranTab] && addResults[peranTab].length > 0" class="border border-gray-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-gray-100">
-                            <template x-for="m in addResults[peranTab]" :key="m.idsobat">
+                            <template x-for="m in addResults[peranTab]" :key="m.tipe + ':' + (m.idsobat || m.user_id)">
                                 <button type="button" @click="addToRoster(peranTab, m)"
                                     class="w-full px-3 py-2 text-left hover:bg-blue-50 transition flex items-center justify-between gap-2">
-                                    <span>
-                                        <span class="block text-sm font-medium text-gray-900" x-text="m.nama"></span>
-                                        <span class="block text-xs text-gray-500" x-text="m.idsobat + (m.kecamatan ? ' · ' + m.kecamatan : '')"></span>
+                                    <span class="min-w-0">
+                                        <span class="block text-sm font-medium text-gray-900 truncate" x-text="m.nama"></span>
+                                        <span class="block text-xs text-gray-500 truncate" x-text="(m.tipe === 'organik' ? m.email : m.idsobat + (m.kecamatan ? ' · ' + m.kecamatan : ''))"></span>
                                     </span>
-                                    <i class="fas fa-plus text-primary"></i>
+                                    <span class="flex-shrink-0 inline-flex items-center gap-2">
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                                            :class="m.tipe === 'organik' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'"
+                                            x-text="m.tipe === 'organik' ? 'Organik' : 'Mitra'"></span>
+                                        <i class="fas fa-plus text-primary"></i>
+                                    </span>
                                 </button>
                             </template>
                         </div>
@@ -91,11 +100,16 @@
                     </template>
 
                     <div class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
-                        <template x-for="p in rosterFor(peranTab)" :key="p.idsobat">
+                        <template x-for="p in rosterFor(peranTab)" :key="p.tipe + ':' + (p.idsobat || p.user_id)">
                             <div class="flex items-center justify-between gap-3 px-5 py-3">
-                                <div class="min-w-0">
-                                    <p class="font-medium text-gray-900 truncate" x-text="p.nama"></p>
-                                    <p class="text-xs text-gray-500" x-text="p.idsobat + (p.kecamatan ? ' · ' + p.kecamatan : '')"></p>
+                                <div class="min-w-0 flex items-center gap-2">
+                                    <div class="min-w-0">
+                                        <p class="font-medium text-gray-900 truncate" x-text="p.nama"></p>
+                                        <p class="text-xs text-gray-500 truncate" x-text="(p.tipe === 'organik' ? p.email : p.idsobat + (p.kecamatan ? ' · ' + p.kecamatan : ''))"></p>
+                                    </div>
+                                    <span class="flex-shrink-0 inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                                        :class="p.tipe === 'organik' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'"
+                                        x-text="p.tipe === 'organik' ? 'Organik' : 'Mitra'"></span>
                                 </div>
                                 <button type="button" @click="removeFromRoster(p)" class="text-red-500 hover:text-red-700 flex-shrink-0" title="Hapus dari kegiatan">
                                     <i class="fas fa-trash"></i>
@@ -119,12 +133,24 @@
             roster: [],
             loading: false,
             flash: { type: '', message: '' },
-            addSearch: { ppl: '', pml: '' },
-            addResults: { ppl: [], pml: [] },
+            addSearch: { ppl: '', pml: '', korwil: '' },
+            addResults: { ppl: [], pml: [], korwil: [] },
             addSearchTimer: {},
 
             init() {
                 this.loadKegiatan();
+            },
+
+            tabLabel(peranTab) {
+                return { ppl: 'Daftar PPL', pml: 'Daftar PML', korwil: 'Daftar Korwil' }[peranTab];
+            },
+
+            tabHint(peranTab) {
+                return {
+                    ppl: 'Mitra yang dinilai sebagai PPL',
+                    pml: 'Mitra (PML Mitra, dinilai Korwil) & akun organik (ditugaskan menilai PPL)',
+                    korwil: 'Akun organik yang ditugaskan menilai PML Mitra (opsional)',
+                }[peranTab];
             },
 
             async loadKegiatan() {
@@ -148,8 +174,8 @@
                 this.kegiatanId = k.id;
                 this.kegiatanSearch = k.nama;
                 this.showKegiatanDropdown = false;
-                this.addSearch = { ppl: '', pml: '' };
-                this.addResults = { ppl: [], pml: [] };
+                this.addSearch = { ppl: '', pml: '', korwil: '' };
+                this.addResults = { ppl: [], pml: [], korwil: [] };
                 this.loadRoster();
             },
 
@@ -172,32 +198,57 @@
                 return this.roster.filter(p => p.peran === peran);
             },
 
-            searchMitra(peranTab) {
+            searchFor(peranTab) {
                 clearTimeout(this.addSearchTimer[peranTab]);
                 this.addSearchTimer[peranTab] = setTimeout(async () => {
                     const q = this.addSearch[peranTab];
                     if (!q) { this.addResults[peranTab] = []; return; }
                     try {
-                        const response = await fetch('/api/penilaian/mitra?q=' + encodeURIComponent(q));
-                        if (!response.ok) throw new Error('Gagal mencari mitra');
-                        const result = await response.json();
-                        this.addResults[peranTab] = result.data || [];
+                        if (peranTab === 'ppl') {
+                            this.addResults[peranTab] = await this.searchMitra(q);
+                        } else if (peranTab === 'korwil') {
+                            this.addResults[peranTab] = await this.searchOrganik(q);
+                        } else {
+                            // pml: gabungan mitra (PML Mitra) + organik (ditugaskan PML)
+                            const [mitra, organik] = await Promise.all([this.searchMitra(q), this.searchOrganik(q)]);
+                            this.addResults[peranTab] = [...mitra, ...organik];
+                        }
                     } catch (error) {
                         this.flash = { type: 'error', message: error.message };
                     }
                 }, 300);
             },
 
-            async addToRoster(peranTab, mitra) {
+            async searchMitra(q) {
+                const response = await fetch('/api/penilaian/mitra?q=' + encodeURIComponent(q));
+                if (!response.ok) throw new Error('Gagal mencari mitra');
+                const result = await response.json();
+                return (result.data || []).map(m => ({ ...m, tipe: 'mitra' }));
+            },
+
+            async searchOrganik(q) {
+                const response = await fetch('/api/penilaian/penilai/search?q=' + encodeURIComponent(q));
+                if (!response.ok) throw new Error('Gagal mencari akun organik');
+                const result = await response.json();
+                return (result.data || []).map(u => ({ ...u, tipe: 'organik' }));
+            },
+
+            async addToRoster(peranTab, item) {
                 try {
+                    const body = { kegiatan_id: Number(this.kegiatanId), peran: peranTab };
+                    if (item.tipe === 'organik') {
+                        body.user_id = item.user_id;
+                    } else {
+                        body.idsobat = item.idsobat;
+                    }
                     const response = await fetch('/api/penilaian/kegiatan/petugas', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ kegiatan_id: Number(this.kegiatanId), idsobat: mitra.idsobat, peran: peranTab }),
+                        body: JSON.stringify(body),
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result?.error?.message || 'Gagal menambahkan petugas');
-                    this.flash = { type: 'success', message: mitra.nama + ' ditambahkan.' };
+                    this.flash = { type: 'success', message: item.nama + ' ditambahkan.' };
                     this.addSearch[peranTab] = '';
                     this.addResults[peranTab] = [];
                     await this.loadRoster();
@@ -208,7 +259,13 @@
 
             async removeFromRoster(p) {
                 try {
-                    const response = await fetch(`/api/penilaian/kegiatan/petugas?kegiatan_id=${this.kegiatanId}&idsobat=${encodeURIComponent(p.idsobat)}`, {
+                    const params = new URLSearchParams({ kegiatan_id: this.kegiatanId });
+                    if (p.tipe === 'organik') {
+                        params.set('user_id', p.user_id);
+                    } else {
+                        params.set('idsobat', p.idsobat);
+                    }
+                    const response = await fetch(`/api/penilaian/kegiatan/petugas?${params.toString()}`, {
                         method: 'DELETE',
                     });
                     const result = await response.json();

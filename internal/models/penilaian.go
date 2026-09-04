@@ -93,21 +93,17 @@ func ValidateSkor(kualitas, ketepatan, kepatuhanSOP, komunikasi, sikap float64) 
 	return ""
 }
 
-// UpsertEvaluasiTahap1 saves the initial score for one yang-dinilai:
-//   - peran "ppl": PML (organik atau mitra) menilai PPL — final seketika, tidak
-//     ada tahap konfirmasi (volume PPL terlalu besar untuk dikonfirmasi satu-satu).
-//   - peran "pml": atasan langsung organik (PJK/Korwil) menilai PML Mitra —
-//     status_konfirmasi diset "pending", menunggu keputusan Subject Matter.
+// UpsertEvaluasiTahap1 saves the initial score for one yang-dinilai (PPL by
+// PML organik/mitra, or PML Mitra by atasan langsung organik/Korwil). Every
+// Tahap 1 score — regardless of peran — goes to status_konfirmasi "pending",
+// awaiting the Subject Matter's approve/reject decision; that's the "Dari
+// nilai tersebut, subject matter mengkonfirmasi nilai" step in the PRD, which
+// applies to both PPL and PML Mitra scores, not just PML Mitra.
 //
-// Menyimpan ulang (upsert) skor Tahap 1 PML Mitra mereset status konfirmasi ke
-// "pending" dan membuang skor ulang Subject Matter sebelumnya (jika ada), karena
+// Menyimpan ulang (upsert) skor Tahap 1 mereset status konfirmasi ke "pending"
+// dan membuang skor ulang Subject Matter sebelumnya (jika ada), karena
 // keduanya merujuk ke nilai awal yang sudah tidak berlaku lagi.
 func UpsertEvaluasiTahap1(penilaiID int, in EvaluasiInput) error {
-	statusKonfirmasi := "disetujui"
-	if in.Peran == "pml" {
-		statusKonfirmasi = "pending"
-	}
-
 	tx, err := database.DB.Begin()
 	if err != nil {
 		return err
@@ -118,7 +114,7 @@ func UpsertEvaluasiTahap1(penilaiID int, in EvaluasiInput) error {
 		INSERT INTO evaluasi_petugas
 			(kegiatan_id, penilai_id, yang_dinilai_idsobat, peran_yang_dinilai, kecamatan, periode, tahun, tanggal_penilaian, tahap,
 			 skor_kualitas, skor_ketepatan_waktu, skor_kepatuhan_sop, skor_komunikasi, skor_sikap, catatan, status_konfirmasi)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, 'pending')
 		ON DUPLICATE KEY UPDATE
 			penilai_id = VALUES(penilai_id),
 			kecamatan = VALUES(kecamatan),
@@ -131,23 +127,21 @@ func UpsertEvaluasiTahap1(penilaiID int, in EvaluasiInput) error {
 			skor_komunikasi = VALUES(skor_komunikasi),
 			skor_sikap = VALUES(skor_sikap),
 			catatan = VALUES(catatan),
-			status_konfirmasi = VALUES(status_konfirmasi),
+			status_konfirmasi = 'pending',
 			confirmed_by = NULL,
 			confirmed_at = NULL,
 			catatan_konfirmasi = NULL
 	`, in.KegiatanID, penilaiID, in.YangDinilaiIDSobat, in.Peran, in.Kecamatan, in.Periode, in.Tahun, nullableDate(in.TanggalPenilaian),
-		in.SkorKualitas, in.SkorKetepatanWaktu, in.SkorKepatuhanSOP, in.SkorKomunikasi, in.SkorSikap, in.Catatan, statusKonfirmasi)
+		in.SkorKualitas, in.SkorKetepatanWaktu, in.SkorKepatuhanSOP, in.SkorKomunikasi, in.SkorSikap, in.Catatan)
 	if err != nil {
 		return err
 	}
 
-	if in.Peran == "pml" {
-		if _, err := tx.Exec(
-			`DELETE FROM evaluasi_petugas WHERE kegiatan_id = ? AND yang_dinilai_idsobat = ? AND tahap = 2`,
-			in.KegiatanID, in.YangDinilaiIDSobat,
-		); err != nil {
-			return err
-		}
+	if _, err := tx.Exec(
+		`DELETE FROM evaluasi_petugas WHERE kegiatan_id = ? AND yang_dinilai_idsobat = ? AND tahap = 2`,
+		in.KegiatanID, in.YangDinilaiIDSobat,
+	); err != nil {
+		return err
 	}
 
 	return tx.Commit()
@@ -160,21 +154,22 @@ func nullableDate(s string) interface{} {
 	return s
 }
 
-// GetStatusKonfirmasi returns the Tahap 1 status_konfirmasi for one PML Mitra
-// evaluation ("pending" | "disetujui" | "ditolak").
-func GetStatusKonfirmasi(kegiatanID int, idsobat string) (string, error) {
-	var status string
-	err := database.DB.QueryRow(
-		`SELECT status_konfirmasi FROM evaluasi_petugas
-		 WHERE kegiatan_id = ? AND yang_dinilai_idsobat = ? AND tahap = 1 AND peran_yang_dinilai = 'pml'`,
+// GetTahap1Status returns the peran and status_konfirmasi of one Tahap 1 score
+// ("pending" | "disetujui" | "ditolak") — peran is needed by
+// SubmitPenilaianUlang, since the Subject Matter's re-score must carry the
+// same peran as what it's re-scoring (PPL or PML Mitra).
+func GetTahap1Status(kegiatanID int, idsobat string) (peran, status string, err error) {
+	err = database.DB.QueryRow(
+		`SELECT peran_yang_dinilai, status_konfirmasi FROM evaluasi_petugas
+		 WHERE kegiatan_id = ? AND yang_dinilai_idsobat = ? AND tahap = 1`,
 		kegiatanID, idsobat,
-	).Scan(&status)
-	return status, err
+	).Scan(&peran, &status)
+	return peran, status, err
 }
 
-// KonfirmasiPenilaianPMLMitra records the Subject Matter's approve/reject
-// decision on one PML Mitra's Tahap 1 score.
-func KonfirmasiPenilaianPMLMitra(kegiatanID int, idsobat string, setuju bool, subjectMatterID int, catatan string) error {
+// KonfirmasiPenilaian records the Subject Matter's approve/reject decision on
+// one Tahap 1 score (PPL or PML Mitra).
+func KonfirmasiPenilaian(kegiatanID int, idsobat string, setuju bool, subjectMatterID int, catatan string) error {
 	status := "ditolak"
 	if setuju {
 		status = "disetujui"
@@ -182,7 +177,7 @@ func KonfirmasiPenilaianPMLMitra(kegiatanID int, idsobat string, setuju bool, su
 	res, err := database.DB.Exec(`
 		UPDATE evaluasi_petugas
 		SET status_konfirmasi = ?, confirmed_by = ?, confirmed_at = CURRENT_TIMESTAMP, catatan_konfirmasi = ?
-		WHERE kegiatan_id = ? AND yang_dinilai_idsobat = ? AND tahap = 1 AND peran_yang_dinilai = 'pml'
+		WHERE kegiatan_id = ? AND yang_dinilai_idsobat = ? AND tahap = 1
 	`, status, subjectMatterID, catatan, kegiatanID, idsobat)
 	if err != nil {
 		return err
@@ -198,14 +193,14 @@ func KonfirmasiPenilaianPMLMitra(kegiatanID int, idsobat string, setuju bool, su
 }
 
 // SubmitPenilaianUlang saves the Subject Matter's own score after rejecting a
-// PML Mitra's Tahap 1 score. Final skor akhir becomes the average of the two —
-// computed on read in GetDaftarPenilaian, not stored.
+// Tahap 1 score (PPL or PML Mitra). Final skor akhir becomes the average of
+// the two — computed on read in GetDaftarPenilaian, not stored.
 func SubmitPenilaianUlang(subjectMatterID int, in EvaluasiInput) error {
 	_, err := database.DB.Exec(`
 		INSERT INTO evaluasi_petugas
 			(kegiatan_id, penilai_id, yang_dinilai_idsobat, peran_yang_dinilai, kecamatan, periode, tahun, tanggal_penilaian, tahap,
 			 skor_kualitas, skor_ketepatan_waktu, skor_kepatuhan_sop, skor_komunikasi, skor_sikap, catatan, status_konfirmasi)
-		VALUES (?, ?, ?, 'pml', ?, ?, ?, ?, 2, ?, ?, ?, ?, ?, ?, 'disetujui')
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 2, ?, ?, ?, ?, ?, ?, 'disetujui')
 		ON DUPLICATE KEY UPDATE
 			penilai_id = VALUES(penilai_id),
 			kecamatan = VALUES(kecamatan),
@@ -218,18 +213,19 @@ func SubmitPenilaianUlang(subjectMatterID int, in EvaluasiInput) error {
 			skor_komunikasi = VALUES(skor_komunikasi),
 			skor_sikap = VALUES(skor_sikap),
 			catatan = VALUES(catatan)
-	`, in.KegiatanID, subjectMatterID, in.YangDinilaiIDSobat, in.Kecamatan, in.Periode, in.Tahun, nullableDate(in.TanggalPenilaian),
+	`, in.KegiatanID, subjectMatterID, in.YangDinilaiIDSobat, in.Peran, in.Kecamatan, in.Periode, in.Tahun, nullableDate(in.TanggalPenilaian),
 		in.SkorKualitas, in.SkorKetepatanWaktu, in.SkorKepatuhanSOP, in.SkorKomunikasi, in.SkorSikap, in.Catatan)
 	return err
 }
 
-// PendingKonfirmasiItem is one PML Mitra score awaiting the Subject Matter's
-// approve/reject decision.
+// PendingKonfirmasiItem is one Tahap 1 score (PPL or PML Mitra) awaiting the
+// Subject Matter's approve/reject decision.
 type PendingKonfirmasiItem struct {
 	KegiatanID       int     `json:"kegiatan_id"`
 	Kegiatan         string  `json:"kegiatan"`
 	IDSobat          string  `json:"idsobat"`
 	NamaMitra        string  `json:"nama_mitra"`
+	Peran            string  `json:"peran"`
 	Kecamatan        string  `json:"kecamatan"`
 	TanggalPenilaian string  `json:"tanggal_penilaian"`
 	NamaPenilai      string  `json:"nama_penilai"`
@@ -237,18 +233,18 @@ type PendingKonfirmasiItem struct {
 	Catatan          string  `json:"catatan"`
 }
 
-// ListPendingKonfirmasi returns every PML Mitra Tahap 1 score still waiting on
-// the Subject Matter.
+// ListPendingKonfirmasi returns every Tahap 1 score (PPL and PML Mitra) still
+// waiting on the Subject Matter.
 func ListPendingKonfirmasi() ([]PendingKonfirmasiItem, error) {
 	rows, err := database.DB.Query(`
-		SELECT e.kegiatan_id, COALESCE(pk.nama, ''), e.yang_dinilai_idsobat, COALESCE(m.nmitra, ''),
+		SELECT e.kegiatan_id, COALESCE(pk.nama, ''), e.yang_dinilai_idsobat, COALESCE(m.nmitra, ''), e.peran_yang_dinilai,
 			COALESCE(e.kecamatan, ''), COALESCE(e.tanggal_penilaian, ''), COALESCE(u.nama, ''),
 			` + weightedSkorSQL + `, COALESCE(e.catatan, '')
 		FROM evaluasi_petugas e
 		LEFT JOIN penilaian_kegiatan pk ON pk.id = e.kegiatan_id
 		LEFT JOIN mitra m ON m.idsobat = e.yang_dinilai_idsobat
 		LEFT JOIN user u ON u.id = e.penilai_id
-		WHERE e.tahap = 1 AND e.peran_yang_dinilai = 'pml' AND e.status_konfirmasi = 'pending'
+		WHERE e.tahap = 1 AND e.status_konfirmasi = 'pending'
 		ORDER BY e.tanggal_penilaian DESC, m.nmitra
 	`)
 	if err != nil {
@@ -260,17 +256,18 @@ func ListPendingKonfirmasi() ([]PendingKonfirmasiItem, error) {
 	for rows.Next() {
 		var it PendingKonfirmasiItem
 		var tanggal sql.NullString
-		if err := rows.Scan(&it.KegiatanID, &it.Kegiatan, &it.IDSobat, &it.NamaMitra, &it.Kecamatan, &tanggal, &it.NamaPenilai, &it.SkorAwal, &it.Catatan); err != nil {
+		if err := rows.Scan(&it.KegiatanID, &it.Kegiatan, &it.IDSobat, &it.NamaMitra, &it.Peran, &it.Kecamatan, &tanggal, &it.NamaPenilai, &it.SkorAwal, &it.Catatan); err != nil {
 			return nil, err
 		}
+		it.Peran = strings.ToUpper(it.Peran)
 		it.TanggalPenilaian = tanggal.String
 		items = append(items, it)
 	}
 	return items, rows.Err()
 }
 
-// DaftarPenilaianItem is one merged assessment row — Tahap 1 (+ Tahap 2 when the
-// PML Mitra confirmation was rejected) — used by both "Daftar Penilaian" and the
+// DaftarPenilaianItem is one merged assessment row — Tahap 1 (+ Tahap 2 when
+// the confirmation was rejected) — used by both "Daftar Penilaian" and the
 // Dashboard & Rekap screens.
 type DaftarPenilaianItem struct {
 	KegiatanID       int      `json:"kegiatan_id"`
@@ -377,9 +374,7 @@ func GetDaftarPenilaian(f DaftarPenilaianFilter) ([]DaftarPenilaianItem, error) 
 			item.TanggalPenilaian = tanggal
 			item.NamaPenilaiAwal = namaPenilai
 			item.SkorAwal = &skorCopy
-			if peran == "pml" {
-				item.StatusKonfirmasi = statusKonfirmasi
-			}
+			item.StatusKonfirmasi = statusKonfirmasi
 			if catatan != "" {
 				item.Catatan = catatan
 			}
@@ -558,31 +553,50 @@ func GetDetailPenilaian(kegiatanID int, idsobat string) (*DetailPenilaian, error
 	return d, nil
 }
 
-// RosterPetugasItem is one mitra assigned to a kegiatan's Penilaian Mitra
-// roster (PPL or PML Mitra). Only admin (Subject Matter) may add/remove
-// roster entries — Korwil and PML (organik/mitra) can only pick from what's
-// already there when scoring, per "PML sm korwil gk boleh tambah petugas".
+// RosterPetugasItem is one entry on a kegiatan's Penilaian Mitra roster.
+// Two kinds share the same roster: mitra entries (peran "ppl"/"pml" — who is
+// being scored, identified by IDSobat) and organik entries (peran
+// "pml"/"korwil" — which organik account is authorized to score PPL or PML
+// Mitra for this kegiatan, identified by UserID). Only admin (Subject
+// Matter) may add/remove roster entries — Korwil and PML (organik/mitra)
+// can only pick from what's already there when scoring, per "PML sm korwil
+// gk boleh tambah petugas".
 type RosterPetugasItem struct {
-	IDSobat   string `json:"idsobat"`
+	Tipe      string `json:"tipe"` // "mitra" | "organik"
+	IDSobat   string `json:"idsobat,omitempty"`
+	UserID    int    `json:"user_id,omitempty"`
 	Nama      string `json:"nama"`
-	Kecamatan string `json:"kecamatan"`
+	Kecamatan string `json:"kecamatan,omitempty"`
+	Email     string `json:"email,omitempty"`
 	Peran     string `json:"peran"`
 }
 
-// ListPetugasKegiatan returns one kegiatan's Penilaian Mitra roster, optionally
-// filtered to one peran ("ppl" | "pml").
+// ListPetugasKegiatan returns one kegiatan's Penilaian Mitra roster —
+// mitra entries and organik entries combined — optionally filtered to one
+// peran ("ppl" | "pml" | "korwil").
 func ListPetugasKegiatan(kegiatanID int, peran string) ([]RosterPetugasItem, error) {
 	query := `
-		SELECT p.idsobat, COALESCE(m.nmitra, ''), COALESCE(m.kecamatan, ''), p.peran
+		SELECT 'mitra' AS tipe, p.idsobat, 0 AS user_id, COALESCE(m.nmitra, '') AS nama, COALESCE(m.kecamatan, '') AS kecamatan, '' AS email, p.peran
 		FROM penilaian_kegiatan_petugas p
 		LEFT JOIN mitra m ON m.idsobat = p.idsobat
-		WHERE p.kegiatan_id = ?`
+		WHERE p.kegiatan_id = ? AND p.user_id IS NULL`
 	args := []interface{}{kegiatanID}
 	if peran != "" {
 		query += " AND p.peran = ?"
 		args = append(args, peran)
 	}
-	query += " ORDER BY m.nmitra"
+	query += `
+		UNION ALL
+		SELECT 'organik', '', p.user_id, COALESCE(u.nama, ''), '', COALESCE(u.email, ''), p.peran
+		FROM penilaian_kegiatan_petugas p
+		LEFT JOIN user u ON u.id = p.user_id
+		WHERE p.kegiatan_id = ? AND p.user_id IS NOT NULL`
+	args = append(args, kegiatanID)
+	if peran != "" {
+		query += " AND p.peran = ?"
+		args = append(args, peran)
+	}
+	query += " ORDER BY nama"
 
 	rows, err := database.DB.Query(query, args...)
 	if err != nil {
@@ -593,7 +607,7 @@ func ListPetugasKegiatan(kegiatanID int, peran string) ([]RosterPetugasItem, err
 	var items []RosterPetugasItem
 	for rows.Next() {
 		var it RosterPetugasItem
-		if err := rows.Scan(&it.IDSobat, &it.Nama, &it.Kecamatan, &it.Peran); err != nil {
+		if err := rows.Scan(&it.Tipe, &it.IDSobat, &it.UserID, &it.Nama, &it.Kecamatan, &it.Email, &it.Peran); err != nil {
 			return nil, err
 		}
 		items = append(items, it)
@@ -601,23 +615,41 @@ func ListPetugasKegiatan(kegiatanID int, peran string) ([]RosterPetugasItem, err
 	return items, rows.Err()
 }
 
-// AddPetugasKeKegiatan adds (or updates the peran of) one mitra on a
-// kegiatan's Penilaian Mitra roster. Admin-only, enforced at the handler.
-func AddPetugasKeKegiatan(kegiatanID int, idsobat, peran string, addedBy int) error {
+// AddPetugasKeKegiatan adds (or updates the peran of) one entry on a
+// kegiatan's Penilaian Mitra roster — pass idsobat for a mitra entry
+// ("ppl"/"pml") or userID for an organik entry ("pml"/"korwil"), never both.
+// Admin-only, enforced at the handler.
+func AddPetugasKeKegiatan(kegiatanID int, idsobat string, userID int, peran string, addedBy int) error {
+	var idsobatArg, userIDArg interface{}
+	if idsobat != "" {
+		idsobatArg = idsobat
+	} else {
+		userIDArg = userID
+	}
 	_, err := database.DB.Exec(`
-		INSERT INTO penilaian_kegiatan_petugas (kegiatan_id, idsobat, peran, added_by)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO penilaian_kegiatan_petugas (kegiatan_id, idsobat, user_id, peran, added_by)
+		VALUES (?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE peran = VALUES(peran)
-	`, kegiatanID, idsobat, peran, addedBy)
+	`, kegiatanID, idsobatArg, userIDArg, peran, addedBy)
 	return err
 }
 
-// RemovePetugasDariKegiatan removes one mitra from a kegiatan's roster.
-func RemovePetugasDariKegiatan(kegiatanID int, idsobat string) error {
-	res, err := database.DB.Exec(
-		`DELETE FROM penilaian_kegiatan_petugas WHERE kegiatan_id = ? AND idsobat = ?`,
-		kegiatanID, idsobat,
-	)
+// RemovePetugasDariKegiatan removes one entry from a kegiatan's roster —
+// pass idsobat for a mitra entry or userID for an organik entry.
+func RemovePetugasDariKegiatan(kegiatanID int, idsobat string, userID int) error {
+	var res sql.Result
+	var err error
+	if idsobat != "" {
+		res, err = database.DB.Exec(
+			`DELETE FROM penilaian_kegiatan_petugas WHERE kegiatan_id = ? AND idsobat = ?`,
+			kegiatanID, idsobat,
+		)
+	} else {
+		res, err = database.DB.Exec(
+			`DELETE FROM penilaian_kegiatan_petugas WHERE kegiatan_id = ? AND user_id = ?`,
+			kegiatanID, userID,
+		)
+	}
 	if err != nil {
 		return err
 	}
@@ -629,4 +661,82 @@ func RemovePetugasDariKegiatan(kegiatanID int, idsobat string) error {
 		return sql.ErrNoRows
 	}
 	return nil
+}
+
+// OrganikSearchResult is one akun organik matched by SearchPenilaiOrganik.
+type OrganikSearchResult struct {
+	UserID int    `json:"user_id"`
+	Nama   string `json:"nama"`
+	Email  string `json:"email"`
+}
+
+// SearchPenilaiOrganik searches akun organik (level "pengguna") by nama,
+// email, or NIP — used to populate the PML/Korwil tabs on Kelola Petugas.
+func SearchPenilaiOrganik(query string) ([]OrganikSearchResult, error) {
+	var results []OrganikSearchResult
+	sqlQuery := `SELECT id, nama, email FROM user WHERE level = 'pengguna'`
+	searchClause, args := buildFlexibleSearchClause([]string{"nama", "email", "nip"}, query)
+	sqlQuery += searchClause + " ORDER BY nama LIMIT 20"
+
+	rows, err := database.DB.Query(sqlQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var r OrganikSearchResult
+		if err := rows.Scan(&r.UserID, &r.Nama, &r.Email); err != nil {
+			return nil, err
+		}
+		results = append(results, r)
+	}
+	return results, rows.Err()
+}
+
+// GetPenilaiPeranForUser returns the peran ("pml" | "korwil") an organik
+// account has been assigned for one kegiatan — sql.ErrNoRows if the admin
+// hasn't assigned them yet, which callers must treat as "access denied".
+func GetPenilaiPeranForUser(kegiatanID, userID int) (string, error) {
+	var peran string
+	err := database.DB.QueryRow(
+		`SELECT peran FROM penilaian_kegiatan_petugas WHERE kegiatan_id = ? AND user_id = ?`,
+		kegiatanID, userID,
+	).Scan(&peran)
+	return peran, err
+}
+
+// KegiatanSayaItem is one kegiatan an organik account has been assigned to,
+// along with the peran ("pml" | "korwil") they hold for it.
+type KegiatanSayaItem struct {
+	ID    int    `json:"id"`
+	Nama  string `json:"nama"`
+	Peran string `json:"peran"`
+}
+
+// ListKegiatanSayaForOrganik returns the kegiatan an organik account is
+// assigned to (any peran), used to build their kegiatan dropdown on the
+// Input Penilaian form — kegiatan without an assignment never appear.
+func ListKegiatanSayaForOrganik(userID int) ([]KegiatanSayaItem, error) {
+	rows, err := database.DB.Query(`
+		SELECT pk.id, pk.nama, p.peran
+		FROM penilaian_kegiatan_petugas p
+		JOIN penilaian_kegiatan pk ON pk.id = p.kegiatan_id
+		WHERE p.user_id = ?
+		ORDER BY pk.urutan, pk.nama
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []KegiatanSayaItem
+	for rows.Next() {
+		var it KegiatanSayaItem
+		if err := rows.Scan(&it.ID, &it.Nama, &it.Peran); err != nil {
+			return nil, err
+		}
+		items = append(items, it)
+	}
+	return items, rows.Err()
 }

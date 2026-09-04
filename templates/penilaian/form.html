@@ -1,5 +1,5 @@
 {{ define "content" }}
-<div class="space-y-6 md:space-y-8" x-data="penilaianInputPage('{{ .PenilaianPeran }}')" x-init="init()">
+<div class="space-y-6 md:space-y-8" x-data="penilaianInputPage('{{ .PenilaianPeran }}', '{{ .UserRole }}')" x-init="init()">
 
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -29,7 +29,14 @@
         <div class="grid md:grid-cols-2 gap-5">
             <div class="md:col-span-2 space-y-2">
                 <label class="block text-sm font-semibold text-gray-700">Kegiatan</label>
-                <div class="relative">
+
+                <template x-if="mine && !loadingKegiatan && kegiatanList.length === 0">
+                    <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                        Anda belum ditugaskan ke kegiatan manapun. Hubungi admin untuk ditugaskan lewat menu <strong>Kelola Petugas</strong>.
+                    </p>
+                </template>
+
+                <div class="relative" x-show="!mine || loadingKegiatan || kegiatanList.length > 0">
                     <span class="form-icon"><i class="fas fa-magnifying-glass"></i></span>
                     <input type="text" x-model="kegiatanSearch" @input="showKegiatanDropdown = true"
                         @focus="showKegiatanDropdown = true; $el.select()" @click.away="showKegiatanDropdown = false"
@@ -41,6 +48,7 @@
                                 class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0"
                                 :class="String(k.id) === String(kegiatanId) ? 'bg-blue-50 font-semibold' : ''">
                                 <span x-text="k.nama"></span>
+                                <span x-show="k.peran" class="ml-2 inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700" x-text="k.peran === 'korwil' ? 'Korwil' : 'PML'"></span>
                             </button>
                         </template>
                     </div>
@@ -170,14 +178,20 @@
 </div>
 
 <script>
-    function penilaianInputPage(peran) {
+    function penilaianInputPage(peran, role) {
         return {
             peran: peran,
+            // PML Mitra selalu menilai PPL untuk kegiatan apa saja (unchanged).
+            // Semua role lain (organik, admin) hanya melihat & bisa menilai
+            // kegiatan yang sudah ditugaskan admin lewat Kelola Petugas — peran
+            // (PML/Korwil) ikut kegiatan yang dipilih, bukan tetap.
+            mine: role !== 'pml_mitra',
             userName: '{{ .UserName }}',
             kegiatanId: '',
             kegiatanSearch: '',
             showKegiatanDropdown: false,
             kegiatanList: [],
+            loadingKegiatan: false,
             petugasSearch: '',
             rosterList: [],
             loadingRoster: false,
@@ -207,13 +221,17 @@
             },
 
             async loadKegiatan() {
+                this.loadingKegiatan = true;
                 try {
-                    const response = await fetch('/api/penilaian/kegiatan');
+                    const url = this.mine ? '/api/penilaian/kegiatan?mine=1' : '/api/penilaian/kegiatan';
+                    const response = await fetch(url);
                     if (!response.ok) throw new Error('Gagal memuat kegiatan');
                     const result = await response.json();
-                    this.kegiatanList = (result.data || []).map(k => ({ id: k.id, nama: k.nama }));
+                    this.kegiatanList = (result.data || []).map(k => ({ id: k.id, nama: k.nama, peran: k.peran || '' }));
                 } catch (error) {
                     this.flash = { type: 'error', message: error.message };
+                } finally {
+                    this.loadingKegiatan = false;
                 }
             },
 
@@ -229,6 +247,12 @@
                 this.showKegiatanDropdown = false;
                 this.selected = null;
                 this.petugasSearch = '';
+                // Untuk role dgn peran dinamis (organik/admin): peran ikut kegiatan
+                // yang dipilih (k.peran dari /api/penilaian/kegiatan?mine=1 — 'pml'
+                // artinya menilai PPL, 'korwil' artinya menilai PML Mitra).
+                if (this.mine && k.peran) {
+                    this.peran = k.peran === 'korwil' ? 'pml' : 'ppl';
+                }
                 this.loadRoster();
             },
 
@@ -239,7 +263,10 @@
                     const response = await fetch(`/api/penilaian/kegiatan/petugas?kegiatan_id=${this.kegiatanId}&peran=${this.peran}`);
                     if (!response.ok) throw new Error('Gagal memuat daftar petugas');
                     const result = await response.json();
-                    this.rosterList = result.data || [];
+                    // Roster kegiatan sekarang bisa berisi entri organik (penilai,
+                    // tidak punya idsobat) selain mitra (yang dinilai) — form ini
+                    // cuma butuh mitra sebagai target penilaian.
+                    this.rosterList = (result.data || []).filter(p => p.tipe === 'mitra');
                 } catch (error) {
                     this.flash = { type: 'error', message: error.message };
                 } finally {

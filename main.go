@@ -450,37 +450,21 @@ func main() {
 	}))
 
 	// Protected Routes - Penilaian Mitra (PPL, PML Mitra, konfirmasi Subject Matter)
-	// Input Penilaian Tahap 1 - PPL: open to any authenticated role, since PML
-	// may be organik (admin/generic level) or mitra (pml_mitra). Final seketika.
+	// Input Penilaian Tahap 1 - satu halaman untuk PPL dan PML Mitra sekaligus.
+	// PML Mitra (level pml_mitra) selalu menilai PPL, final seketika. Akun
+	// organik (level pengguna) menilai PPL atau PML Mitra tergantung kegiatan
+	// yang dipilih — peran per kegiatan ditugaskan admin lewat Kelola Petugas
+	// (lihat resolvePenilaiPeran di internal/handlers/penilaian.go); nilai PML
+	// Mitra menunggu konfirmasi Subject Matter, nilai PPL final begitu disimpan.
 	r.HandleFunc("/penilaian", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
-			"Title":             "Penilaian Kinerja PPL",
-			"PageTitle":         "Penilaian Kinerja PPL",
+			"Title":             "Penilaian Kinerja",
+			"PageTitle":         "Penilaian Kinerja",
 			"ShowSidebar":       true,
 			"ActivePage":        "penilaian",
 			"PenilaianPeran":    "ppl",
-			"PenilaianTitle":    "Penilaian Kinerja PPL",
-			"PenilaianSubtitle": "Nilai kualitas hasil kerja, ketepatan waktu, kepatuhan SOP, komunikasi, dan sikap kerja petugas pendataan lapangan (PPL) yang Anda awasi. Nilai ini final begitu disimpan.",
-		})
-
-		tmpl(w, "layouts/base.html", data,
-			"templates/layouts/base.html",
-			"templates/partials/sidebar.html",
-			"templates/penilaian/form.html",
-		)
-	}))
-
-	// Input Penilaian Tahap 1 - PML Mitra: korwil-only (atasan langsung organik
-	// / PJK-Korwil). Menunggu konfirmasi Subject Matter sebelum final.
-	r.HandleFunc("/penilaian/korwil", middleware.RequireKorwil(func(w http.ResponseWriter, r *http.Request) {
-		data := mergeUserData(r, map[string]interface{}{
-			"Title":             "Penilaian Kinerja PML Mitra",
-			"PageTitle":         "Penilaian Kinerja PML Mitra",
-			"ShowSidebar":       true,
-			"ActivePage":        "penilaian",
-			"PenilaianPeran":    "pml",
-			"PenilaianTitle":    "Penilaian Kinerja PML Mitra",
-			"PenilaianSubtitle": "Sebagai atasan langsung organik (PJK/Korwil), nilai kualitas hasil kerja, ketepatan waktu, kepatuhan SOP, komunikasi, dan sikap kerja PML Mitra yang Anda awasi. Nilai ini menunggu konfirmasi Subject Matter sebelum final.",
+			"PenilaianTitle":    "Penilaian Kinerja",
+			"PenilaianSubtitle": "Pilih kegiatan untuk menilai. Nilai PPL final begitu disimpan; nilai PML Mitra menunggu konfirmasi Subject Matter.",
 		})
 
 		tmpl(w, "layouts/base.html", data,
@@ -558,6 +542,7 @@ func main() {
 
 	r.HandleFunc("/api/penilaian/kegiatan", middleware.RequireAuth(handlers.ListKegiatanForPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/mitra", middleware.RequireAdmin(handlers.SearchMitraPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/penilai/search", middleware.RequireAdmin(handlers.SearchPenilaiOrganikHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/kegiatan/petugas", middleware.RequireAuth(handlers.ListRosterPetugasHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/kegiatan/petugas", middleware.RequireAdmin(handlers.AddRosterPetugasHandler)).Methods("POST")
 	r.HandleFunc("/api/penilaian/kegiatan/petugas", middleware.RequireAdmin(handlers.RemoveRosterPetugasHandler)).Methods("DELETE")

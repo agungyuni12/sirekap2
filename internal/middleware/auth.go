@@ -52,22 +52,3 @@ func RequireNotPMLMitra(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
-
-// RequireKorwil middleware ensures the "korwil" role (atasan langsung organik
-// / PJK-Korwil, who scores PML Mitra in Tahap 1 of Penilaian Mitra) is used
-// only by that role.
-func RequireKorwil(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !handlers.IsAuthenticated(r) {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
-
-		if handlers.GetUserLevel(r) != "korwil" {
-			http.Redirect(w, r, "/lapor", http.StatusSeeOther)
-			return
-		}
-
-		next(w, r)
-	}
-}
