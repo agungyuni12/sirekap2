@@ -246,7 +246,7 @@ func ListPendingKonfirmasi() ([]PendingKonfirmasiItem, error) {
 			` + weightedSkorSQL + `, COALESCE(e.catatan, '')
 		FROM evaluasi_petugas e
 		LEFT JOIN penilaian_kegiatan pk ON pk.id = e.kegiatan_id
-		LEFT JOIN mitra m ON m.idsobat COLLATE utf8mb4_general_ci = e.yang_dinilai_idsobat
+		LEFT JOIN mitra m ON m.idsobat = e.yang_dinilai_idsobat
 		LEFT JOIN user u ON u.id = e.penilai_id
 		WHERE e.tahap = 1 AND e.peran_yang_dinilai = 'pml' AND e.status_konfirmasi = 'pending'
 		ORDER BY e.tanggal_penilaian DESC, m.nmitra
@@ -328,7 +328,7 @@ func GetDaftarPenilaian(f DaftarPenilaianFilter) ([]DaftarPenilaianItem, error) 
 			e.status_konfirmasi, COALESCE(u.nama, ''), COALESCE(e.catatan, '')
 		FROM evaluasi_petugas e
 		LEFT JOIN penilaian_kegiatan pk ON pk.id = e.kegiatan_id
-		LEFT JOIN mitra m ON m.idsobat COLLATE utf8mb4_general_ci = e.yang_dinilai_idsobat
+		LEFT JOIN mitra m ON m.idsobat = e.yang_dinilai_idsobat
 		LEFT JOIN user u ON u.id = e.penilai_id
 		WHERE `+where+`
 		ORDER BY e.kegiatan_id, e.yang_dinilai_idsobat, e.tahap
@@ -479,7 +479,7 @@ func GetDetailPenilaian(kegiatanID int, idsobat string) (*DetailPenilaian, error
 			e.status_konfirmasi, COALESCE(u.nama, ''), COALESCE(e.catatan, '')
 		FROM evaluasi_petugas e
 		LEFT JOIN penilaian_kegiatan pk ON pk.id = e.kegiatan_id
-		LEFT JOIN mitra m ON m.idsobat COLLATE utf8mb4_general_ci = e.yang_dinilai_idsobat
+		LEFT JOIN mitra m ON m.idsobat = e.yang_dinilai_idsobat
 		LEFT JOIN user u ON u.id = e.penilai_id
 		WHERE e.kegiatan_id = ? AND e.yang_dinilai_idsobat = ?
 		ORDER BY e.tahap
@@ -575,7 +575,7 @@ func ListPetugasKegiatan(kegiatanID int, peran string) ([]RosterPetugasItem, err
 	query := `
 		SELECT p.idsobat, COALESCE(m.nmitra, ''), COALESCE(m.kecamatan, ''), p.peran
 		FROM penilaian_kegiatan_petugas p
-		LEFT JOIN mitra m ON m.idsobat COLLATE utf8mb4_general_ci = p.idsobat
+		LEFT JOIN mitra m ON m.idsobat = p.idsobat
 		WHERE p.kegiatan_id = ?`
 	args := []interface{}{kegiatanID}
 	if peran != "" {
