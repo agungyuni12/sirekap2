@@ -449,15 +449,18 @@ func main() {
 		)
 	}))
 
-	// Protected Routes - Penilaian Kinerja PPL & PML
-	// Tahap 1 (PML menilai PPL) is open to any authenticated role, since PML
-	// may be organik (admin) or mitra (pml_mitra/generic level).
+	// Protected Routes - Penilaian Mitra (PPL, PML Mitra, konfirmasi Subject Matter)
+	// Input Penilaian Tahap 1 - PPL: open to any authenticated role, since PML
+	// may be organik (admin/generic level) or mitra (pml_mitra). Final seketika.
 	r.HandleFunc("/penilaian", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
-			"Title":       "Penilaian Kinerja PPL",
-			"PageTitle":   "Penilaian Kinerja PPL",
-			"ShowSidebar": true,
-			"ActivePage":  "penilaian",
+			"Title":             "Penilaian Kinerja PPL",
+			"PageTitle":         "Penilaian Kinerja PPL",
+			"ShowSidebar":       true,
+			"ActivePage":        "penilaian",
+			"PenilaianPeran":    "ppl",
+			"PenilaianTitle":    "Penilaian Kinerja PPL",
+			"PenilaianSubtitle": "Nilai kualitas hasil kerja, ketepatan waktu, kepatuhan SOP, komunikasi, dan sikap kerja petugas pendataan lapangan (PPL) yang Anda awasi. Nilai ini final begitu disimpan.",
 		})
 
 		tmpl(w, "layouts/base.html", data,
@@ -467,11 +470,31 @@ func main() {
 		)
 	}))
 
-	// Tahap 2 (finalisasi Subject Matter) is admin-only.
+	// Input Penilaian Tahap 1 - PML Mitra: korwil-only (atasan langsung organik
+	// / PJK-Korwil). Menunggu konfirmasi Subject Matter sebelum final.
+	r.HandleFunc("/penilaian/korwil", middleware.RequireKorwil(func(w http.ResponseWriter, r *http.Request) {
+		data := mergeUserData(r, map[string]interface{}{
+			"Title":             "Penilaian Kinerja PML Mitra",
+			"PageTitle":         "Penilaian Kinerja PML Mitra",
+			"ShowSidebar":       true,
+			"ActivePage":        "penilaian",
+			"PenilaianPeran":    "pml",
+			"PenilaianTitle":    "Penilaian Kinerja PML Mitra",
+			"PenilaianSubtitle": "Sebagai atasan langsung organik (PJK/Korwil), nilai kualitas hasil kerja, ketepatan waktu, kepatuhan SOP, komunikasi, dan sikap kerja PML Mitra yang Anda awasi. Nilai ini menunggu konfirmasi Subject Matter sebelum final.",
+		})
+
+		tmpl(w, "layouts/base.html", data,
+			"templates/layouts/base.html",
+			"templates/partials/sidebar.html",
+			"templates/penilaian/form.html",
+		)
+	}))
+
+	// Konfirmasi Subject Matter atas penilaian PML Mitra — admin-only.
 	r.HandleFunc("/penilaian/rekap", middleware.RequireAdmin(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
-			"Title":       "Rekap Penilaian Kinerja",
-			"PageTitle":   "Rekap Penilaian Kinerja",
+			"Title":       "Konfirmasi Penilaian PML Mitra",
+			"PageTitle":   "Konfirmasi Penilaian PML Mitra",
 			"ShowSidebar": true,
 			"ActivePage":  "penilaian-rekap",
 		})
@@ -483,7 +506,41 @@ func main() {
 		)
 	}))
 
-	// Dashboard & rekap gabungan (Tahap 1 + Tahap 2) — admin-only, sama seperti /penilaian/rekap.
+	// Daftar Penilaian — riwayat gabungan semua penilaian, filter per kecamatan,
+	// bisa dicek lagi per aspek. Terbuka untuk semua role yang punya akses Penilaian.
+	r.HandleFunc("/penilaian/daftar", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+		data := mergeUserData(r, map[string]interface{}{
+			"Title":       "Daftar Penilaian",
+			"PageTitle":   "Daftar Penilaian",
+			"ShowSidebar": true,
+			"ActivePage":  "penilaian-daftar",
+		})
+
+		tmpl(w, "layouts/base.html", data,
+			"templates/layouts/base.html",
+			"templates/partials/sidebar.html",
+			"templates/penilaian/daftar.html",
+		)
+	}))
+
+	// Kelola Petugas — admin-only. Roster PPL & PML Mitra per kegiatan; hanya
+	// admin yang boleh menambah/menghapus (Korwil & PML hanya memilih saat menilai).
+	r.HandleFunc("/penilaian/kelola-petugas", middleware.RequireAdmin(func(w http.ResponseWriter, r *http.Request) {
+		data := mergeUserData(r, map[string]interface{}{
+			"Title":       "Kelola Petugas",
+			"PageTitle":   "Kelola Petugas Penilaian",
+			"ShowSidebar": true,
+			"ActivePage":  "penilaian-kelola-petugas",
+		})
+
+		tmpl(w, "layouts/base.html", data,
+			"templates/layouts/base.html",
+			"templates/partials/sidebar.html",
+			"templates/penilaian/kelola-petugas.html",
+		)
+	}))
+
+	// Dashboard & rekap gabungan (Tahap 1 + konfirmasi/Tahap 2) — admin-only.
 	r.HandleFunc("/penilaian/dashboard", middleware.RequireAdmin(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
 			"Title":       "Dashboard Penilaian Kinerja",
@@ -500,9 +557,16 @@ func main() {
 	}))
 
 	r.HandleFunc("/api/penilaian/kegiatan", middleware.RequireAuth(handlers.ListKegiatanForPenilaianHandler)).Methods("GET")
-	r.HandleFunc("/api/penilaian/petugas", middleware.RequireAuth(handlers.ListPetugasPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/mitra", middleware.RequireAdmin(handlers.SearchMitraPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/kegiatan/petugas", middleware.RequireAuth(handlers.ListRosterPetugasHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/kegiatan/petugas", middleware.RequireAdmin(handlers.AddRosterPetugasHandler)).Methods("POST")
+	r.HandleFunc("/api/penilaian/kegiatan/petugas", middleware.RequireAdmin(handlers.RemoveRosterPetugasHandler)).Methods("DELETE")
 	r.HandleFunc("/api/penilaian", middleware.RequireAuth(handlers.SubmitPenilaianHandler)).Methods("POST")
-	r.HandleFunc("/api/penilaian/rekap", middleware.RequireAdmin(handlers.RekapPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/konfirmasi/pending", middleware.RequireAdmin(handlers.ListPendingKonfirmasiHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/konfirmasi", middleware.RequireAdmin(handlers.KonfirmasiPenilaianHandler)).Methods("POST")
+	r.HandleFunc("/api/penilaian/ulang", middleware.RequireAdmin(handlers.SubmitPenilaianUlangHandler)).Methods("POST")
+	r.HandleFunc("/api/penilaian/daftar", middleware.RequireAuth(handlers.DaftarPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/detail", middleware.RequireAuth(handlers.DetailPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/dashboard", middleware.RequireAdmin(handlers.DashboardPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/rekap-dashboard", middleware.RequireAdmin(handlers.RekapDashboardHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/rekap-dashboard/export", middleware.RequireAdmin(handlers.ExportRekapDashboardHandler)).Methods("GET")

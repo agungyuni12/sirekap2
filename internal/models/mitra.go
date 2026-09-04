@@ -15,16 +15,17 @@ type Mitra struct {
 
 // MitraSearchResult represents a simplified result for autocomplete
 type MitraSearchResult struct {
-	IDSobat string `json:"idsobat"`
-	Nama    string `json:"nama"`
+	IDSobat   string `json:"idsobat"`
+	Nama      string `json:"nama"`
+	Kecamatan string `json:"kecamatan,omitempty"`
 }
 
 // SearchMitra searches mitra by idsobat or name
 func SearchMitra(query, tahun string) ([]MitraSearchResult, error) {
 	var results []MitraSearchResult
 	sqlQuery := `
-		SELECT idsobat, nmitra 
-		FROM mitra 
+		SELECT idsobat, nmitra, kecamatan
+		FROM mitra
 		WHERE 1 = 1`
 	args := make([]interface{}, 0, 12)
 
@@ -48,9 +49,9 @@ func SearchMitra(query, tahun string) ([]MitraSearchResult, error) {
 
 	for rows.Next() {
 		var result MitraSearchResult
-		var idsobat, nmitra sql.NullString
+		var idsobat, nmitra, kecamatan sql.NullString
 
-		if err := rows.Scan(&idsobat, &nmitra); err != nil {
+		if err := rows.Scan(&idsobat, &nmitra, &kecamatan); err != nil {
 			return nil, err
 		}
 
@@ -59,6 +60,9 @@ func SearchMitra(query, tahun string) ([]MitraSearchResult, error) {
 		}
 		if nmitra.Valid {
 			result.Nama = nmitra.String
+		}
+		if kecamatan.Valid {
+			result.Kecamatan = kecamatan.String
 		}
 
 		results = append(results, result)

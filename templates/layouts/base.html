@@ -568,12 +568,12 @@
         activeSE2026Group: {{ if eq .ActivePage "se2026" }}true{{ else if eq .ActivePage "se2026-import" }}true{{ else }}false{{ end }},
         activeMatriksGroup: {{ if eq .ActivePage "matriks" }}true{{ else if eq .ActivePage "monitoring" }}true{{ else if eq .ActivePage "kalender" }}true{{ else if eq .ActivePage "administrasi" }}true{{ else }}false{{ end }},
         activeLaporGroup: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}false{{ end }},
-        activePenilaianGroup: {{ if eq .ActivePage "penilaian" }}true{{ else if eq .ActivePage "penilaian-rekap" }}true{{ else }}false{{ end }},
+        activePenilaianGroup: {{ if eq .ActivePage "penilaian" }}true{{ else if eq .ActivePage "penilaian-rekap" }}true{{ else if eq .ActivePage "penilaian-daftar" }}true{{ else if eq .ActivePage "penilaian-kelola-petugas" }}true{{ else if eq .ActivePage "penilaian-dashboard" }}true{{ else }}false{{ end }},
         expandedRekap: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else }}false{{ end }},
         expandedSE2026: {{ if eq .ActivePage "se2026" }}true{{ else if eq .ActivePage "se2026-import" }}true{{ else }}false{{ end }},
         expandedMatriks: {{ if eq .ActivePage "matriks" }}true{{ else if eq .ActivePage "monitoring" }}true{{ else if eq .ActivePage "kalender" }}true{{ else if eq .ActivePage "administrasi" }}true{{ else }}false{{ end }},
         expandedLapor: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}true{{ end }},
-        expandedPenilaian: {{ if eq .ActivePage "penilaian" }}true{{ else if eq .ActivePage "penilaian-rekap" }}true{{ else }}true{{ end }},
+        expandedPenilaian: {{ if eq .ActivePage "penilaian" }}true{{ else if eq .ActivePage "penilaian-rekap" }}true{{ else if eq .ActivePage "penilaian-daftar" }}true{{ else if eq .ActivePage "penilaian-kelola-petugas" }}true{{ else if eq .ActivePage "penilaian-dashboard" }}true{{ else }}true{{ end }},
         toggleSidebar() {
             if (this.isMobile) {
                 this.sidebarOpen = !this.sidebarOpen;
@@ -768,12 +768,55 @@
                             <a href="/penilaian/rekap" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-rekap" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-check w-5 mr-3 {{ if eq .ActivePage "penilaian-rekap" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>Nilai PML Mitra</span>
+                                <span>Konfirmasi PML Mitra</span>
+                            </a>
+                            <a href="/penilaian/daftar" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-daftar" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-list-check w-5 mr-3 {{ if eq .ActivePage "penilaian-daftar" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Daftar Penilaian</span>
+                            </a>
+                            <a href="/penilaian/kelola-petugas" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-kelola-petugas" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-users-gear w-5 mr-3 {{ if eq .ActivePage "penilaian-kelola-petugas" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Kelola Petugas</span>
                             </a>
                             <a href="/penilaian/dashboard" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-dashboard" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-chart-pie w-5 mr-3 {{ if eq .ActivePage "penilaian-dashboard" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
                                 <span>Dashboard &amp; Rekap</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    {{ else if eq .UserRole "korwil" }}
+
+                    <!-- KORWIL/PJK: atasan langsung organik, menilai PML Mitra (Tahap 1) -->
+                    <div>
+                        <button @click="expandedPenilaian = !expandedPenilaian"
+                            class="flex items-center w-full py-3 text-gray-300 rounded-xl transition hover:bg-white/10"
+                            :class="[(expandedPenilaian || activePenilaianGroup) && 'bg-white/10 text-white', sidebarCollapsed && !isMobile ? 'px-2 justify-center' : 'px-4']">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0"
+                                :class="sidebarCollapsed && !isMobile ? '' : 'mr-3'">
+                                <i class="fas fa-star-half-stroke text-amber-400"></i>
+                            </div>
+                            <span x-show="!sidebarCollapsed || isMobile"
+                                class="flex-1 pr-3 text-left font-semibold whitespace-nowrap">PENILAIAN</span>
+                            <i x-show="!sidebarCollapsed || isMobile"
+                                class="fas fa-chevron-down ml-1 flex-shrink-0 text-sm transition-transform duration-200"
+                                :class="expandedPenilaian && 'rotate-180'"></i>
+                        </button>
+
+                        <div x-show="expandedPenilaian && (!sidebarCollapsed || isMobile)" x-collapse
+                            class="mt-2 ml-6 pl-4 border-l-2 border-gray-600 space-y-1">
+                            <a href="/penilaian/korwil" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-clipboard-user w-5 mr-3 {{ if eq .ActivePage "penilaian" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Nilai PML Mitra</span>
+                            </a>
+                            <a href="/penilaian/daftar" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-daftar" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-list-check w-5 mr-3 {{ if eq .ActivePage "penilaian-daftar" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Daftar Penilaian</span>
                             </a>
                         </div>
                     </div>
@@ -802,6 +845,11 @@
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-user w-5 mr-3 {{ if eq .ActivePage "penilaian" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
                                 <span>Nilai PPL</span>
+                            </a>
+                            <a href="/penilaian/daftar" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-daftar" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-list-check w-5 mr-3 {{ if eq .ActivePage "penilaian-daftar" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Daftar Penilaian</span>
                             </a>
                         </div>
                     </div>
@@ -901,6 +949,11 @@
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-user w-5 mr-3 {{ if eq .ActivePage "penilaian" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
                                 <span>Nilai PPL</span>
+                            </a>
+                            <a href="/penilaian/daftar" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-daftar" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-list-check w-5 mr-3 {{ if eq .ActivePage "penilaian-daftar" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Daftar Penilaian</span>
                             </a>
                         </div>
                     </div>

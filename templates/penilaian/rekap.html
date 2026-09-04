@@ -1,11 +1,15 @@
 {{ define "content" }}
-<div class="space-y-6 md:space-y-8" x-data="penilaianRekapPage()" x-init="init()">
+<div class="space-y-6 md:space-y-8" x-data="konfirmasiPenilaianPage()" x-init="init()">
 
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Penilaian PML Mitra</h2>
-            <p class="text-gray-500 mt-1 text-sm md:text-base">Subject Matter menilai langsung kinerja PML Mitra. Penilaian PPL oleh PML bersifat final dan tidak memerlukan review di sini.</p>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Konfirmasi Penilaian PML Mitra</h2>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">PML Mitra dinilai oleh atasan langsung organik (PJK/Korwil). Sebagai Subject Matter, konfirmasi nilai tersebut — jika tidak setuju, berikan penilaian ulang; skor akhir adalah rata-rata kedua nilai.</p>
         </div>
+        <a href="/penilaian/daftar"
+            class="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium shadow-sm">
+            <i class="fas fa-list-check mr-2 text-primary"></i> Daftar Penilaian
+        </a>
     </div>
 
     <template x-if="flash.message">
@@ -20,42 +24,11 @@
         </div>
     </template>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-6">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Kegiatan Statistik (PML)</label>
-        <div class="relative max-w-lg">
-            <span class="form-icon"><i class="fas fa-magnifying-glass"></i></span>
-            <input type="text" x-model="kegiatanSearch" @input="showKegiatanDropdown = true"
-                @focus="showKegiatanDropdown = true; $el.select()" @click.away="showKegiatanDropdown = false"
-                class="w-full input-with-icon" placeholder="Ketik untuk cari kegiatan...">
-            <div x-show="showKegiatanDropdown && filteredKegiatanList().length > 0" x-cloak
-                class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 max-h-64 overflow-y-auto">
-                <template x-for="k in filteredKegiatanList()" :key="k.id">
-                    <button type="button" @click="selectKegiatan(k)"
-                        class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0"
-                        :class="String(k.id) === String(kegiatanId) ? 'bg-blue-50 font-semibold' : ''">
-                        <span x-text="k.nama"></span>
-                    </button>
-                </template>
-            </div>
-            <div x-show="showKegiatanDropdown && kegiatanSearch && filteredKegiatanList().length === 0" x-cloak
-                class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-500">
-                Tidak ada kegiatan yang cocok.
-            </div>
-        </div>
-    </div>
-
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 space-y-3">
-            <div class="flex items-center justify-between gap-3">
-                <h3 class="font-semibold text-gray-900">Daftar PML Mitra</h3>
-                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700"
-                    x-text="filteredRekapList().length + ' / ' + rekapList.length + ' orang'"></span>
-            </div>
-            <div class="relative max-w-sm" x-show="rekapList.length > 5">
-                <span class="form-icon"><i class="fas fa-magnifying-glass"></i></span>
-                <input type="text" x-model="mitraSearch" class="w-full input-with-icon text-sm"
-                    placeholder="Cari nama PML Mitra...">
-            </div>
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900">Menunggu Konfirmasi</h3>
+            <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700"
+                x-text="pendingList.length + ' menunggu'"></span>
         </div>
 
         <template x-if="loading">
@@ -64,50 +37,44 @@
             </div>
         </template>
 
-        <template x-if="!loading && kegiatanId && rekapList.length === 0">
-            <div class="p-8 md:p-12 text-center">
-                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-inbox text-2xl text-gray-400"></i>
+        <template x-if="!loading && pendingList.length === 0">
+            <div class="p-10 text-center">
+                <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-circle-check text-2xl text-emerald-500"></i>
                 </div>
-                <h3 class="text-base font-semibold text-gray-700">Belum Ada Data</h3>
-                <p class="text-sm text-gray-500 mt-1">Tidak ada PML Mitra pada kegiatan ini.</p>
+                <h3 class="text-base font-semibold text-gray-700">Semua Sudah Dikonfirmasi</h3>
+                <p class="text-sm text-gray-500 mt-1">Tidak ada penilaian PML Mitra yang menunggu konfirmasi.</p>
             </div>
         </template>
 
-        <template x-if="!loading && rekapList.length > 0 && filteredRekapList().length === 0">
-            <div class="p-8 md:p-12 text-center">
-                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-magnifying-glass text-2xl text-gray-400"></i>
-                </div>
-                <h3 class="text-base font-semibold text-gray-700">Tidak Ditemukan</h3>
-                <p class="text-sm text-gray-500 mt-1">Tidak ada PML Mitra dengan nama tersebut.</p>
-            </div>
-        </template>
-
-        <div class="overflow-x-auto" x-show="!loading && filteredRekapList().length > 0">
+        <div class="overflow-x-auto" x-show="!loading && pendingList.length > 0">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Nama</th>
-                        <th class="px-4 py-3 text-right font-semibold">Nilai</th>
-                        <th class="px-4 py-3 text-center font-semibold">Status</th>
+                        <th class="px-4 py-3 text-left font-semibold">Nama PML Mitra</th>
+                        <th class="px-4 py-3 text-left font-semibold">Kegiatan</th>
+                        <th class="px-4 py-3 text-left font-semibold">Kecamatan</th>
+                        <th class="px-4 py-3 text-left font-semibold">Dinilai Oleh</th>
+                        <th class="px-4 py-3 text-right font-semibold">Skor Awal</th>
                         <th class="px-4 py-3 text-center font-semibold">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    <template x-for="item in filteredRekapList()" :key="item.mitra_id">
+                    <template x-for="item in pendingList" :key="item.kegiatan_id + '-' + item.idsobat">
                         <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 font-medium text-gray-900" x-text="item.mitra_name"></td>
-                            <td class="px-4 py-3 text-right font-bold text-primary" x-text="item.nilai ?? '-'"></td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
-                                    :class="item.status_kelulusan === 'lulus' ? 'bg-emerald-100 text-emerald-700' : (item.status_kelulusan === 'perlu_perhatian' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700')"
-                                    x-text="statusLabel(item.status_kelulusan)"></span>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <button type="button" @click="openScoreModal(item)"
-                                    class="text-primary hover:text-primary-dark font-medium">
-                                    <i class="fas fa-pen mr-1"></i> Nilai
+                            <td class="px-4 py-3 font-medium text-gray-900" x-text="item.nama_mitra"></td>
+                            <td class="px-4 py-3 text-gray-600" x-text="item.kegiatan"></td>
+                            <td class="px-4 py-3 text-gray-600" x-text="item.kecamatan || '-'"></td>
+                            <td class="px-4 py-3 text-gray-600" x-text="item.nama_penilai"></td>
+                            <td class="px-4 py-3 text-right font-bold text-primary" x-text="item.skor_awal.toFixed(1)"></td>
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
+                                <button type="button" @click="approve(item)"
+                                    class="text-emerald-600 hover:text-emerald-800 font-medium mr-3">
+                                    <i class="fas fa-check mr-1"></i> Setuju
+                                </button>
+                                <button type="button" @click="openReject(item)"
+                                    class="text-red-600 hover:text-red-800 font-medium">
+                                    <i class="fas fa-xmark mr-1"></i> Tolak &amp; Nilai Ulang
                                 </button>
                             </td>
                         </tr>
@@ -117,21 +84,25 @@
         </div>
     </div>
 
-    <!-- Score PML Modal -->
+    <!-- Reject + Re-score Modal -->
     <div x-show="modalOpen" x-cloak x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4"
         style="background: rgba(15, 23, 42, 0.5);">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" @click.outside="modalOpen = false">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto" @click.outside="modalOpen = false">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-semibold text-gray-900">Penilaian PML Mitra &mdash; <span x-text="modalItem?.mitra_name"></span></h3>
+                <h3 class="font-semibold text-gray-900">Penilaian Ulang &mdash; <span x-text="modalItem?.nama_mitra"></span></h3>
                 <button @click="modalOpen = false" class="w-9 h-9 rounded-full hover:bg-gray-100 text-gray-500">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form @submit.prevent="submitPenilaian()" class="p-6 space-y-5">
+            <form @submit.prevent="submitUlang()" class="p-6 space-y-5">
+                <p class="text-sm text-gray-500">Skor awal dari atasan langsung organik: <span class="font-bold text-gray-700" x-text="modalItem?.skor_awal.toFixed(1)"></span>. Skor akhir akan menjadi rata-rata skor awal dan skor ulang ini.</p>
                 <template x-for="crit in criteria" :key="crit.key">
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
-                            <label class="block text-sm font-semibold text-gray-700" x-text="crit.label"></label>
+                            <label class="block text-sm font-semibold text-gray-700">
+                                <span x-text="crit.label"></span>
+                                <span class="text-gray-400 font-normal" x-text="'(' + crit.bobotLabel + ')'"></span>
+                            </label>
                             <span class="text-lg font-bold text-primary" x-text="modalForm[crit.key]"></span>
                         </div>
                         <input type="range" min="1" max="100" x-model.number="modalForm[crit.key]" class="w-full accent-primary">
@@ -145,7 +116,7 @@
                     <button type="submit" :disabled="modalSubmitting"
                         class="flex-1 inline-flex items-center justify-center px-5 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-semibold disabled:opacity-60">
                         <i class="fas mr-2" :class="modalSubmitting ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-                        <span x-text="modalSubmitting ? 'Menyimpan...' : 'Simpan Penilaian'"></span>
+                        <span x-text="modalSubmitting ? 'Menyimpan...' : 'Simpan Penilaian Ulang'"></span>
                     </button>
                 </div>
             </form>
@@ -154,65 +125,34 @@
 </div>
 
 <script>
-    function penilaianRekapPage() {
+    function konfirmasiPenilaianPage() {
         return {
-            kegiatanId: '',
-            kegiatanSearch: '',
-            showKegiatanDropdown: false,
-            kegiatanList: [],
-            rekapList: [],
-            mitraSearch: '',
+            pendingList: [],
             loading: false,
             flash: { type: '', message: '' },
             modalOpen: false,
             modalItem: null,
             modalSubmitting: false,
             criteria: [
-                { key: 'skor_kualitas', label: 'Kualitas Hasil Kerja' },
-                { key: 'skor_ketepatan_waktu', label: 'Ketepatan Waktu' },
-                { key: 'skor_kepatuhan_sop', label: 'Kepatuhan terhadap SOP' },
-                { key: 'skor_komunikasi', label: 'Komunikasi dan Koordinasi' },
-                { key: 'skor_sikap', label: 'Sikap dan Perilaku' },
+                { key: 'skor_kualitas', label: 'Kualitas Hasil Kerja', bobotLabel: '30%' },
+                { key: 'skor_ketepatan_waktu', label: 'Ketepatan Waktu', bobotLabel: '17,5%' },
+                { key: 'skor_kepatuhan_sop', label: 'Kepatuhan terhadap SOP', bobotLabel: '17,5%' },
+                { key: 'skor_komunikasi', label: 'Komunikasi & Koordinasi', bobotLabel: '17,5%' },
+                { key: 'skor_sikap', label: 'Sikap/Perilaku', bobotLabel: '17,5%' },
             ],
             modalForm: { skor_kualitas: 80, skor_ketepatan_waktu: 80, skor_kepatuhan_sop: 80, skor_komunikasi: 80, skor_sikap: 80, catatan: '' },
 
             init() {
-                this.loadKegiatan();
+                this.load();
             },
 
-            async loadKegiatan() {
-                try {
-                    const response = await fetch('/api/penilaian/kegiatan?peran=pml');
-                    if (!response.ok) throw new Error('Gagal memuat kegiatan');
-                    const result = await response.json();
-                    this.kegiatanList = (result.data || []).map(k => ({ id: k.id, nama: k.nama }));
-                } catch (error) {
-                    this.flash = { type: 'error', message: error.message };
-                }
-            },
-
-            filteredKegiatanList() {
-                const query = this.kegiatanSearch.trim().toLowerCase();
-                if (!query) return this.kegiatanList;
-                return this.kegiatanList.filter(k => k.nama.toLowerCase().includes(query));
-            },
-
-            selectKegiatan(k) {
-                this.kegiatanId = k.id;
-                this.kegiatanSearch = k.nama;
-                this.showKegiatanDropdown = false;
-                this.mitraSearch = '';
-                this.loadRekap();
-            },
-
-            async loadRekap() {
-                if (!this.kegiatanId) { this.rekapList = []; return; }
+            async load() {
                 this.loading = true;
                 try {
-                    const response = await fetch(`/api/penilaian/rekap?kegiatan_id=${this.kegiatanId}`);
-                    if (!response.ok) throw new Error('Gagal memuat data');
+                    const response = await fetch('/api/penilaian/konfirmasi/pending');
+                    if (!response.ok) throw new Error('Gagal memuat antrean konfirmasi');
                     const result = await response.json();
-                    this.rekapList = result.data || [];
+                    this.pendingList = result.data || [];
                 } catch (error) {
                     this.flash = { type: 'error', message: error.message };
                 } finally {
@@ -220,35 +160,47 @@
                 }
             },
 
-            filteredRekapList() {
-                const query = this.mitraSearch.trim().toLowerCase();
-                if (!query) return this.rekapList;
-                return this.rekapList.filter(item => item.mitra_name.toLowerCase().includes(query));
+            async approve(item) {
+                try {
+                    const response = await fetch('/api/penilaian/konfirmasi', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ kegiatan_id: item.kegiatan_id, idsobat: item.idsobat, setuju: true }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result?.error?.message || 'Gagal menyimpan konfirmasi');
+                    this.flash = { type: 'success', message: 'Penilaian ' + item.nama_mitra + ' disetujui.' };
+                    await this.load();
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
+                }
             },
 
-            statusLabel(status) {
-                if (status === 'lulus') return 'Lulus';
-                if (status === 'perlu_perhatian') return 'Perlu Perhatian';
-                return 'Belum Dinilai';
-            },
-
-            openScoreModal(item) {
+            openReject(item) {
                 this.modalItem = item;
                 this.modalForm = { skor_kualitas: 80, skor_ketepatan_waktu: 80, skor_kepatuhan_sop: 80, skor_komunikasi: 80, skor_sikap: 80, catatan: '' };
                 this.modalOpen = true;
             },
 
-            async submitPenilaian() {
+            async submitUlang() {
                 if (!this.modalItem) return;
                 this.modalSubmitting = true;
                 try {
-                    const response = await fetch('/api/penilaian', {
+                    let response = await fetch('/api/penilaian/konfirmasi', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ kegiatan_id: this.modalItem.kegiatan_id, idsobat: this.modalItem.idsobat, setuju: false }),
+                    });
+                    let result = await response.json();
+                    if (!response.ok) throw new Error(result?.error?.message || 'Gagal menolak penilaian');
+
+                    response = await fetch('/api/penilaian/ulang', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            kegiatan_id: Number(this.kegiatanId),
-                            yang_dinilai_id: this.modalItem.mitra_id,
-                            tahap: 2,
+                            kegiatan_id: this.modalItem.kegiatan_id,
+                            yang_dinilai_id: this.modalItem.idsobat,
+                            kecamatan: this.modalItem.kecamatan,
                             skor_kualitas: this.modalForm.skor_kualitas,
                             skor_ketepatan_waktu: this.modalForm.skor_ketepatan_waktu,
                             skor_kepatuhan_sop: this.modalForm.skor_kepatuhan_sop,
@@ -257,11 +209,12 @@
                             catatan: this.modalForm.catatan,
                         }),
                     });
-                    const result = await response.json();
-                    if (!response.ok) throw new Error(result?.error?.message || 'Gagal menyimpan penilaian');
-                    this.flash = { type: 'success', message: 'Penilaian PML Mitra tersimpan.' };
+                    result = await response.json();
+                    if (!response.ok) throw new Error(result?.error?.message || 'Gagal menyimpan penilaian ulang');
+
+                    this.flash = { type: 'success', message: 'Penilaian ulang tersimpan. Skor akhir ' + this.modalItem.nama_mitra + ' adalah rata-rata kedua nilai.' };
                     this.modalOpen = false;
-                    await this.loadRekap();
+                    await this.load();
                 } catch (error) {
                     this.flash = { type: 'error', message: error.message };
                 } finally {

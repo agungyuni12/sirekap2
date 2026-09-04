@@ -72,7 +72,7 @@
 
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 md:p-6">
-        <div class="grid md:grid-cols-5 gap-4">
+        <div class="grid md:grid-cols-6 gap-4">
             <div class="md:col-span-2 relative">
                 <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Kegiatan</label>
                 <input type="text" x-model="filters.kegiatanSearch" @input="showKegiatanDropdown = true"
@@ -119,6 +119,10 @@
                     <option value="Perlu Pembinaan">Perlu Pembinaan</option>
                 </select>
             </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Kecamatan</label>
+                <input type="text" x-model="filters.kecamatan" @input.debounce.400ms="loadAll()" class="w-full" placeholder="Semua kecamatan...">
+            </div>
         </div>
         <div class="mt-4 relative max-w-sm">
             <span class="form-icon"><i class="fas fa-magnifying-glass"></i></span>
@@ -158,9 +162,10 @@
                         <th class="px-4 py-3 text-left font-semibold">Nama Mitra</th>
                         <th class="px-4 py-3 text-left font-semibold">ID Sobat</th>
                         <th class="px-4 py-3 text-left font-semibold">Kegiatan</th>
+                        <th class="px-4 py-3 text-left font-semibold">Kecamatan</th>
                         <th class="px-4 py-3 text-center font-semibold">Peran</th>
-                        <th class="px-4 py-3 text-right font-semibold">Tahap 1</th>
-                        <th class="px-4 py-3 text-right font-semibold">Tahap 2</th>
+                        <th class="px-4 py-3 text-right font-semibold">Skor Awal</th>
+                        <th class="px-4 py-3 text-right font-semibold">Skor Ulang SM</th>
                         <th class="px-4 py-3 text-right font-semibold">Skor Akhir</th>
                         <th class="px-4 py-3 text-center font-semibold">Predikat</th>
                     </tr>
@@ -171,15 +176,17 @@
                             <td class="px-4 py-3 font-medium text-gray-900 dark:text-white" x-text="item.nama_mitra"></td>
                             <td class="px-4 py-3 text-gray-500 dark:text-gray-400" x-text="item.idsobat"></td>
                             <td class="px-4 py-3 text-gray-600 dark:text-gray-300" x-text="item.kegiatan"></td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-300" x-text="item.kecamatan || '-'"></td>
                             <td class="px-4 py-3 text-center">
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
                                     x-text="item.peran"></span>
                             </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300" x-text="item.skor_tahap1 ?? '-'"></td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300" x-text="item.skor_tahap2 ?? '-'"></td>
-                            <td class="px-4 py-3 text-right font-bold text-primary" x-text="item.skor_akhir.toFixed(1)"></td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300" x-text="item.skor_awal !== null ? item.skor_awal.toFixed(1) : '-'"></td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300" x-text="item.skor_ulang !== null && item.skor_ulang !== undefined ? item.skor_ulang.toFixed(1) : '-'"></td>
+                            <td class="px-4 py-3 text-right font-bold text-primary" x-text="item.skor_akhir !== null ? item.skor_akhir.toFixed(1) : '-'"></td>
                             <td class="px-4 py-3 text-center">
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" :class="predikatClass(item.predikat)" x-text="item.predikat"></span>
+                                <span x-show="item.predikat" class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" :class="predikatClass(item.predikat)" x-text="item.predikat"></span>
+                                <span x-show="!item.predikat">-</span>
                             </td>
                         </tr>
                     </template>
@@ -203,7 +210,7 @@
             totalData: 0,
             kegiatanList: [],
             tahunOptions: [],
-            filters: { kegiatanId: '', kegiatanSearch: '', tahun: '', peran: '', predikat: '', search: '' },
+            filters: { kegiatanId: '', kegiatanSearch: '', tahun: '', peran: '', kecamatan: '', predikat: '', search: '' },
             showKegiatanDropdown: false,
             loading: false,
             flash: { type: '', message: '' },
@@ -257,6 +264,7 @@
                 if (this.filters.kegiatanId) params.set('kegiatan_id', this.filters.kegiatanId);
                 if (this.filters.tahun) params.set('tahun', this.filters.tahun);
                 if (this.filters.peran) params.set('peran', this.filters.peran);
+                if (this.filters.kecamatan) params.set('kecamatan', this.filters.kecamatan);
                 if (this.filters.predikat) params.set('predikat', this.filters.predikat);
                 return '/api/penilaian/rekap-dashboard/export?' + params.toString();
             },
@@ -321,12 +329,13 @@
                 const params = new URLSearchParams();
                 if (this.filters.kegiatanId) params.set('kegiatan_id', this.filters.kegiatanId);
                 if (this.filters.tahun) params.set('tahun', this.filters.tahun);
+                if (this.filters.peran) params.set('peran', this.filters.peran);
+                if (this.filters.kecamatan) params.set('kecamatan', this.filters.kecamatan);
                 return params;
             },
 
             rekapParams() {
                 const params = this.dashboardParams();
-                if (this.filters.peran) params.set('peran', this.filters.peran);
                 if (this.filters.predikat) params.set('predikat', this.filters.predikat);
                 if (this.filters.search) params.set('search', this.filters.search);
                 return params;

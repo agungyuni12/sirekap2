@@ -5,19 +5,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/xuri/excelize/v2"
 	"sirekap/internal/models"
 )
 
-// DashboardPenilaianHandler GET /api/penilaian/dashboard?kegiatan_id=&tahun=
+// DashboardPenilaianHandler GET /api/penilaian/dashboard?kegiatan_id=&tahun=&peran=&kecamatan=
 func DashboardPenilaianHandler(w http.ResponseWriter, r *http.Request) {
-	kegiatanID, _ := strconv.Atoi(r.URL.Query().Get("kegiatan_id"))
-	tahun := r.URL.Query().Get("tahun")
-
-	stats, err := models.GetDashboardPenilaianStats(kegiatanID, tahun)
+	stats, err := models.GetDashboardPenilaianStats(daftarPenilaianFilters(r))
 	if err != nil {
 		log.Printf("Error loading dashboard penilaian stats: %v", err)
 		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memuat statistik penilaian")
@@ -26,22 +22,9 @@ func DashboardPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, stats)
 }
 
-// rekapDashboardFilters reads the shared kegiatan_id/tahun/peran/predikat/search
-// query params used by both the JSON listing and the Excel export.
-func rekapDashboardFilters(r *http.Request) (kegiatanID int, tahun, peran, predikat, search string) {
-	kegiatanID, _ = strconv.Atoi(r.URL.Query().Get("kegiatan_id"))
-	tahun = r.URL.Query().Get("tahun")
-	peran = r.URL.Query().Get("peran")
-	predikat = r.URL.Query().Get("predikat")
-	search = r.URL.Query().Get("search")
-	return
-}
-
-// RekapDashboardHandler GET /api/penilaian/rekap-dashboard?kegiatan_id=&tahun=&peran=&predikat=&search=
+// RekapDashboardHandler GET /api/penilaian/rekap-dashboard?kegiatan_id=&tahun=&peran=&kecamatan=&predikat=&search=
 func RekapDashboardHandler(w http.ResponseWriter, r *http.Request) {
-	kegiatanID, tahun, peran, predikat, search := rekapDashboardFilters(r)
-
-	items, err := models.GetRekapDashboard(kegiatanID, tahun, peran, predikat, search)
+	items, err := models.GetRekapDashboard(daftarPenilaianFilters(r))
 	if err != nil {
 		log.Printf("Error loading rekap dashboard: %v", err)
 		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memuat rekapitulasi penilaian")
@@ -53,11 +36,10 @@ func RekapDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ExportRekapDashboardHandler GET /api/penilaian/rekap-dashboard/export?kegiatan_id=&tahun=&peran=&predikat=
+// ExportRekapDashboardHandler GET /api/penilaian/rekap-dashboard/export?kegiatan_id=&tahun=&peran=&kecamatan=&predikat=
 func ExportRekapDashboardHandler(w http.ResponseWriter, r *http.Request) {
-	kegiatanID, tahun, peran, predikat, search := rekapDashboardFilters(r)
-
-	items, err := models.GetRekapDashboard(kegiatanID, tahun, peran, predikat, search)
+	filter := daftarPenilaianFilters(r)
+	items, err := models.GetRekapDashboard(filter)
 	if err != nil {
 		log.Printf("Error loading rekap dashboard for export: %v", err)
 		http.Error(w, "Gagal mengambil data rekapitulasi penilaian", http.StatusInternalServerError)
@@ -73,19 +55,19 @@ func ExportRekapDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	f.SetCellValue(sheet, "A1", "BADAN PUSAT STATISTIK KABUPATEN DOMPU")
 	f.SetCellValue(sheet, "A2", "REKAPITULASI PENILAIAN KINERJA MITRA STATISTIK")
 	period := "Semua Periode"
-	if tahun != "" {
-		period = fmt.Sprintf("Tahun Anggaran %s", tahun)
+	if filter.Tahun != "" {
+		period = fmt.Sprintf("Tahun Anggaran %s", filter.Tahun)
 	}
 	f.SetCellValue(sheet, "A3", period)
 	f.SetCellValue(sheet, "A4", fmt.Sprintf("Diunduh: %s", time.Now().Format("02 January 2006 15:04")))
 	titleStyle, _ := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true, Size: 13}})
 	f.SetCellStyle(sheet, "A1", "A1", titleStyle)
-	f.MergeCell(sheet, "A1", "J1")
-	f.MergeCell(sheet, "A2", "J2")
-	f.MergeCell(sheet, "A3", "J3")
-	f.MergeCell(sheet, "A4", "J4")
+	f.MergeCell(sheet, "A1", "L1")
+	f.MergeCell(sheet, "A2", "L2")
+	f.MergeCell(sheet, "A3", "L3")
+	f.MergeCell(sheet, "A4", "L4")
 
-	headers := []string{"No", "ID Sobat", "Nama Mitra", "Kegiatan", "Peran", "Skor Tahap 1", "Skor Tahap 2", "Skor Akhir", "Predikat", "Catatan"}
+	headers := []string{"No", "ID Sobat", "Nama Mitra", "Kegiatan", "Peran", "Kecamatan", "Skor Awal", "Status Konfirmasi", "Skor Ulang SM", "Skor Akhir", "Predikat", "Catatan"}
 	headerRow := 6
 	for i, h := range headers {
 		cell, _ := excelize.CoordinatesToCellName(i+1, headerRow)
@@ -120,25 +102,33 @@ func ExportRekapDashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	row := headerRow + 1
 	for i, item := range items {
-		skorTahap1 := interface{}("-")
-		if item.SkorTahap1 != nil {
-			skorTahap1 = *item.SkorTahap1
+		skorAwal := interface{}("-")
+		if item.SkorAwal != nil {
+			skorAwal = *item.SkorAwal
 		}
-		skorTahap2 := interface{}("-")
-		if item.SkorTahap2 != nil {
-			skorTahap2 = *item.SkorTahap2
+		skorUlang := interface{}("-")
+		if item.SkorUlang != nil {
+			skorUlang = *item.SkorUlang
+		}
+		skorAkhir := interface{}("-")
+		if item.SkorAkhir != nil {
+			skorAkhir = *item.SkorAkhir
+		}
+		statusKonfirmasi := item.StatusKonfirmasi
+		if statusKonfirmasi == "" {
+			statusKonfirmasi = "-"
 		}
 
 		values := []interface{}{
-			i + 1, item.IDSobat, item.NamaMitra, item.Kegiatan, item.Peran,
-			skorTahap1, skorTahap2, item.SkorAkhir, item.Predikat, item.Catatan,
+			i + 1, item.IDSobat, item.NamaMitra, item.Kegiatan, item.Peran, item.Kecamatan,
+			skorAwal, statusKonfirmasi, skorUlang, skorAkhir, item.Predikat, item.Catatan,
 		}
 		for j, v := range values {
 			cell, _ := excelize.CoordinatesToCellName(j+1, row)
 			f.SetCellValue(sheet, cell, v)
 		}
 		if style, ok := predikatStyles[item.Predikat]; ok {
-			predikatCell, _ := excelize.CoordinatesToCellName(9, row)
+			predikatCell, _ := excelize.CoordinatesToCellName(11, row)
 			f.SetCellStyle(sheet, predikatCell, predikatCell, style)
 		}
 		row++
@@ -148,8 +138,9 @@ func ExportRekapDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	f.SetColWidth(sheet, "B", "B", 16)
 	f.SetColWidth(sheet, "C", "D", 30)
 	f.SetColWidth(sheet, "E", "E", 10)
-	f.SetColWidth(sheet, "F", "I", 14)
-	f.SetColWidth(sheet, "J", "J", 30)
+	f.SetColWidth(sheet, "F", "F", 18)
+	f.SetColWidth(sheet, "G", "K", 14)
+	f.SetColWidth(sheet, "L", "L", 30)
 
 	var buf bytes.Buffer
 	if err := f.Write(&buf); err != nil {
