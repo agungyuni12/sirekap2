@@ -1,0 +1,10 @@
+.git
+.gitignore
+node_modules
+output
+static/uploads
+*.md
+.env
+.env.local
+.env.production
+.claude
