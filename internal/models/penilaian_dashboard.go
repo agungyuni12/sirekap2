@@ -59,11 +59,18 @@ type aspekRaw struct {
 // rejected-then-averaged with Subject Matter's own score. Pending PML Mitra
 // confirmations are excluded until finalized.
 func GetDashboardPenilaianStats(f DaftarPenilaianFilter) (*DashboardPenilaianStats, error) {
-	clauses := []string{"1=1"}
+	// periode_id is nullable only to preserve pre-migration rows (see
+	// migrations/add_periode_ke_penilaian_kegiatan.sql) — those rows have no
+	// periode to report against, so they're excluded here.
+	clauses := []string{"e.periode_id IS NOT NULL"}
 	var args []interface{}
 	if f.KegiatanID > 0 {
 		clauses = append(clauses, "e.kegiatan_id = ?")
 		args = append(args, f.KegiatanID)
+	}
+	if f.PeriodeID > 0 {
+		clauses = append(clauses, "e.periode_id = ?")
+		args = append(args, f.PeriodeID)
 	}
 	if f.Tahun != "" {
 		clauses = append(clauses, "e.tahun = ?")
@@ -72,7 +79,7 @@ func GetDashboardPenilaianStats(f DaftarPenilaianFilter) (*DashboardPenilaianSta
 	where := strings.Join(clauses, " AND ")
 
 	rows, err := database.DB.Query(`
-		SELECT e.kegiatan_id, e.yang_dinilai_idsobat, e.peran_yang_dinilai, COALESCE(e.kecamatan, ''),
+		SELECT e.periode_id, e.yang_dinilai_idsobat, e.peran_yang_dinilai, COALESCE(e.kecamatan, ''),
 			e.tahap, e.status_konfirmasi,
 			e.skor_kualitas, e.skor_ketepatan_waktu, e.skor_kepatuhan_sop, e.skor_komunikasi, e.skor_sikap
 		FROM evaluasi_petugas e
@@ -83,8 +90,8 @@ func GetDashboardPenilaianStats(f DaftarPenilaianFilter) (*DashboardPenilaianSta
 	defer rows.Close()
 
 	type key struct {
-		kegiatanID int
-		idsobat    string
+		periodeID int
+		idsobat   string
 	}
 	type group struct {
 		peran, kecamatan, status string
@@ -93,14 +100,14 @@ func GetDashboardPenilaianStats(f DaftarPenilaianFilter) (*DashboardPenilaianSta
 	groups := map[key]*group{}
 
 	for rows.Next() {
-		var kID, tahap int
+		var pID, tahap int
 		var idsobat, peran, kecamatan, status string
 		var a aspekRaw
-		if err := rows.Scan(&kID, &idsobat, &peran, &kecamatan, &tahap, &status,
+		if err := rows.Scan(&pID, &idsobat, &peran, &kecamatan, &tahap, &status,
 			&a.kualitas, &a.ketepatan, &a.kepatuhanSOP, &a.komunikasi, &a.sikap); err != nil {
 			return nil, err
 		}
-		k := key{kID, idsobat}
+		k := key{pID, idsobat}
 		g, ok := groups[k]
 		if !ok {
 			g = &group{peran: peran, kecamatan: kecamatan, status: status}

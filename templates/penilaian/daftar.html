@@ -109,6 +109,7 @@
                     <tr>
                         <th class="px-4 py-3 text-left font-semibold">Nama Mitra</th>
                         <th class="px-4 py-3 text-left font-semibold">Kegiatan</th>
+                        <th class="px-4 py-3 text-left font-semibold">Periode</th>
                         <th class="px-4 py-3 text-left font-semibold">Kecamatan</th>
                         <th class="px-4 py-3 text-center font-semibold">Peran</th>
                         <th class="px-4 py-3 text-center font-semibold">Status</th>
@@ -118,10 +119,11 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    <template x-for="item in items" :key="item.kegiatan_id + '-' + item.idsobat">
+                    <template x-for="item in items" :key="item.periode_id + '-' + item.idsobat">
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 font-medium text-gray-900" x-text="item.nama_mitra"></td>
                             <td class="px-4 py-3 text-gray-600" x-text="item.kegiatan"></td>
+                            <td class="px-4 py-3 text-gray-600" x-text="(item.periode || '-') + ' ' + (item.tahun || '')"></td>
                             <td class="px-4 py-3 text-gray-600" x-text="item.kecamatan || '-'"></td>
                             <td class="px-4 py-3 text-center">
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" x-text="item.peran"></span>
@@ -334,7 +336,7 @@
                 this.detailLoading = true;
                 this.detail = null;
                 try {
-                    const response = await fetch('/api/penilaian/detail?kegiatan_id=' + item.kegiatan_id + '&idsobat=' + encodeURIComponent(item.idsobat));
+                    const response = await fetch('/api/penilaian/detail?periode_id=' + item.periode_id + '&idsobat=' + encodeURIComponent(item.idsobat));
                     if (!response.ok) throw new Error('Gagal memuat detail penilaian');
                     this.detail = await response.json();
                 } catch (error) {

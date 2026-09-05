@@ -48,7 +48,6 @@
                                 class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0"
                                 :class="String(k.id) === String(kegiatanId) ? 'bg-blue-50 font-semibold' : ''">
                                 <span x-text="k.nama"></span>
-                                <span x-show="k.peran" class="ml-2 inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700" x-text="k.peran === 'korwil' ? 'Korwil' : 'PML'"></span>
                             </button>
                         </template>
                     </div>
@@ -59,37 +58,61 @@
                 </div>
             </div>
 
-            <div class="space-y-2">
+            <div class="md:col-span-2 space-y-2">
                 <label class="block text-sm font-semibold text-gray-700">Periode</label>
-                <input type="text" x-model="form_periode" placeholder="cth: Triwulan I, Maret 2026" class="w-full">
+
+                <template x-if="kegiatanId && !loadingPeriode && periodeList.length === 0">
+                    <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                        Belum ada periode untuk kegiatan ini. Hubungi admin untuk menambahkan lewat menu <strong>Kelola Petugas</strong>.
+                    </p>
+                </template>
+
+                <template x-if="!kegiatanId">
+                    <p class="text-sm text-gray-500 bg-gray-50 rounded-xl px-4 py-3">Pilih kegiatan terlebih dahulu untuk melihat periode yang tersedia.</p>
+                </template>
+
+                <div class="flex flex-wrap gap-2" x-show="kegiatanId && (loadingPeriode || periodeList.length > 0)">
+                    <template x-if="loadingPeriode">
+                        <p class="text-sm text-primary py-2"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat periode...</p>
+                    </template>
+                    <template x-for="p in periodeList" :key="p.periode_id">
+                        <button type="button" @click="selectPeriode(p)"
+                            class="px-4 py-2 rounded-xl border text-sm font-medium transition"
+                            :class="String(p.periode_id) === String(periodeId) ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'">
+                            <span x-text="p.periode + ' ' + p.tahun"></span>
+                            <span x-show="p.peran" class="ml-1 opacity-80" x-text="'(' + (p.peran === 'korwil' ? 'Korwil' : 'PML') + ')'"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700">Periode Terpilih</label>
+                <input type="text" :value="periodeId ? (currentPeriode().periode + ' ' + currentPeriode().tahun) : '-'" disabled class="w-full bg-gray-50 text-gray-500">
             </div>
             <div class="space-y-2">
                 <label class="block text-sm font-semibold text-gray-700">Tahun</label>
-                <select x-model="form_tahun" class="w-full">
-                    <template x-for="y in tahunOptions" :key="y">
-                        <option :value="y" x-text="y"></option>
-                    </template>
-                </select>
+                <input type="text" :value="periodeId ? currentPeriode().tahun : '-'" disabled class="w-full bg-gray-50 text-gray-500">
             </div>
 
             <div class="md:col-span-2 space-y-2">
                 <label class="block text-sm font-semibold text-gray-700">Nama Petugas</label>
 
-                <template x-if="!kegiatanId">
-                    <p class="text-sm text-gray-500 bg-gray-50 rounded-xl px-4 py-3">Pilih kegiatan terlebih dahulu untuk melihat daftar petugas.</p>
+                <template x-if="!periodeId">
+                    <p class="text-sm text-gray-500 bg-gray-50 rounded-xl px-4 py-3">Pilih periode terlebih dahulu untuk melihat daftar petugas.</p>
                 </template>
 
-                <template x-if="kegiatanId && loadingRoster">
+                <template x-if="periodeId && loadingRoster">
                     <p class="text-sm text-primary bg-gray-50 rounded-xl px-4 py-3"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar petugas...</p>
                 </template>
 
-                <template x-if="kegiatanId && !loadingRoster && rosterList.length === 0">
+                <template x-if="periodeId && !loadingRoster && rosterList.length === 0">
                     <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                        Belum ada petugas terdaftar untuk kegiatan ini. Hubungi admin untuk menambahkan lewat menu <strong>Kelola Petugas</strong>.
+                        Belum ada petugas terdaftar untuk periode ini. Hubungi admin untuk menambahkan lewat menu <strong>Kelola Petugas</strong>.
                     </p>
                 </template>
 
-                <template x-if="kegiatanId && !loadingRoster && rosterList.length > 0">
+                <template x-if="periodeId && !loadingRoster && rosterList.length > 0">
                     <div class="relative">
                         <span class="form-icon"><i class="fas fa-magnifying-glass"></i></span>
                         <input type="text" x-model="petugasSearch" @input="showPetugasDropdown = true"
@@ -168,7 +191,7 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3">
-            <button type="submit" :disabled="submitting || !kegiatanId || !selected"
+            <button type="submit" :disabled="submitting || !periodeId || !selected"
                 class="inline-flex items-center justify-center px-5 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed">
                 <i class="fas mr-2" :class="submitting ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
                 <span x-text="submitting ? 'Menyimpan...' : 'Simpan Penilaian'"></span>
@@ -192,6 +215,9 @@
             showKegiatanDropdown: false,
             kegiatanList: [],
             loadingKegiatan: false,
+            periodeId: '',
+            periodeList: [],
+            loadingPeriode: false,
             petugasSearch: '',
             rosterList: [],
             loadingRoster: false,
@@ -199,9 +225,6 @@
             selected: null,
             submitting: false,
             flash: { type: '', message: '' },
-            tahunOptions: [],
-            form_periode: '',
-            form_tahun: String(new Date().getFullYear()),
             form_kecamatan: '',
             form_tanggal: new Date().toISOString().slice(0, 10),
             criteria: [
@@ -214,9 +237,6 @@
             form: { skor_kualitas: 80, skor_ketepatan_waktu: 80, skor_kepatuhan_sop: 80, skor_komunikasi: 80, skor_sikap: 80, catatan: '' },
 
             init() {
-                for (let y = new Date().getFullYear(); y >= new Date().getFullYear() - 4; y--) {
-                    this.tahunOptions.push(String(y));
-                }
                 this.loadKegiatan();
             },
 
@@ -227,7 +247,7 @@
                     const response = await fetch(url);
                     if (!response.ok) throw new Error('Gagal memuat kegiatan');
                     const result = await response.json();
-                    this.kegiatanList = (result.data || []).map(k => ({ id: k.id, nama: k.nama, peran: k.peran || '' }));
+                    this.kegiatanList = (result.data || []).map(k => ({ id: k.id, nama: k.nama }));
                 } catch (error) {
                     this.flash = { type: 'error', message: error.message };
                 } finally {
@@ -245,25 +265,64 @@
                 this.kegiatanId = k.id;
                 this.kegiatanSearch = k.nama;
                 this.showKegiatanDropdown = false;
+                this.periodeId = '';
+                this.rosterList = [];
                 this.selected = null;
                 this.petugasSearch = '';
-                // Untuk role dgn peran dinamis (organik/admin): peran ikut kegiatan
-                // yang dipilih (k.peran dari /api/penilaian/kegiatan?mine=1 — 'pml'
-                // artinya menilai PPL, 'korwil' artinya menilai PML Mitra).
-                if (this.mine && k.peran) {
-                    this.peran = k.peran === 'korwil' ? 'pml' : 'ppl';
+                this.loadPeriode();
+            },
+
+            async loadPeriode() {
+                if (!this.kegiatanId) { this.periodeList = []; return; }
+                this.loadingPeriode = true;
+                try {
+                    const url = this.mine
+                        ? `/api/penilaian/kegiatan/periode?kegiatan_id=${this.kegiatanId}&mine=1`
+                        : `/api/penilaian/kegiatan/periode?kegiatan_id=${this.kegiatanId}`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Gagal memuat periode');
+                    const result = await response.json();
+                    // Normalisasi: endpoint tanpa ?mine=1 (pml_mitra) mengembalikan
+                    // field "id" (PenilaianKegiatanPeriode), dengan ?mine=1 (organik)
+                    // mengembalikan "periode_id" (PeriodeSayaItem) + "peran".
+                    this.periodeList = (result.data || []).map(p => ({
+                        periode_id: p.periode_id ?? p.id,
+                        periode: p.periode,
+                        tahun: p.tahun,
+                        peran: p.peran || '',
+                    }));
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
+                } finally {
+                    this.loadingPeriode = false;
+                }
+            },
+
+            currentPeriode() {
+                return this.periodeList.find(p => String(p.periode_id) === String(this.periodeId)) || { periode: '', tahun: '' };
+            },
+
+            selectPeriode(p) {
+                this.periodeId = p.periode_id;
+                this.selected = null;
+                this.petugasSearch = '';
+                // Untuk role dgn peran dinamis (organik/admin): peran ikut periode
+                // yang dipilih (p.peran dari /api/penilaian/kegiatan/periode?mine=1
+                // — 'pml' artinya menilai PPL, 'korwil' artinya menilai PML Mitra).
+                if (this.mine && p.peran) {
+                    this.peran = p.peran === 'korwil' ? 'pml' : 'ppl';
                 }
                 this.loadRoster();
             },
 
             async loadRoster() {
-                if (!this.kegiatanId) { this.rosterList = []; return; }
+                if (!this.periodeId) { this.rosterList = []; return; }
                 this.loadingRoster = true;
                 try {
-                    const response = await fetch(`/api/penilaian/kegiatan/petugas?kegiatan_id=${this.kegiatanId}&peran=${this.peran}`);
+                    const response = await fetch(`/api/penilaian/kegiatan/petugas?periode_id=${this.periodeId}&peran=${this.peran}`);
                     if (!response.ok) throw new Error('Gagal memuat daftar petugas');
                     const result = await response.json();
-                    // Roster kegiatan sekarang bisa berisi entri organik (penilai,
+                    // Roster periode sekarang bisa berisi entri organik (penilai,
                     // tidak punya idsobat) selain mitra (yang dinilai) — form ini
                     // cuma butuh mitra sebagai target penilaian.
                     this.rosterList = (result.data || []).filter(p => p.tipe === 'mitra');
@@ -294,7 +353,7 @@
             },
 
             async submitPenilaian() {
-                if (!this.selected || !this.kegiatanId) return;
+                if (!this.selected || !this.periodeId) return;
                 this.submitting = true;
                 this.flash = { type: '', message: '' };
                 try {
@@ -302,11 +361,9 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            kegiatan_id: Number(this.kegiatanId),
+                            periode_id: Number(this.periodeId),
                             yang_dinilai_id: this.selected.idsobat,
                             kecamatan: this.form_kecamatan,
-                            periode: this.form_periode,
-                            tahun: this.form_tahun,
                             tanggal_penilaian: this.form_tanggal,
                             skor_kualitas: this.form.skor_kualitas,
                             skor_ketepatan_waktu: this.form.skor_ketepatan_waktu,

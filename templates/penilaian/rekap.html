@@ -53,6 +53,7 @@
                     <tr>
                         <th class="px-4 py-3 text-left font-semibold">Nama PML Mitra</th>
                         <th class="px-4 py-3 text-left font-semibold">Kegiatan</th>
+                        <th class="px-4 py-3 text-left font-semibold">Periode</th>
                         <th class="px-4 py-3 text-left font-semibold">Kecamatan</th>
                         <th class="px-4 py-3 text-left font-semibold">Dinilai Oleh</th>
                         <th class="px-4 py-3 text-right font-semibold">Skor Awal</th>
@@ -60,10 +61,11 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    <template x-for="item in pendingList" :key="item.kegiatan_id + '-' + item.idsobat">
+                    <template x-for="item in pendingList" :key="item.periode_id + '-' + item.idsobat">
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 font-medium text-gray-900" x-text="item.nama_mitra"></td>
                             <td class="px-4 py-3 text-gray-600" x-text="item.kegiatan"></td>
+                            <td class="px-4 py-3 text-gray-600" x-text="(item.periode || '-') + ' ' + (item.tahun || '')"></td>
                             <td class="px-4 py-3 text-gray-600" x-text="item.kecamatan || '-'"></td>
                             <td class="px-4 py-3 text-gray-600" x-text="item.nama_penilai"></td>
                             <td class="px-4 py-3 text-right font-bold text-primary" x-text="item.skor_awal.toFixed(1)"></td>
@@ -165,7 +167,7 @@
                     const response = await fetch('/api/penilaian/konfirmasi', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ kegiatan_id: item.kegiatan_id, idsobat: item.idsobat, setuju: true }),
+                        body: JSON.stringify({ periode_id: item.periode_id, idsobat: item.idsobat, setuju: true }),
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result?.error?.message || 'Gagal menyimpan konfirmasi');
@@ -189,7 +191,7 @@
                     let response = await fetch('/api/penilaian/konfirmasi', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ kegiatan_id: this.modalItem.kegiatan_id, idsobat: this.modalItem.idsobat, setuju: false }),
+                        body: JSON.stringify({ periode_id: this.modalItem.periode_id, idsobat: this.modalItem.idsobat, setuju: false }),
                     });
                     let result = await response.json();
                     if (!response.ok) throw new Error(result?.error?.message || 'Gagal menolak penilaian');
@@ -198,7 +200,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            kegiatan_id: this.modalItem.kegiatan_id,
+                            periode_id: this.modalItem.periode_id,
                             yang_dinilai_id: this.modalItem.idsobat,
                             kecamatan: this.modalItem.kecamatan,
                             skor_kualitas: this.modalForm.skor_kualitas,

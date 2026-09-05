@@ -541,6 +541,8 @@ func main() {
 	}))
 
 	r.HandleFunc("/api/penilaian/kegiatan", middleware.RequireAuth(handlers.ListKegiatanForPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/kegiatan/periode", middleware.RequireAuth(handlers.ListPeriodeForKegiatanHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/kegiatan/periode", middleware.RequireAdmin(handlers.AddPeriodeKegiatanHandler)).Methods("POST")
 	r.HandleFunc("/api/penilaian/mitra", middleware.RequireAdmin(handlers.SearchMitraPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/penilai/search", middleware.RequireAdmin(handlers.SearchPenilaiOrganikHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/kegiatan/petugas", middleware.RequireAuth(handlers.ListRosterPetugasHandler)).Methods("GET")
