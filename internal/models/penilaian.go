@@ -651,8 +651,12 @@ type RosterPetugasItem struct {
 // mitra entries and organik entries combined — optionally filtered to one
 // peran ("ppl" | "pml" | "korwil").
 func ListPetugasKegiatan(periodeID int, peran string) ([]RosterPetugasItem, error) {
+	// Tabel mitra bisa punya banyak baris per idsobat (beda tahun/kegiatan
+	// survei — lihat filter tahun di SearchMitra), jadi LEFT JOIN di sini
+	// di-GROUP BY p.idsobat supaya satu entri roster tidak kegandaan ikut
+	// jumlah baris mitra yang cocok.
 	query := `
-		SELECT 'mitra' AS tipe, p.idsobat, 0 AS user_id, COALESCE(m.nmitra, '') AS nama, COALESCE(m.kecamatan, '') AS kecamatan, '' AS email, p.peran
+		SELECT 'mitra' AS tipe, p.idsobat, 0 AS user_id, COALESCE(MAX(m.nmitra), '') AS nama, COALESCE(MAX(m.kecamatan), '') AS kecamatan, '' AS email, p.peran
 		FROM penilaian_kegiatan_petugas p
 		LEFT JOIN mitra m ON m.idsobat = p.idsobat
 		WHERE p.periode_id = ? AND p.user_id IS NULL`
@@ -662,6 +666,7 @@ func ListPetugasKegiatan(periodeID int, peran string) ([]RosterPetugasItem, erro
 		args = append(args, peran)
 	}
 	query += `
+		GROUP BY p.idsobat, p.peran
 		UNION ALL
 		SELECT 'organik', '', p.user_id, COALESCE(u.nama, ''), '', COALESCE(u.email, ''), p.peran
 		FROM penilaian_kegiatan_petugas p

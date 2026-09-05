@@ -572,8 +572,8 @@
         expandedRekap: {{ if eq .ActivePage "input" }}true{{ else if eq .ActivePage "rekap" }}true{{ else if eq .ActivePage "kegiatan" }}true{{ else if eq .ActivePage "surat" }}true{{ else }}false{{ end }},
         expandedSE2026: {{ if eq .ActivePage "se2026" }}true{{ else if eq .ActivePage "se2026-import" }}true{{ else }}false{{ end }},
         expandedMatriks: {{ if eq .ActivePage "matriks" }}true{{ else if eq .ActivePage "monitoring" }}true{{ else if eq .ActivePage "kalender" }}true{{ else if eq .ActivePage "administrasi" }}true{{ else }}false{{ end }},
-        expandedLapor: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}true{{ end }},
-        expandedPenilaian: {{ if eq .ActivePage "penilaian" }}true{{ else if eq .ActivePage "penilaian-rekap" }}true{{ else if eq .ActivePage "penilaian-daftar" }}true{{ else if eq .ActivePage "penilaian-kelola-petugas" }}true{{ else if eq .ActivePage "penilaian-dashboard" }}true{{ else }}true{{ end }},
+        expandedLapor: {{ if eq .ActivePage "lapor" }}true{{ else if eq .ActivePage "lapor-history" }}true{{ else if eq .ActivePage "lapor-sppd" }}true{{ else if eq .ActivePage "lapor-sppd-history" }}true{{ else }}false{{ end }},
+        expandedPenilaian: {{ if eq .ActivePage "penilaian" }}true{{ else if eq .ActivePage "penilaian-rekap" }}true{{ else if eq .ActivePage "penilaian-daftar" }}true{{ else if eq .ActivePage "penilaian-kelola-petugas" }}true{{ else if eq .ActivePage "penilaian-dashboard" }}true{{ else }}false{{ end }},
         toggleSidebar() {
             if (this.isMobile) {
                 this.sidebarOpen = !this.sidebarOpen;

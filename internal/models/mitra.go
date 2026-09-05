@@ -23,8 +23,11 @@ type MitraSearchResult struct {
 // SearchMitra searches mitra by idsobat or name
 func SearchMitra(query, tahun string) ([]MitraSearchResult, error) {
 	var results []MitraSearchResult
+	// mitra bisa punya banyak baris per idsobat (satu per tahun/kegiatan
+	// survei) — GROUP BY supaya satu orang tidak muncul berkali-kali di
+	// hasil pencarian saat tahun tidak difilter.
 	sqlQuery := `
-		SELECT idsobat, nmitra, kecamatan
+		SELECT idsobat, MAX(nmitra), MAX(kecamatan)
 		FROM mitra
 		WHERE 1 = 1`
 	args := make([]interface{}, 0, 12)
@@ -38,7 +41,7 @@ func SearchMitra(query, tahun string) ([]MitraSearchResult, error) {
 		[]string{"idsobat", "nmitra", "CONCAT(idsobat,'/', nmitra)"},
 		query,
 	)
-	sqlQuery += searchClause + " LIMIT 20"
+	sqlQuery += searchClause + " GROUP BY idsobat LIMIT 20"
 	args = append(args, searchArgs...)
 
 	rows, err := database.DB.Query(sqlQuery, args...)
