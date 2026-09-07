@@ -477,8 +477,8 @@ func main() {
 	// Konfirmasi Subject Matter atas penilaian PML Mitra — admin-only.
 	r.HandleFunc("/penilaian/rekap", middleware.RequireAdmin(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
-			"Title":       "Konfirmasi Penilaian PML Mitra",
-			"PageTitle":   "Konfirmasi Penilaian PML Mitra",
+			"Title":       "Konfirmasi Penilaian",
+			"PageTitle":   "Konfirmasi Penilaian",
 			"ShowSidebar": true,
 			"ActivePage":  "penilaian-rekap",
 		})
@@ -491,8 +491,9 @@ func main() {
 	}))
 
 	// Daftar Penilaian — riwayat gabungan semua penilaian, filter per kecamatan,
-	// bisa dicek lagi per aspek. Terbuka untuk semua role yang punya akses Penilaian.
-	r.HandleFunc("/penilaian/daftar", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+	// bisa dicek lagi per aspek. Terbuka untuk semua role yang punya akses
+	// Penilaian, kecuali PML Mitra (hanya boleh input nilai PPL + lapor translok).
+	r.HandleFunc("/penilaian/daftar", middleware.RequireNotPMLMitra(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
 			"Title":       "Daftar Penilaian",
 			"PageTitle":   "Daftar Penilaian",
@@ -552,8 +553,8 @@ func main() {
 	r.HandleFunc("/api/penilaian/konfirmasi/pending", middleware.RequireAdmin(handlers.ListPendingKonfirmasiHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/konfirmasi", middleware.RequireAdmin(handlers.KonfirmasiPenilaianHandler)).Methods("POST")
 	r.HandleFunc("/api/penilaian/ulang", middleware.RequireAdmin(handlers.SubmitPenilaianUlangHandler)).Methods("POST")
-	r.HandleFunc("/api/penilaian/daftar", middleware.RequireAuth(handlers.DaftarPenilaianHandler)).Methods("GET")
-	r.HandleFunc("/api/penilaian/detail", middleware.RequireAuth(handlers.DetailPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/daftar", middleware.RequireNotPMLMitra(handlers.DaftarPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/detail", middleware.RequireNotPMLMitra(handlers.DetailPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/dashboard", middleware.RequireAdmin(handlers.DashboardPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/rekap-dashboard", middleware.RequireAdmin(handlers.RekapDashboardHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/rekap-dashboard/export", middleware.RequireAdmin(handlers.ExportRekapDashboardHandler)).Methods("GET")

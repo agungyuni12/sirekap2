@@ -763,7 +763,7 @@
                             <a href="/penilaian/rekap" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-rekap" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-check w-5 mr-3 {{ if eq .ActivePage "penilaian-rekap" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>Konfirmasi PML Mitra</span>
+                                <span>Konfirmasi Penilaian</span>
                             </a>
                             <a href="/penilaian/daftar" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-daftar" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
@@ -807,11 +807,6 @@
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-user w-5 mr-3 {{ if eq .ActivePage "penilaian" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
                                 <span>Nilai PPL</span>
-                            </a>
-                            <a href="/penilaian/daftar" @click="sidebarOpen = false"
-                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-daftar" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
-                                <i class="fas fa-list-check w-5 mr-3 {{ if eq .ActivePage "penilaian-daftar" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>Daftar Penilaian</span>
                             </a>
                         </div>
                     </div>
