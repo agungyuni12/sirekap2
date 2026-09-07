@@ -286,14 +286,13 @@
             },
 
             statusLabel(item) {
-                if (item.peran === 'PPL') return 'Final';
                 if (item.status_konfirmasi === 'disetujui') return 'Disetujui';
                 if (item.status_konfirmasi === 'ditolak') return item.skor_ulang !== undefined && item.skor_ulang !== null ? 'Final (Rata-rata)' : 'Ditolak - Menunggu Nilai Ulang';
                 return 'Menunggu Konfirmasi';
             },
 
             statusClass(item) {
-                if (item.peran === 'PPL' || item.status_konfirmasi === 'disetujui') return 'bg-emerald-100 text-emerald-700';
+                if (item.status_konfirmasi === 'disetujui') return 'bg-emerald-100 text-emerald-700';
                 if (item.status_konfirmasi === 'ditolak') return (item.skor_ulang !== undefined && item.skor_ulang !== null) ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700';
                 return 'bg-amber-100 text-amber-700';
             },

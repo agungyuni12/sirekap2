@@ -58,10 +58,11 @@ type aspekRaw struct {
 
 // GetDashboardPenilaianStats aggregates evaluasi_petugas into the summary
 // statistics shown on the Dashboard Penilaian Kinerja Mitra screen. Only
-// finalized assessments count: PPL scores (final the moment PML submits them)
-// and PML Mitra scores that are either confirmed by Subject Matter, or
-// rejected-then-averaged with Subject Matter's own score. Pending PML Mitra
-// confirmations are excluded until finalized.
+// finalized assessments count — PPL and PML Mitra scores alike go through
+// the same Subject Matter confirmation: "disetujui" finalizes the initial
+// score as-is, "ditolak" finalizes as the average with Subject Matter's own
+// re-score once submitted. Anything still "pending" (or rejected without a
+// re-score yet) is excluded until finalized.
 func GetDashboardPenilaianStats(f DaftarPenilaianFilter) (*DashboardPenilaianStats, error) {
 	// periode_id is nullable only to preserve pre-migration rows (see
 	// migrations/add_periode_ke_penilaian_kegiatan.sql) — those rows have no
@@ -142,23 +143,21 @@ func GetDashboardPenilaianStats(f DaftarPenilaianFilter) (*DashboardPenilaianSta
 			continue
 		}
 
+		// PPL dan PML Mitra sama-sama lewat alur konfirmasi Subject Matter —
+		// lihat catatan di GetDaftarPenilaian. Pending (atau ditolak tanpa
+		// skor ulang) belum dihitung "final", jadi dilewati dari statistik.
 		var final *aspekRaw
-		switch strings.ToLower(g.peran) {
-		case "ppl":
+		switch g.status {
+		case "disetujui":
 			final = g.tahap1
-		case "pml":
-			switch g.status {
-			case "disetujui":
-				final = g.tahap1
-			case "ditolak":
-				if g.tahap1 != nil && g.tahap2 != nil {
-					final = &aspekRaw{
-						kualitas:     (g.tahap1.kualitas + g.tahap2.kualitas) / 2,
-						ketepatan:    (g.tahap1.ketepatan + g.tahap2.ketepatan) / 2,
-						kepatuhanSOP: (g.tahap1.kepatuhanSOP + g.tahap2.kepatuhanSOP) / 2,
-						komunikasi:   (g.tahap1.komunikasi + g.tahap2.komunikasi) / 2,
-						sikap:        (g.tahap1.sikap + g.tahap2.sikap) / 2,
-					}
+		case "ditolak":
+			if g.tahap1 != nil && g.tahap2 != nil {
+				final = &aspekRaw{
+					kualitas:     (g.tahap1.kualitas + g.tahap2.kualitas) / 2,
+					ketepatan:    (g.tahap1.ketepatan + g.tahap2.ketepatan) / 2,
+					kepatuhanSOP: (g.tahap1.kepatuhanSOP + g.tahap2.kepatuhanSOP) / 2,
+					komunikasi:   (g.tahap1.komunikasi + g.tahap2.komunikasi) / 2,
+					sikap:        (g.tahap1.sikap + g.tahap2.sikap) / 2,
 				}
 			}
 		}

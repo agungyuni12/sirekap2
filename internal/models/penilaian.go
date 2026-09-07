@@ -351,7 +351,7 @@ type DaftarPenilaianItem struct {
 	TanggalPenilaian string   `json:"tanggal_penilaian"`
 	NamaPenilaiAwal  string   `json:"nama_penilai_awal"`
 	SkorAwal         *float64 `json:"skor_awal"`
-	StatusKonfirmasi string   `json:"status_konfirmasi"` // "" untuk PPL (tidak berlaku)
+	StatusKonfirmasi string   `json:"status_konfirmasi"` // "pending" | "disetujui" | "ditolak" — berlaku utk PPL & PML Mitra
 	NamaPenilaiUlang string   `json:"nama_penilai_ulang,omitempty"`
 	SkorUlang        *float64 `json:"skor_ulang,omitempty"`
 	SkorAkhir        *float64 `json:"skor_akhir"`
@@ -476,19 +476,17 @@ func GetDaftarPenilaian(f DaftarPenilaianFilter) ([]DaftarPenilaianItem, error) 
 	for _, k := range order {
 		item := *byKey[k]
 
-		switch strings.ToLower(item.Peran) {
-		case "ppl":
-			// Tidak ada tahap konfirmasi untuk PPL — final seketika PML submit.
+		// PPL dan PML Mitra sama-sama lewat alur konfirmasi Subject Matter
+		// (status_konfirmasi) — disetujui = skor awal final, ditolak = rata-
+		// rata skor awal & skor ulang (begitu Subject Matter submit skor
+		// ulangnya), pending = belum final (SkorAkhir tetap nil).
+		switch item.StatusKonfirmasi {
+		case "disetujui":
 			item.SkorAkhir = item.SkorAwal
-		case "pml":
-			switch item.StatusKonfirmasi {
-			case "disetujui":
-				item.SkorAkhir = item.SkorAwal
-			case "ditolak":
-				if item.SkorAwal != nil && item.SkorUlang != nil {
-					avg := (*item.SkorAwal + *item.SkorUlang) / 2
-					item.SkorAkhir = &avg
-				}
+		case "ditolak":
+			if item.SkorAwal != nil && item.SkorUlang != nil {
+				avg := (*item.SkorAwal + *item.SkorUlang) / 2
+				item.SkorAkhir = &avg
 			}
 		}
 		if item.SkorAkhir != nil {
@@ -590,9 +588,7 @@ func GetDetailPenilaian(periodeID int, idsobat string) (*DetailPenilaian, error)
 			d.NamaPenilaiAwal = namaPenilai
 			d.SkorAwal = &skorCopy
 			d.AspekAwal = aspekBreakdown(kualitas, ketepatan, kepatuhanSOP, komunikasi, sikap)
-			if peran == "pml" {
-				d.StatusKonfirmasi = statusKonfirmasi
-			}
+			d.StatusKonfirmasi = statusKonfirmasi
 			if catatan != "" {
 				d.Catatan = catatan
 			}
@@ -612,18 +608,15 @@ func GetDetailPenilaian(periodeID int, idsobat string) (*DetailPenilaian, error)
 		return nil, sql.ErrNoRows
 	}
 
-	switch strings.ToLower(d.Peran) {
-	case "ppl":
+	// PPL dan PML Mitra sama-sama lewat alur konfirmasi Subject Matter — lihat
+	// catatan di GetDaftarPenilaian.
+	switch d.StatusKonfirmasi {
+	case "disetujui":
 		d.SkorAkhir = d.SkorAwal
-	case "pml":
-		switch d.StatusKonfirmasi {
-		case "disetujui":
-			d.SkorAkhir = d.SkorAwal
-		case "ditolak":
-			if d.SkorAwal != nil && d.SkorUlang != nil {
-				avg := (*d.SkorAwal + *d.SkorUlang) / 2
-				d.SkorAkhir = &avg
-			}
+	case "ditolak":
+		if d.SkorAwal != nil && d.SkorUlang != nil {
+			avg := (*d.SkorAwal + *d.SkorUlang) / 2
+			d.SkorAkhir = &avg
 		}
 	}
 	if d.SkorAkhir != nil {
