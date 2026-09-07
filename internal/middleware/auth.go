@@ -52,3 +52,27 @@ func RequireNotPMLMitra(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
+
+// RequireNotExternalDaftarPenilaian blocks Daftar Penilaian (everyone's
+// performance history) from "pml_mitra" and from "pengguna" accounts whose
+// email isn't @bps.go.id (see handlers.IsExternalAccount) — matches the
+// sidebar/page-button visibility, so direct URL access can't bypass it.
+// Deliberately narrower than RequireNotPMLMitra: it does NOT touch Penilaian
+// scoring/assignment access, which stays gated by the per-periode Kelola
+// Petugas assignment regardless of email — an external account can still be
+// PPL, not PML, so it must never be granted PML-Mitra-style capabilities.
+func RequireNotExternalDaftarPenilaian(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !handlers.IsAuthenticated(r) {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		if handlers.GetUserLevel(r) == "pml_mitra" || handlers.IsExternalAccount(r) {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+
+		next(w, r)
+	}
+}

@@ -583,7 +583,10 @@ func RemoveRosterPetugasHandler(w http.ResponseWriter, r *http.Request) {
 // Autocomplete akun organik untuk tab PML/Korwil di Kelola Petugas.
 func SearchPenilaiOrganikHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
-	results, err := models.SearchPenilaiOrganik(query)
+	// Tab Korwil ("atasan langsung organik") cuma boleh diisi organik asli
+	// (email @bps.go.id) — PML Mitra eksternal gak bisa jadi Korwil.
+	bpsOnly := r.URL.Query().Get("peran") == "korwil"
+	results, err := models.SearchPenilaiOrganik(query, bpsOnly)
 	if err != nil {
 		log.Printf("Error searching penilai organik: %v", err)
 		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal mencari akun organik")

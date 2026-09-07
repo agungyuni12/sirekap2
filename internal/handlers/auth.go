@@ -145,6 +145,11 @@ func GetUserFromSession(r *http.Request) map[string]interface{} {
 		data["UserRole"] = session.Values["level"]
 		data["UserInitials"] = session.Values["initials"]
 		data["IsLoggedIn"] = true
+		// See IsExternalAccount below — level "pengguna" covers both organik
+		// (BPS staff) and external mitra, split only by email domain.
+		// Presentation-only (e.g. hide Daftar Penilaian); never used to grant
+		// PML-Mitra-style capabilities.
+		data["IsExternalAccount"] = IsExternalAccount(r)
 	} else {
 		data["IsLoggedIn"] = false
 	}
@@ -166,6 +171,17 @@ func GetUserLevel(r *http.Request) string {
 		return level
 	}
 	return ""
+}
+
+// IsExternalAccount reports whether the current session belongs to a
+// "pengguna"-level account whose email isn't @bps.go.id — see
+// models.User.IsExternalAccount for why this exists and its limits
+// (presentation-only, never a stand-in for PML-Mitra capabilities).
+func IsExternalAccount(r *http.Request) bool {
+	session, _ := store.Get(r, "sirekap-session")
+	level, _ := session.Values["level"].(string)
+	email, _ := session.Values["email"].(string)
+	return level == "pengguna" && !strings.HasSuffix(strings.ToLower(email), "@bps.go.id")
 }
 
 func renderLogin(w http.ResponseWriter, data LoginPageData) {

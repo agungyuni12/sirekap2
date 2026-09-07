@@ -127,9 +127,7 @@
                                         <span class="block text-xs text-gray-500 truncate" x-text="(m.tipe === 'organik' ? m.email : m.idsobat + (m.kecamatan ? ' · ' + m.kecamatan : ''))"></span>
                                     </span>
                                     <span class="flex-shrink-0 inline-flex items-center gap-2">
-                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                                            :class="m.tipe === 'organik' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'"
-                                            x-text="m.tipe === 'organik' ? 'Organik' : 'Mitra'"></span>
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold" :class="tipeBadgeClass(m)" x-text="tipeLabel(m)"></span>
                                         <i class="fas fa-plus text-primary"></i>
                                     </span>
                                 </button>
@@ -155,9 +153,7 @@
                                         <p class="font-medium text-gray-900 truncate" x-text="p.nama"></p>
                                         <p class="text-xs text-gray-500 truncate" x-text="(p.tipe === 'organik' ? p.email : p.idsobat + (p.kecamatan ? ' · ' + p.kecamatan : ''))"></p>
                                     </div>
-                                    <span class="flex-shrink-0 inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                                        :class="p.tipe === 'organik' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'"
-                                        x-text="p.tipe === 'organik' ? 'Organik' : 'Mitra'"></span>
+                                    <span class="flex-shrink-0 inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold" :class="tipeBadgeClass(p)" x-text="tipeLabel(p)"></span>
                                 </div>
                                 <button type="button" @click="removeFromRoster(p)" class="text-red-500 hover:text-red-700 flex-shrink-0" title="Hapus dari kegiatan">
                                     <i class="fas fa-trash"></i>
@@ -308,10 +304,10 @@
                         if (peranTab === 'ppl') {
                             this.addResults[peranTab] = await this.searchMitra(q);
                         } else if (peranTab === 'korwil') {
-                            this.addResults[peranTab] = await this.searchOrganik(q);
+                            this.addResults[peranTab] = await this.searchOrganik(q, 'korwil');
                         } else {
                             // pml: gabungan mitra (PML Mitra) + organik (ditugaskan PML)
-                            const [mitra, organik] = await Promise.all([this.searchMitra(q), this.searchOrganik(q)]);
+                            const [mitra, organik] = await Promise.all([this.searchMitra(q), this.searchOrganik(q, 'pml')]);
                             this.addResults[peranTab] = [...mitra, ...organik];
                         }
                     } catch (error) {
@@ -327,11 +323,24 @@
                 return (result.data || []).map(m => ({ ...m, tipe: 'mitra' }));
             },
 
-            async searchOrganik(q) {
-                const response = await fetch('/api/penilaian/penilai/search?q=' + encodeURIComponent(q));
+            async searchOrganik(q, peranTab) {
+                const response = await fetch('/api/penilaian/penilai/search?q=' + encodeURIComponent(q) + '&peran=' + peranTab);
                 if (!response.ok) throw new Error('Gagal mencari akun organik');
                 const result = await response.json();
                 return (result.data || []).map(u => ({ ...u, tipe: 'organik' }));
+            },
+
+            // Badge "Organik" (email @bps.go.id) vs "PML Mitra" (email lain,
+            // level pengguna tapi bukan staf BPS) vs "Mitra" (dari tabel mitra,
+            // idsobat) — lihat models.OrganikSearchResult.IsExternal.
+            tipeLabel(item) {
+                if (item.tipe !== 'organik') return 'Mitra';
+                return item.is_external ? 'PML Mitra' : 'Organik';
+            },
+
+            tipeBadgeClass(item) {
+                if (item.tipe !== 'organik') return 'bg-gray-100 text-gray-600';
+                return item.is_external ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700';
             },
 
             async addToRoster(peranTab, item) {

@@ -642,13 +642,14 @@ func GetDetailPenilaian(periodeID int, idsobat string) (*DetailPenilaian, error)
 // can only pick from what's already there when scoring, per "PML sm korwil
 // gk boleh tambah petugas".
 type RosterPetugasItem struct {
-	Tipe      string `json:"tipe"` // "mitra" | "organik"
-	IDSobat   string `json:"idsobat,omitempty"`
-	UserID    int    `json:"user_id,omitempty"`
-	Nama      string `json:"nama"`
-	Kecamatan string `json:"kecamatan,omitempty"`
-	Email     string `json:"email,omitempty"`
-	Peran     string `json:"peran"`
+	Tipe       string `json:"tipe"` // "mitra" | "organik"
+	IDSobat    string `json:"idsobat,omitempty"`
+	UserID     int    `json:"user_id,omitempty"`
+	Nama       string `json:"nama"`
+	Kecamatan  string `json:"kecamatan,omitempty"`
+	Email      string `json:"email,omitempty"`
+	Peran      string `json:"peran"`
+	IsExternal bool   `json:"is_external,omitempty"` // tipe "organik" only — lihat OrganikSearchResult
 }
 
 // ListPetugasKegiatan returns one periode's Penilaian Mitra roster —
@@ -706,6 +707,9 @@ func ListPetugasKegiatan(periodeID int, peran string, excludeScored bool) ([]Ros
 		if err := rows.Scan(&it.Tipe, &it.IDSobat, &it.UserID, &it.Nama, &it.Kecamatan, &it.Email, &it.Peran); err != nil {
 			return nil, err
 		}
+		if it.Tipe == "organik" {
+			it.IsExternal = !strings.HasSuffix(strings.ToLower(it.Email), "@bps.go.id")
+		}
 		items = append(items, it)
 	}
 	return items, rows.Err()
@@ -760,17 +764,28 @@ func RemovePetugasDariKegiatan(periodeID int, idsobat string, userID int) error 
 }
 
 // OrganikSearchResult is one akun organik matched by SearchPenilaiOrganik.
+// IsExternal flags accounts whose email isn't @bps.go.id — level "pengguna"
+// covers both real organik (BPS staff) and external mitra who were never
+// explicitly set to a separate level, so this is the only way to tell them
+// apart when admin is deciding who to assign as PML/Korwil.
 type OrganikSearchResult struct {
-	UserID int    `json:"user_id"`
-	Nama   string `json:"nama"`
-	Email  string `json:"email"`
+	UserID     int    `json:"user_id"`
+	Nama       string `json:"nama"`
+	Email      string `json:"email"`
+	IsExternal bool   `json:"is_external"`
 }
 
-// SearchPenilaiOrganik searches akun organik (level "pengguna") by nama,
-// email, or NIP — used to populate the PML/Korwil tabs on Kelola Petugas.
-func SearchPenilaiOrganik(query string) ([]OrganikSearchResult, error) {
+// SearchPenilaiOrganik searches akun "pengguna" by nama, email, atau NIP —
+// dipakai buat isi tab PML/Korwil di Kelola Petugas. Dengan bpsOnly=true,
+// cuma akun ber-email @bps.go.id yang dikembalikan — dipakai tab Korwil,
+// karena Korwil ("atasan langsung organik") harus organik asli, gak boleh
+// PML Mitra eksternal.
+func SearchPenilaiOrganik(query string, bpsOnly bool) ([]OrganikSearchResult, error) {
 	var results []OrganikSearchResult
 	sqlQuery := `SELECT id, nama, email FROM user WHERE level = 'pengguna'`
+	if bpsOnly {
+		sqlQuery += ` AND email LIKE '%@bps.go.id'`
+	}
 	searchClause, args := buildFlexibleSearchClause([]string{"nama", "email", "nip"}, query)
 	sqlQuery += searchClause + " ORDER BY nama LIMIT 20"
 
@@ -785,6 +800,7 @@ func SearchPenilaiOrganik(query string) ([]OrganikSearchResult, error) {
 		if err := rows.Scan(&r.UserID, &r.Nama, &r.Email); err != nil {
 			return nil, err
 		}
+		r.IsExternal = !strings.HasSuffix(strings.ToLower(r.Email), "@bps.go.id")
 		results = append(results, r)
 	}
 	return results, rows.Err()
@@ -793,12 +809,38 @@ func SearchPenilaiOrganik(query string) ([]OrganikSearchResult, error) {
 // GetPenilaiPeranForUser returns the peran ("pml" | "korwil") an organik
 // account has been assigned for one periode — sql.ErrNoRows if the admin
 // hasn't assigned them yet, which callers must treat as "access denied".
+// Checked two ways, in order:
+//  1. An explicit organik assignment (user_id-based roster row) — used for
+//     Korwil, and for organik accounts with no linked mitra profile.
+//  2. If the account's NIP is actually a mitra idsobat (user.nip ==
+//     mitra.idsobat — true for most "pengguna" accounts, see
+//     internal/models/user.go), the SAME PPL/PML roster tab already used to
+//     mark who's being scored decides this too: tagged "pml" there means
+//     this person's real role for the periode is PML (they score PPL),
+//     tagged "ppl" means they're the one being scored — no row is returned,
+//     so they're correctly blocked from scoring. Admin doesn't need a
+//     second, separate assignment step for these accounts: tagging their
+//     idsobat as PML in the normal PPL/PML roster already grants login-side
+//     scoring rights too.
 func GetPenilaiPeranForUser(periodeID, userID int) (string, error) {
 	var peran string
 	err := database.DB.QueryRow(
 		`SELECT peran FROM penilaian_kegiatan_petugas WHERE periode_id = ? AND user_id = ?`,
 		periodeID, userID,
 	).Scan(&peran)
+	if err == nil {
+		return peran, nil
+	}
+	if err != sql.ErrNoRows {
+		return "", err
+	}
+
+	err = database.DB.QueryRow(`
+		SELECT p.peran
+		FROM user u
+		JOIN penilaian_kegiatan_petugas p ON p.idsobat = u.nip
+		WHERE u.id = ? AND p.periode_id = ? AND p.peran = 'pml'
+	`, userID, periodeID).Scan(&peran)
 	return peran, err
 }
 
@@ -816,15 +858,32 @@ type PeriodeSayaItem struct {
 // ListPeriodeSayaForOrganik returns every periode instance an organik account
 // is assigned to (any peran), used to build the kegiatan/periode dropdowns on
 // the Input Penilaian form — periode without an assignment never appear.
+// Combines both assignment paths from GetPenilaiPeranForUser: explicit
+// user_id-based rows (Korwil, or organik with no mitra profile), and — for
+// accounts whose NIP is actually a mitra idsobat — periode where that
+// idsobat is tagged "pml" in the ordinary PPL/PML roster.
 func ListPeriodeSayaForOrganik(userID int) ([]PeriodeSayaItem, error) {
+	// ORDER BY can't reference table-qualified columns outside the SELECT
+	// list once UNION is involved, so the combined rows are wrapped in a
+	// subquery carrying "urutan" through just to sort by it.
 	rows, err := database.DB.Query(`
-		SELECT per.id, pk.id, pk.nama, per.periode, per.tahun, p.peran
-		FROM penilaian_kegiatan_petugas p
-		JOIN penilaian_kegiatan_periode per ON per.id = p.periode_id
-		JOIN penilaian_kegiatan pk ON pk.id = per.kegiatan_id
-		WHERE p.user_id = ?
-		ORDER BY pk.urutan, pk.nama, per.tahun DESC, per.id DESC
-	`, userID)
+		SELECT x.periode_id, x.kegiatan_id, x.kegiatan, x.periode, x.tahun, x.peran
+		FROM (
+			SELECT per.id AS periode_id, pk.id AS kegiatan_id, pk.nama AS kegiatan, per.periode, per.tahun, p.peran, pk.urutan
+			FROM penilaian_kegiatan_petugas p
+			JOIN penilaian_kegiatan_periode per ON per.id = p.periode_id
+			JOIN penilaian_kegiatan pk ON pk.id = per.kegiatan_id
+			WHERE p.user_id = ?
+			UNION
+			SELECT per.id, pk.id, pk.nama, per.periode, per.tahun, p.peran, pk.urutan
+			FROM penilaian_kegiatan_petugas p
+			JOIN penilaian_kegiatan_periode per ON per.id = p.periode_id
+			JOIN penilaian_kegiatan pk ON pk.id = per.kegiatan_id
+			JOIN user u ON u.nip = p.idsobat
+			WHERE u.id = ? AND p.peran = 'pml'
+		) x
+		ORDER BY x.urutan, x.kegiatan, x.tahun DESC, x.periode_id DESC
+	`, userID, userID)
 	if err != nil {
 		return nil, err
 	}

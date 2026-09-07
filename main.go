@@ -491,9 +491,10 @@ func main() {
 	}))
 
 	// Daftar Penilaian — riwayat gabungan semua penilaian, filter per kecamatan,
-	// bisa dicek lagi per aspek. Terbuka untuk semua role yang punya akses
-	// Penilaian, kecuali PML Mitra (hanya boleh input nilai PPL + lapor translok).
-	r.HandleFunc("/penilaian/daftar", middleware.RequireNotPMLMitra(func(w http.ResponseWriter, r *http.Request) {
+	// bisa dicek lagi per aspek. Terbuka untuk organik (BPS staff), tertutup
+	// untuk PML Mitra dan akun eksternal (level pengguna, email bukan
+	// @bps.go.id) — mereka gak perlu lihat riwayat performa semua orang.
+	r.HandleFunc("/penilaian/daftar", middleware.RequireNotExternalDaftarPenilaian(func(w http.ResponseWriter, r *http.Request) {
 		data := mergeUserData(r, map[string]interface{}{
 			"Title":       "Daftar Penilaian",
 			"PageTitle":   "Daftar Penilaian",
@@ -553,8 +554,8 @@ func main() {
 	r.HandleFunc("/api/penilaian/konfirmasi/pending", middleware.RequireAdmin(handlers.ListPendingKonfirmasiHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/konfirmasi", middleware.RequireAdmin(handlers.KonfirmasiPenilaianHandler)).Methods("POST")
 	r.HandleFunc("/api/penilaian/ulang", middleware.RequireAdmin(handlers.SubmitPenilaianUlangHandler)).Methods("POST")
-	r.HandleFunc("/api/penilaian/daftar", middleware.RequireNotPMLMitra(handlers.DaftarPenilaianHandler)).Methods("GET")
-	r.HandleFunc("/api/penilaian/detail", middleware.RequireNotPMLMitra(handlers.DetailPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/daftar", middleware.RequireNotExternalDaftarPenilaian(handlers.DaftarPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/detail", middleware.RequireNotExternalDaftarPenilaian(handlers.DetailPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/dashboard", middleware.RequireAdmin(handlers.DashboardPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/rekap-dashboard", middleware.RequireAdmin(handlers.RekapDashboardHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/rekap-dashboard/export", middleware.RequireAdmin(handlers.ExportRekapDashboardHandler)).Methods("GET")
