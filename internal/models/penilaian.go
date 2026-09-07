@@ -300,17 +300,21 @@ type PendingKonfirmasiItem struct {
 // ListPendingKonfirmasi returns every Tahap 1 score (PPL and PML Mitra) still
 // waiting on the Subject Matter.
 func ListPendingKonfirmasi() ([]PendingKonfirmasiItem, error) {
+	// mitra (dan penilaian_kegiatan/user, jaga-jaga) di-GROUP BY e.id — mitra
+	// bisa punya banyak baris per idsobat (beda tahun/kegiatan survei), jadi
+	// tanpa ini satu skor bisa kegandaan ikut jumlah baris mitra yang cocok.
 	rows, err := database.DB.Query(`
-		SELECT e.kegiatan_id, e.periode_id, COALESCE(pk.nama, ''), COALESCE(e.periode, ''), COALESCE(e.tahun, ''),
-			e.yang_dinilai_idsobat, COALESCE(m.nmitra, ''), e.peran_yang_dinilai,
-			COALESCE(e.kecamatan, ''), COALESCE(e.tanggal_penilaian, ''), COALESCE(u.nama, ''),
+		SELECT e.kegiatan_id, e.periode_id, COALESCE(MAX(pk.nama), ''), COALESCE(e.periode, ''), COALESCE(e.tahun, ''),
+			e.yang_dinilai_idsobat, COALESCE(MAX(m.nmitra), ''), e.peran_yang_dinilai,
+			COALESCE(e.kecamatan, ''), COALESCE(e.tanggal_penilaian, ''), COALESCE(MAX(u.nama), ''),
 			` + weightedSkorSQL + `, COALESCE(e.catatan, '')
 		FROM evaluasi_petugas e
 		LEFT JOIN penilaian_kegiatan pk ON pk.id = e.kegiatan_id
 		LEFT JOIN mitra m ON m.idsobat = e.yang_dinilai_idsobat
 		LEFT JOIN user u ON u.id = e.penilai_id
 		WHERE e.tahap = 1 AND e.status_konfirmasi = 'pending' AND e.periode_id IS NOT NULL
-		ORDER BY e.tanggal_penilaian DESC, m.nmitra
+		GROUP BY e.id
+		ORDER BY e.tanggal_penilaian DESC, MAX(m.nmitra)
 	`)
 	if err != nil {
 		return nil, err
