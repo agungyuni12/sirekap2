@@ -90,10 +90,11 @@ func ExportRekapDashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	predikatStyles := map[string]int{}
 	predikatColors := map[string]string{
-		"Sangat Baik":     "D1FAE5",
-		"Baik":            "DBEAFE",
-		"Cukup":           "FEF3C7",
-		"Perlu Pembinaan": "FEE2E2",
+		"Sangat Baik":   "D1FAE5",
+		"Baik":          "DBEAFE",
+		"Cukup":         "FEF3C7",
+		"Kurang":        "FFE4CE",
+		"Sangat Kurang": "FEE2E2",
 	}
 	for predikatLabel, color := range predikatColors {
 		style, _ := f.NewStyle(&excelize.Style{Fill: excelize.Fill{Type: "pattern", Color: []string{color}, Pattern: 1}})

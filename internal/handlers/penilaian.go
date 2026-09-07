@@ -281,6 +281,19 @@ func SubmitPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Petugas yang sudah punya skor Tahap 1 untuk periode ini tidak boleh
+	// dinilai ulang lewat form ini — mencegah nilai lama tertimpa tanpa
+	// sadar (roster picker juga sudah menyembunyikan mereka, ini jaga-jaga
+	// kalau ada yang coba lewat API langsung).
+	if _, _, err := models.GetTahap1Status(payload.PeriodeID, payload.YangDinilaiID); err == nil {
+		apiError(w, http.StatusConflict, "ALREADY_SCORED", "Petugas ini sudah dinilai untuk periode ini.")
+		return
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		log.Printf("Error checking existing skor: %v", err)
+		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memeriksa penilaian sebelumnya")
+		return
+	}
+
 	in := payload.toInput(kegiatanID, payload.PeriodeID, periode, tahun, peran)
 	if err := models.UpsertEvaluasiTahap1(penilaiID, in); err != nil {
 		log.Printf("Error saving penilaian: %v", err)
@@ -473,7 +486,8 @@ func ListRosterPetugasHandler(w http.ResponseWriter, r *http.Request) {
 		apiError(w, http.StatusBadRequest, "INVALID_PERIODE", "periode_id tidak valid")
 		return
 	}
-	items, err := models.ListPetugasKegiatan(periodeID, r.URL.Query().Get("peran"))
+	excludeScored := r.URL.Query().Get("exclude_scored") == "1"
+	items, err := models.ListPetugasKegiatan(periodeID, r.URL.Query().Get("peran"), excludeScored)
 	if err != nil {
 		log.Printf("Error listing roster petugas: %v", err)
 		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memuat daftar petugas")

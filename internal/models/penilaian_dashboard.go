@@ -6,28 +6,32 @@ import (
 	"sirekap/internal/database"
 )
 
-// PredikatFromSkor classifies a final score into the 4-tier predikat used by
-// the Dashboard & Rekap Penilaian Kinerja Mitra screen.
+// PredikatFromSkor classifies a final score into the 5-tier predikat used by
+// the Dashboard & Rekap Penilaian Kinerja Mitra screen: 91-100 Sangat Baik,
+// 81-90 Baik, 71-80 Cukup, 61-70 Kurang, 1-60 Sangat Kurang.
 func PredikatFromSkor(skor float64) string {
 	switch {
-	case skor >= 90:
+	case skor >= 91:
 		return "Sangat Baik"
-	case skor >= 80:
+	case skor >= 81:
 		return "Baik"
-	case skor >= 70:
+	case skor >= 71:
 		return "Cukup"
+	case skor >= 61:
+		return "Kurang"
 	default:
-		return "Perlu Pembinaan"
+		return "Sangat Kurang"
 	}
 }
 
 // DistribusiKelulusan is the predikat breakdown, keyed the way the API contract
 // specifies (snake_case, one field per predikat).
 type DistribusiKelulusan struct {
-	SangatBaik     int `json:"sangat_baik"`
-	Baik           int `json:"baik"`
-	Cukup          int `json:"cukup"`
-	PerluPembinaan int `json:"perlu_pembinaan"`
+	SangatBaik   int `json:"sangat_baik"`
+	Baik         int `json:"baik"`
+	Cukup        int `json:"cukup"`
+	Kurang       int `json:"kurang"`
+	SangatKurang int `json:"sangat_kurang"`
 }
 
 // RataPerAspek is the average score per one of the 5 penilaian aspects
@@ -178,8 +182,10 @@ func GetDashboardPenilaianStats(f DaftarPenilaianFilter) (*DashboardPenilaianSta
 			stats.DistribusiKelulusan.Baik++
 		case "Cukup":
 			stats.DistribusiKelulusan.Cukup++
+		case "Kurang":
+			stats.DistribusiKelulusan.Kurang++
 		default:
-			stats.DistribusiKelulusan.PerluPembinaan++
+			stats.DistribusiKelulusan.SangatKurang++
 		}
 	}
 

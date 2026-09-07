@@ -653,8 +653,13 @@ type RosterPetugasItem struct {
 
 // ListPetugasKegiatan returns one periode's Penilaian Mitra roster —
 // mitra entries and organik entries combined — optionally filtered to one
-// peran ("ppl" | "pml" | "korwil").
-func ListPetugasKegiatan(periodeID int, peran string) ([]RosterPetugasItem, error) {
+// peran ("ppl" | "pml" | "korwil"). With excludeScored, mitra who already
+// have a Tahap 1 score for this periode are left out of the mitra entries —
+// used by the Input Penilaian target picker so an already-scored petugas
+// can't be selected again and accidentally overwritten; Kelola Petugas
+// (roster management) always passes excludeScored=false so admin still sees
+// everyone on the roster regardless of scoring status.
+func ListPetugasKegiatan(periodeID int, peran string, excludeScored bool) ([]RosterPetugasItem, error) {
 	// Tabel mitra bisa punya banyak baris per idsobat (beda tahun/kegiatan
 	// survei — lihat filter tahun di SearchMitra), jadi LEFT JOIN di sini
 	// di-GROUP BY p.idsobat supaya satu entri roster tidak kegandaan ikut
@@ -668,6 +673,12 @@ func ListPetugasKegiatan(periodeID int, peran string) ([]RosterPetugasItem, erro
 	if peran != "" {
 		query += " AND p.peran = ?"
 		args = append(args, peran)
+	}
+	if excludeScored {
+		query += ` AND NOT EXISTS (
+			SELECT 1 FROM evaluasi_petugas e
+			WHERE e.periode_id = p.periode_id AND e.yang_dinilai_idsobat = p.idsobat AND e.tahap = 1
+		)`
 	}
 	query += `
 		GROUP BY p.idsobat, p.peran

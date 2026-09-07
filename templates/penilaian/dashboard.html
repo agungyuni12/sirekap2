@@ -49,8 +49,8 @@
             <div class="w-11 h-11 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-3">
                 <i class="fas fa-triangle-exclamation text-red-500"></i>
             </div>
-            <p class="text-2xl font-bold text-gray-800 dark:text-white" x-text="stats.distribusi_kelulusan.perlu_pembinaan"></p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Perlu Pembinaan</p>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white" x-text="stats.distribusi_kelulusan.kurang + stats.distribusi_kelulusan.sangat_kurang"></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Kurang ke Bawah</p>
         </div>
     </div>
 
@@ -116,7 +116,8 @@
                     <option value="Sangat Baik">Sangat Baik</option>
                     <option value="Baik">Baik</option>
                     <option value="Cukup">Cukup</option>
-                    <option value="Perlu Pembinaan">Perlu Pembinaan</option>
+                    <option value="Kurang">Kurang</option>
+                    <option value="Sangat Kurang">Sangat Kurang</option>
                 </select>
             </div>
             <div>
@@ -203,7 +204,7 @@
             stats: {
                 total_dinilai: 0,
                 rata_rata_skor: 0,
-                distribusi_kelulusan: { sangat_baik: 0, baik: 0, cukup: 0, perlu_pembinaan: 0 },
+                distribusi_kelulusan: { sangat_baik: 0, baik: 0, cukup: 0, kurang: 0, sangat_kurang: 0 },
                 rata_per_aspek: { kualitas: 0, ketepatan_waktu: 0, kepatuhan_sop: 0, komunikasi: 0, sikap: 0 },
             },
             rekapList: [],
@@ -255,6 +256,7 @@
                     case 'Sangat Baik': return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300';
                     case 'Baik': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
                     case 'Cukup': return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300';
+                    case 'Kurang': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
                     default: return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
                 }
             },
@@ -278,15 +280,16 @@
                 this._predikatChart = new Chart(this.$refs.predikatChart, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Sangat Baik', 'Baik', 'Cukup', 'Perlu Pembinaan'],
+                        labels: ['Sangat Baik', 'Baik', 'Cukup', 'Kurang', 'Sangat Kurang'],
                         datasets: [{
                             data: [
                                 this.stats.distribusi_kelulusan.sangat_baik,
                                 this.stats.distribusi_kelulusan.baik,
                                 this.stats.distribusi_kelulusan.cukup,
-                                this.stats.distribusi_kelulusan.perlu_pembinaan,
+                                this.stats.distribusi_kelulusan.kurang,
+                                this.stats.distribusi_kelulusan.sangat_kurang,
                             ],
-                            backgroundColor: ['#10b981', '#2563eb', '#f59e0b', '#ef4444'],
+                            backgroundColor: ['#10b981', '#2563eb', '#f59e0b', '#f97316', '#ef4444'],
                             borderWidth: 0,
                         }],
                     },
