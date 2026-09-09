@@ -46,13 +46,12 @@ type RataPerAspek struct {
 
 // DashboardPenilaianStats is the aggregate payload for GET /api/penilaian/dashboard.
 type DashboardPenilaianStats struct {
-	TotalDinilai        int                 `json:"total_dinilai"`
-	RataRataSkor        float64             `json:"rata_rata_skor"`
-	DistribusiKelulusan DistribusiKelulusan `json:"distribusi_kelulusan"`
-	RataPerAspek        RataPerAspek        `json:"rata_per_aspek"`
-	TotalPetugas        int                 `json:"total_petugas"` // total roster Kelola Petugas — lihat GetCakupanPenilaian
-	SudahDinilai        int                 `json:"sudah_dinilai"` // dari TotalPetugas, sudah punya minimal 1 skor
-	TopPPL              []RekapMitraItem    `json:"top_ppl"`       // 5 PPL skor rata-rata tertinggi — lihat GetTopPPL
+	TotalDinilai        int                   `json:"total_dinilai"`
+	RataRataSkor        float64               `json:"rata_rata_skor"`
+	DistribusiKelulusan DistribusiKelulusan   `json:"distribusi_kelulusan"`
+	RataPerAspek        RataPerAspek          `json:"rata_per_aspek"`
+	CakupanPerKegiatan  []KegiatanCakupanItem `json:"cakupan_per_kegiatan"` // lihat GetCakupanPerKegiatan
+	TopPPL              []RekapMitraItem      `json:"top_ppl"`              // 5 PPL skor rata-rata tertinggi — lihat GetTopPPL
 }
 
 type aspekRaw struct {
@@ -203,12 +202,11 @@ func GetDashboardPenilaianStats(f DaftarPenilaianFilter) (*DashboardPenilaianSta
 		}
 	}
 
-	total, dinilai, err := GetCakupanPenilaian(f.KegiatanID)
+	cakupan, err := GetCakupanPerKegiatan(f.Tahun)
 	if err != nil {
 		return nil, err
 	}
-	stats.TotalPetugas = total
-	stats.SudahDinilai = dinilai
+	stats.CakupanPerKegiatan = cakupan
 
 	topPPL, err := GetTopPPL(f)
 	if err != nil {

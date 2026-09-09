@@ -58,16 +58,23 @@
     <div class="grid lg:grid-cols-2 gap-5">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 md:p-6">
             <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Cakupan Penilaian</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                <span class="font-semibold text-gray-800 dark:text-white" x-text="stats.sudah_dinilai"></span>
-                dari
-                <span class="font-semibold text-gray-800 dark:text-white" x-text="stats.total_petugas"></span>
-                petugas terdaftar sudah dinilai
-            </p>
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                <div class="bg-primary h-3 rounded-full transition-all" :style="'width:' + cakupanPercent() + '%'"></div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Petugas terdaftar (Kelola Petugas) yang sudah dinilai, per kegiatan.</p>
+            <template x-if="!stats.cakupan_per_kegiatan || stats.cakupan_per_kegiatan.length === 0">
+                <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">Belum ada kegiatan dengan petugas terdaftar.</p>
+            </template>
+            <div class="space-y-4 max-h-72 overflow-y-auto pr-1">
+                <template x-for="k in (stats.cakupan_per_kegiatan || [])" :key="k.kegiatan_id">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <p class="text-sm text-gray-700 dark:text-gray-200 truncate" x-text="k.kegiatan"></p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0" x-text="k.dinilai + ' dari ' + k.total + ' (' + cakupanPercent(k) + '%)'"></p>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                            <div class="bg-primary h-3 rounded-full transition-all" :style="'width:' + cakupanPercent(k) + '%'"></div>
+                        </div>
+                    </div>
+                </template>
             </div>
-            <p class="text-right text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="cakupanPercent() + '%'"></p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 md:p-6">
             <h3 class="font-semibold text-gray-900 dark:text-white mb-3">5 PPL Terbaik</h3>
@@ -246,8 +253,7 @@
                 rata_rata_skor: 0,
                 distribusi_kelulusan: { sangat_baik: 0, baik: 0, cukup: 0, kurang: 0, sangat_kurang: 0 },
                 rata_per_aspek: { kualitas: 0, ketepatan_waktu: 0, kepatuhan_sop: 0, komunikasi: 0, sikap: 0 },
-                total_petugas: 0,
-                sudah_dinilai: 0,
+                cakupan_per_kegiatan: [],
                 top_ppl: [],
             },
             rekapList: [],
@@ -305,9 +311,9 @@
                 }
             },
 
-            cakupanPercent() {
-                if (!this.stats.total_petugas) return 0;
-                return Math.round((this.stats.sudah_dinilai / this.stats.total_petugas) * 100);
+            cakupanPercent(k) {
+                if (!k || !k.total) return 0;
+                return Math.round((k.dinilai / k.total) * 100);
             },
 
             exportUrl() {

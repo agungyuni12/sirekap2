@@ -621,30 +621,58 @@ func GetTopPPL(f DaftarPenilaianFilter) ([]RekapMitraItem, error) {
 	return ranked, nil
 }
 
-// GetCakupanPenilaian returns how many mitra registered on the roster
-// (Kelola Petugas) have at least one Tahap 1 score recorded — "180 dari 200
-// petugas sudah dinilai" on the Dashboard. "Sudah dinilai" here is deliberately
-// loose (any Tahap 1 row, regardless of status_konfirmasi), not just
-// finalized ones. kegiatanID<=0 sums across every kegiatan.
-func GetCakupanPenilaian(kegiatanID int) (total, dinilai int, err error) {
+// KegiatanCakupanItem is one kegiatan's coverage — "180 dari 200 petugas
+// terdaftar sudah dinilai" — for the Dashboard's Cakupan Penilaian widget,
+// broken down per kegiatan rather than summed into one number ("misal dari
+// SE ada 200 petugas..." di catatan user itu maksudnya per kegiatan).
+type KegiatanCakupanItem struct {
+	KegiatanID int    `json:"kegiatan_id"`
+	Kegiatan   string `json:"kegiatan"`
+	Total      int    `json:"total"`   // mitra unik terdaftar di roster kegiatan ini
+	Dinilai    int    `json:"dinilai"` // dari situ, sudah punya minimal 1 skor tahap 1
+}
+
+// GetCakupanPerKegiatan returns coverage for every kegiatan that has a
+// roster, one row each — only kegiatan admin has actually added petugas to
+// via Kelola Petugas show up. "Sudah dinilai" is deliberately loose (any
+// Tahap 1 row, regardless of status_konfirmasi), not just finalized ones.
+// tahun="" sums across every tahun.
+func GetCakupanPerKegiatan(tahun string) ([]KegiatanCakupanItem, error) {
 	clauses := []string{"p.idsobat IS NOT NULL"}
 	var args []interface{}
-	if kegiatanID > 0 {
-		clauses = append(clauses, "per.kegiatan_id = ?")
-		args = append(args, kegiatanID)
+	if tahun != "" {
+		clauses = append(clauses, "per.tahun = ?")
+		args = append(args, tahun)
 	}
 	where := strings.Join(clauses, " AND ")
 
-	err = database.DB.QueryRow(`
-		SELECT COUNT(DISTINCT p.idsobat),
+	rows, err := database.DB.Query(`
+		SELECT pk.id, pk.nama,
+			COUNT(DISTINCT p.idsobat),
 			COUNT(DISTINCT CASE WHEN e.id IS NOT NULL THEN p.idsobat END)
 		FROM penilaian_kegiatan_petugas p
 		JOIN penilaian_kegiatan_periode per ON per.id = p.periode_id
+		JOIN penilaian_kegiatan pk ON pk.id = per.kegiatan_id
 		LEFT JOIN evaluasi_petugas e
 			ON e.periode_id = p.periode_id AND e.yang_dinilai_idsobat = p.idsobat AND e.tahap = 1
-		WHERE `+where, args...,
-	).Scan(&total, &dinilai)
-	return total, dinilai, err
+		WHERE `+where+`
+		GROUP BY pk.id, pk.nama
+		ORDER BY pk.urutan, pk.nama
+	`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []KegiatanCakupanItem
+	for rows.Next() {
+		var it KegiatanCakupanItem
+		if err := rows.Scan(&it.KegiatanID, &it.Kegiatan, &it.Total, &it.Dinilai); err != nil {
+			return nil, err
+		}
+		items = append(items, it)
+	}
+	return items, rows.Err()
 }
 
 // GetDetailPenilaian returns the full aspect-by-aspect breakdown for one
