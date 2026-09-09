@@ -259,6 +259,7 @@
             loading: false,
             flash: { type: '', message: '' },
             _predikatChart: null,
+            _chartRetries: 0,
             _aspekChart: null,
 
             init() {
@@ -324,6 +325,26 @@
                 const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
                 const labelColor = isDark ? '#cbd5e1' : '#475569';
 
+                if (typeof Chart === 'undefined' || !this.$refs.predikatChart || !this.$refs.aspekChart) {
+                    // Chart.js belum kemuat (CDN lambat/gagal) atau canvas belum
+                    // ke-render — coba lagi sebentar lagi daripada gagal diam-diam,
+                    // maks ~3 detik supaya gak retry selamanya kalau CDN-nya
+                    // memang gagal total (mis. diblokir jaringan kantor).
+                    if (this._chartRetries < 15) {
+                        this._chartRetries++;
+                        setTimeout(() => this.renderCharts(), 200);
+                    }
+                    return;
+                }
+                this._chartRetries = 0;
+
+                // Cek langsung ke canvas-nya (bukan cuma variabel yang kita
+                // track sendiri) — kalau ada chart "hantu" masih nempel di situ
+                // (misal dari cache/reload browser), Chart.js gagal bikin yang
+                // baru dengan error "Cannot read properties of null (reading
+                // 'save')" karena context canvas lama itu sudah gak valid.
+                const existingPredikat = Chart.getChart(this.$refs.predikatChart);
+                if (existingPredikat) existingPredikat.destroy();
                 if (this._predikatChart) this._predikatChart.destroy();
                 this._predikatChart = new Chart(this.$refs.predikatChart, {
                     type: 'doughnut',
@@ -347,6 +368,8 @@
                     },
                 });
 
+                const existingAspek = Chart.getChart(this.$refs.aspekChart);
+                if (existingAspek) existingAspek.destroy();
                 if (this._aspekChart) this._aspekChart.destroy();
                 this._aspekChart = new Chart(this.$refs.aspekChart, {
                     type: 'bar',
