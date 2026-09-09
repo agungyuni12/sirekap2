@@ -54,6 +54,46 @@
         </div>
     </div>
 
+    <!-- Cakupan Penilaian & 5 PPL Terbaik -->
+    <div class="grid lg:grid-cols-2 gap-5">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 md:p-6">
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Cakupan Penilaian</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <span class="font-semibold text-gray-800 dark:text-white" x-text="stats.sudah_dinilai"></span>
+                dari
+                <span class="font-semibold text-gray-800 dark:text-white" x-text="stats.total_petugas"></span>
+                petugas terdaftar sudah dinilai
+            </p>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div class="bg-primary h-3 rounded-full transition-all" :style="'width:' + cakupanPercent() + '%'"></div>
+            </div>
+            <p class="text-right text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="cakupanPercent() + '%'"></p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 md:p-6">
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">5 PPL Terbaik</h3>
+            <template x-if="!stats.top_ppl || stats.top_ppl.length === 0">
+                <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">Belum ada data.</p>
+            </template>
+            <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                <template x-for="(p, idx) in (stats.top_ppl || [])" :key="p.idsobat">
+                    <div class="flex items-center justify-between gap-3 py-2.5">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-6 h-6 flex-shrink-0 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-bold flex items-center justify-center" x-text="idx + 1"></span>
+                            <div class="min-w-0">
+                                <p class="font-medium text-gray-900 dark:text-white truncate" x-text="p.nama_mitra"></p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400" x-text="p.idsobat"></p>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 text-right">
+                            <p class="font-bold text-primary" x-text="p.skor_rata_rata.toFixed(1)"></p>
+                            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold" :class="predikatClass(p.predikat)" x-text="p.predikat"></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts -->
     <div class="grid lg:grid-cols-5 gap-5">
         <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 md:p-6">
@@ -206,6 +246,9 @@
                 rata_rata_skor: 0,
                 distribusi_kelulusan: { sangat_baik: 0, baik: 0, cukup: 0, kurang: 0, sangat_kurang: 0 },
                 rata_per_aspek: { kualitas: 0, ketepatan_waktu: 0, kepatuhan_sop: 0, komunikasi: 0, sikap: 0 },
+                total_petugas: 0,
+                sudah_dinilai: 0,
+                top_ppl: [],
             },
             rekapList: [],
             totalData: 0,
@@ -259,6 +302,11 @@
                     case 'Kurang': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
                     default: return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
                 }
+            },
+
+            cakupanPercent() {
+                if (!this.stats.total_petugas) return 0;
+                return Math.round((this.stats.sudah_dinilai / this.stats.total_petugas) * 100);
             },
 
             exportUrl() {

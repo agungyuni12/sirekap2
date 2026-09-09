@@ -50,6 +50,9 @@ type DashboardPenilaianStats struct {
 	RataRataSkor        float64             `json:"rata_rata_skor"`
 	DistribusiKelulusan DistribusiKelulusan `json:"distribusi_kelulusan"`
 	RataPerAspek        RataPerAspek        `json:"rata_per_aspek"`
+	TotalPetugas        int                 `json:"total_petugas"` // total roster Kelola Petugas — lihat GetCakupanPenilaian
+	SudahDinilai        int                 `json:"sudah_dinilai"` // dari TotalPetugas, sudah punya minimal 1 skor
+	TopPPL              []RekapMitraItem    `json:"top_ppl"`       // 5 PPL skor rata-rata tertinggi — lihat GetTopPPL
 }
 
 type aspekRaw struct {
@@ -199,6 +202,19 @@ func GetDashboardPenilaianStats(f DaftarPenilaianFilter) (*DashboardPenilaianSta
 			Sikap:          sumSikap / n,
 		}
 	}
+
+	total, dinilai, err := GetCakupanPenilaian(f.KegiatanID)
+	if err != nil {
+		return nil, err
+	}
+	stats.TotalPetugas = total
+	stats.SudahDinilai = dinilai
+
+	topPPL, err := GetTopPPL(f)
+	if err != nil {
+		return nil, err
+	}
+	stats.TopPPL = topPPL
 
 	return stats, nil
 }

@@ -555,6 +555,7 @@ func main() {
 	r.HandleFunc("/api/penilaian/konfirmasi", middleware.RequireAdmin(handlers.KonfirmasiPenilaianHandler)).Methods("POST")
 	r.HandleFunc("/api/penilaian/ulang", middleware.RequireAdmin(handlers.SubmitPenilaianUlangHandler)).Methods("POST")
 	r.HandleFunc("/api/penilaian/daftar", middleware.RequireNotExternalDaftarPenilaian(handlers.DaftarPenilaianHandler)).Methods("GET")
+	r.HandleFunc("/api/penilaian/rekap-mitra", middleware.RequireNotExternalDaftarPenilaian(handlers.RekapMitraHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/detail", middleware.RequireNotExternalDaftarPenilaian(handlers.DetailPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/dashboard", middleware.RequireAdmin(handlers.DashboardPenilaianHandler)).Methods("GET")
 	r.HandleFunc("/api/penilaian/rekap-dashboard", middleware.RequireAdmin(handlers.RekapDashboardHandler)).Methods("GET")

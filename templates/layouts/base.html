@@ -760,6 +760,11 @@
 
                         <div x-show="expandedPenilaian && (!sidebarCollapsed || isMobile)" x-collapse
                             class="mt-2 ml-6 pl-4 border-l-2 border-gray-600 space-y-1">
+                            <a href="/penilaian/kelola-petugas" @click="sidebarOpen = false"
+                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-kelola-petugas" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
+                                <i class="fas fa-users-gear w-5 mr-3 {{ if eq .ActivePage "penilaian-kelola-petugas" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
+                                <span>Kelola Petugas</span>
+                            </a>
                             <a href="/penilaian/rekap" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-rekap" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-clipboard-check w-5 mr-3 {{ if eq .ActivePage "penilaian-rekap" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
@@ -769,11 +774,6 @@
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-daftar" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
                                 <i class="fas fa-list-check w-5 mr-3 {{ if eq .ActivePage "penilaian-daftar" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
                                 <span>Daftar Penilaian</span>
-                            </a>
-                            <a href="/penilaian/kelola-petugas" @click="sidebarOpen = false"
-                                class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-kelola-petugas" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">
-                                <i class="fas fa-users-gear w-5 mr-3 {{ if eq .ActivePage "penilaian-kelola-petugas" }}text-amber-400{{ else }}text-gray-500{{ end }}"></i>
-                                <span>Kelola Petugas</span>
                             </a>
                             <a href="/penilaian/dashboard" @click="sidebarOpen = false"
                                 class="flex items-center px-4 py-2.5 rounded-lg transition {{ if eq .ActivePage "penilaian-dashboard" }}bg-white/10 text-white{{ else }}text-gray-400 hover:text-white hover:bg-white/5{{ end }}">

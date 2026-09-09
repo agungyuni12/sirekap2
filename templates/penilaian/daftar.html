@@ -4,7 +4,7 @@
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
             <h2 class="text-xl md:text-2xl font-bold text-gray-800">Daftar Penilaian</h2>
-            <p class="text-gray-500 mt-1 text-sm md:text-base">Riwayat seluruh penilaian mitra. Klik satu baris untuk melihat rincian skor per aspek.</p>
+            <p class="text-gray-500 mt-1 text-sm md:text-base">Rekapitulasi nilai akhir tiap mitra (rata-rata, kalau dinilai di lebih dari satu kegiatan). Klik "Riwayat" untuk lihat nilai per kegiatan.</p>
         </div>
     </div>
 
@@ -109,43 +109,77 @@
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
                         <th class="px-4 py-3 text-left font-semibold">Nama Mitra</th>
-                        <th class="px-4 py-3 text-left font-semibold">Kegiatan</th>
-                        <th class="px-4 py-3 text-left font-semibold">Periode</th>
-                        <th class="px-4 py-3 text-left font-semibold">Kecamatan</th>
-                        <th class="px-4 py-3 text-center font-semibold">Peran</th>
-                        <th class="px-4 py-3 text-center font-semibold">Status</th>
-                        <th class="px-4 py-3 text-right font-semibold">Skor Akhir</th>
+                        <th class="px-4 py-3 text-left font-semibold">ID Sobat</th>
+                        <th class="px-4 py-3 text-center font-semibold">Jumlah Kegiatan</th>
+                        <th class="px-4 py-3 text-right font-semibold">Skor Rata-rata</th>
                         <th class="px-4 py-3 text-center font-semibold">Predikat</th>
                         <th class="px-4 py-3 text-center font-semibold">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    <template x-for="item in items" :key="item.periode_id + '-' + item.idsobat">
+                    <template x-for="item in items" :key="item.idsobat">
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 font-medium text-gray-900" x-text="item.nama_mitra"></td>
-                            <td class="px-4 py-3 text-gray-600" x-text="item.kegiatan"></td>
-                            <td class="px-4 py-3 text-gray-600" x-text="(item.periode || '-') + ' ' + (item.tahun || '')"></td>
-                            <td class="px-4 py-3 text-gray-600" x-text="item.kecamatan || '-'"></td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600" x-text="item.peran"></span>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold" :class="statusClass(item)" x-text="statusLabel(item)"></span>
-                            </td>
-                            <td class="px-4 py-3 text-right font-bold text-primary" x-text="item.skor_akhir !== null ? item.skor_akhir.toFixed(1) : '-'"></td>
+                            <td class="px-4 py-3 text-gray-600" x-text="item.idsobat"></td>
+                            <td class="px-4 py-3 text-center text-gray-600" x-text="item.jumlah_kegiatan"></td>
+                            <td class="px-4 py-3 text-right font-bold text-primary" x-text="item.skor_rata_rata !== null ? item.skor_rata_rata.toFixed(1) : '-'"></td>
                             <td class="px-4 py-3 text-center">
                                 <span x-show="item.predikat" class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" :class="predikatClass(item.predikat)" x-text="item.predikat"></span>
                                 <span x-show="!item.predikat">-</span>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <button type="button" @click="openDetail(item)" class="text-primary hover:text-primary-dark font-medium">
-                                    <i class="fas fa-eye mr-1"></i> Detail
+                                <button type="button" @click="openRiwayat(item)" class="text-primary hover:text-primary-dark font-medium">
+                                    <i class="fas fa-clock-rotate-left mr-1"></i> Riwayat
                                 </button>
                             </td>
                         </tr>
                     </template>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Riwayat Modal (daftar penilaian per kegiatan, untuk satu mitra) -->
+    <div x-show="riwayatOpen" x-cloak x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background: rgba(15, 23, 42, 0.5);">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden max-h-[90vh] overflow-y-auto" @click.outside="riwayatOpen = false">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-gray-900">Riwayat Penilaian</h3>
+                    <p class="text-xs text-gray-500" x-text="riwayatMitra"></p>
+                </div>
+                <button @click="riwayatOpen = false" class="w-9 h-9 rounded-full hover:bg-gray-100 text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <template x-if="riwayatLoading">
+                <div class="p-8 text-sm text-primary inline-flex items-center">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Memuat riwayat...
+                </div>
+            </template>
+
+            <template x-if="!riwayatLoading && riwayatList.length === 0">
+                <div class="p-8 text-center text-sm text-gray-500">Belum ada riwayat penilaian.</div>
+            </template>
+
+            <div class="divide-y divide-gray-100" x-show="!riwayatLoading && riwayatList.length > 0">
+                <template x-for="r in riwayatList" :key="r.periode_id + '-' + r.idsobat">
+                    <button type="button" @click="riwayatOpen = false; openDetail(r)"
+                        class="w-full text-left px-6 py-4 hover:bg-gray-50 transition flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="font-medium text-gray-900 truncate" x-text="r.kegiatan"></p>
+                            <p class="text-xs text-gray-500" x-text="(r.periode || '-') + ' ' + (r.tahun || '') + ' · ' + r.peran + ' · ' + (r.kecamatan || '-')"></p>
+                            <span class="inline-flex mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" :class="statusClass(r)" x-text="statusLabel(r)"></span>
+                        </div>
+                        <div class="flex-shrink-0 text-right">
+                            <p class="text-lg font-bold" :class="r.skor_akhir !== null ? 'text-primary' : 'text-gray-400'"
+                                x-text="r.skor_akhir !== null ? r.skor_akhir.toFixed(1) : '-'"></p>
+                            <span x-show="r.predikat" class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold" :class="predikatClass(r.predikat)" x-text="r.predikat"></span>
+                        </div>
+                    </button>
+                </template>
+            </div>
         </div>
     </div>
 
@@ -252,6 +286,10 @@
             detailOpen: false,
             detailLoading: false,
             detail: null,
+            riwayatOpen: false,
+            riwayatLoading: false,
+            riwayatList: [],
+            riwayatMitra: '',
 
             init() {
                 for (let y = new Date().getFullYear(); y >= new Date().getFullYear() - 4; y--) {
@@ -321,7 +359,7 @@
             async load() {
                 this.loading = true;
                 try {
-                    const response = await fetch('/api/penilaian/daftar?' + this.params().toString());
+                    const response = await fetch('/api/penilaian/rekap-mitra?' + this.params().toString());
                     if (!response.ok) throw new Error('Gagal memuat daftar penilaian');
                     const result = await response.json();
                     this.items = result.data || [];
@@ -329,6 +367,27 @@
                     this.flash = { type: 'error', message: error.message };
                 } finally {
                     this.loading = false;
+                }
+            },
+
+            async openRiwayat(item) {
+                this.riwayatOpen = true;
+                this.riwayatLoading = true;
+                this.riwayatList = [];
+                this.riwayatMitra = item.nama_mitra + ' · ' + item.idsobat;
+                try {
+                    const p = this.params();
+                    p.delete('predikat'); // predikat di sini nilai per-kegiatan, bukan rata-rata
+                    p.set('idsobat', item.idsobat);
+                    const response = await fetch('/api/penilaian/daftar?' + p.toString());
+                    if (!response.ok) throw new Error('Gagal memuat riwayat penilaian');
+                    const result = await response.json();
+                    this.riwayatList = result.data || [];
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
+                    this.riwayatOpen = false;
+                } finally {
+                    this.riwayatLoading = false;
                 }
             },
 

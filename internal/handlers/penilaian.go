@@ -425,6 +425,7 @@ func daftarPenilaianFilters(r *http.Request) models.DaftarPenilaianFilter {
 	return models.DaftarPenilaianFilter{
 		KegiatanID:       kegiatanID,
 		PeriodeID:        periodeID,
+		IDSobat:          r.URL.Query().Get("idsobat"),
 		Tahun:            r.URL.Query().Get("tahun"),
 		Peran:            r.URL.Query().Get("peran"),
 		Kecamatan:        r.URL.Query().Get("kecamatan"),
@@ -440,6 +441,24 @@ func DaftarPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error loading daftar penilaian: %v", err)
 		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memuat daftar penilaian")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"data":       items,
+		"total_data": len(items),
+	})
+}
+
+// RekapMitraHandler GET /api/penilaian/rekap-mitra
+// Daftar Penilaian yang sudah digabung per mitra (satu baris per mitra,
+// skor rata-rata) — mitra yang dinilai di lebih dari satu kegiatan tidak
+// lagi tampil sebagai baris terpisah. Riwayat per kegiatan tetap bisa
+// dibuka lewat GET /api/penilaian/daftar?idsobat=.
+func RekapMitraHandler(w http.ResponseWriter, r *http.Request) {
+	items, err := models.GetRekapMitra(daftarPenilaianFilters(r))
+	if err != nil {
+		log.Printf("Error loading rekap mitra: %v", err)
+		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal memuat rekap mitra")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{

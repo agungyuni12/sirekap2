@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 
 	"sirekap/internal/database"
@@ -363,6 +364,7 @@ type DaftarPenilaianItem struct {
 type DaftarPenilaianFilter struct {
 	KegiatanID       int
 	PeriodeID        int
+	IDSobat          string
 	Tahun            string
 	Peran            string
 	Kecamatan        string
@@ -390,6 +392,10 @@ func GetDaftarPenilaian(f DaftarPenilaianFilter) ([]DaftarPenilaianItem, error) 
 	if f.PeriodeID > 0 {
 		clauses = append(clauses, "e.periode_id = ?")
 		args = append(args, f.PeriodeID)
+	}
+	if f.IDSobat != "" {
+		clauses = append(clauses, "e.yang_dinilai_idsobat = ?")
+		args = append(args, f.IDSobat)
 	}
 	if f.Tahun != "" {
 		clauses = append(clauses, "e.tahun = ?")
@@ -515,6 +521,130 @@ func GetDaftarPenilaian(f DaftarPenilaianFilter) ([]DaftarPenilaianItem, error) 
 	}
 
 	return items, nil
+}
+
+// RekapMitraItem is one mitra's overall standing across every kegiatan/
+// periode they've been assessed in — the grouped view Daftar Penilaian
+// shows by default (satu mitra bisa dinilai di lebih dari satu kegiatan;
+// baris terpisah per kegiatan digabung jadi satu skor rata-rata di sini,
+// riwayat per kegiatan tetap bisa dibuka lewat GetDaftarPenilaian dengan
+// filter IDSobat).
+type RekapMitraItem struct {
+	IDSobat        string   `json:"idsobat"`
+	NamaMitra      string   `json:"nama_mitra"`
+	JumlahKegiatan int      `json:"jumlah_kegiatan"` // total entri (final + pending/ditolak)
+	JumlahDinilai  int      `json:"jumlah_dinilai"`  // entri final yang masuk rata-rata
+	SkorRataRata   *float64 `json:"skor_rata_rata"`
+	Predikat       string   `json:"predikat"`
+}
+
+// GetRekapMitra groups GetDaftarPenilaian's per-(periode,idsobat) rows by
+// mitra, averaging SkorAkhir across only the finalized ones (pending, or
+// ditolak belum dinilai ulang, tetap dihitung di JumlahKegiatan tapi tidak
+// masuk rata-rata). f.Predikat is applied AFTER grouping, against the
+// averaged predikat — filtering "Sangat Baik" here means "mitra yang
+// keseluruhannya Sangat Baik", bukan "salah satu kegiatannya Sangat Baik".
+func GetRekapMitra(f DaftarPenilaianFilter) ([]RekapMitraItem, error) {
+	entryFilter := f
+	entryFilter.Predikat = ""
+	entries, err := GetDaftarPenilaian(entryFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	type agg struct {
+		nama  string
+		sum   float64
+		n     int
+		total int
+	}
+	var order []string
+	byIdsobat := map[string]*agg{}
+	for _, e := range entries {
+		a, ok := byIdsobat[e.IDSobat]
+		if !ok {
+			a = &agg{nama: e.NamaMitra}
+			byIdsobat[e.IDSobat] = a
+			order = append(order, e.IDSobat)
+		}
+		a.total++
+		if e.SkorAkhir != nil {
+			a.sum += *e.SkorAkhir
+			a.n++
+		}
+	}
+
+	items := make([]RekapMitraItem, 0, len(order))
+	for _, idsobat := range order {
+		a := byIdsobat[idsobat]
+		item := RekapMitraItem{
+			IDSobat:        idsobat,
+			NamaMitra:      a.nama,
+			JumlahKegiatan: a.total,
+			JumlahDinilai:  a.n,
+		}
+		if a.n > 0 {
+			avg := a.sum / float64(a.n)
+			item.SkorRataRata = &avg
+			item.Predikat = PredikatFromSkor(avg)
+		}
+		if f.Predikat != "" && !strings.EqualFold(item.Predikat, f.Predikat) {
+			continue
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+// GetTopPPL returns the 5 PPL with the highest skor rata-rata, for the
+// Dashboard "5 PPL Terbaik" widget — mitra without a finalized score are
+// excluded (SkorRataRata nil).
+func GetTopPPL(f DaftarPenilaianFilter) ([]RekapMitraItem, error) {
+	f.Peran = "ppl"
+	items, err := GetRekapMitra(f)
+	if err != nil {
+		return nil, err
+	}
+
+	ranked := make([]RekapMitraItem, 0, len(items))
+	for _, it := range items {
+		if it.SkorRataRata != nil {
+			ranked = append(ranked, it)
+		}
+	}
+	sort.Slice(ranked, func(i, j int) bool {
+		return *ranked[i].SkorRataRata > *ranked[j].SkorRataRata
+	})
+	if len(ranked) > 5 {
+		ranked = ranked[:5]
+	}
+	return ranked, nil
+}
+
+// GetCakupanPenilaian returns how many mitra registered on the roster
+// (Kelola Petugas) have at least one Tahap 1 score recorded — "180 dari 200
+// petugas sudah dinilai" on the Dashboard. "Sudah dinilai" here is deliberately
+// loose (any Tahap 1 row, regardless of status_konfirmasi), not just
+// finalized ones. kegiatanID<=0 sums across every kegiatan.
+func GetCakupanPenilaian(kegiatanID int) (total, dinilai int, err error) {
+	clauses := []string{"p.idsobat IS NOT NULL"}
+	var args []interface{}
+	if kegiatanID > 0 {
+		clauses = append(clauses, "per.kegiatan_id = ?")
+		args = append(args, kegiatanID)
+	}
+	where := strings.Join(clauses, " AND ")
+
+	err = database.DB.QueryRow(`
+		SELECT COUNT(DISTINCT p.idsobat),
+			COUNT(DISTINCT CASE WHEN e.id IS NOT NULL THEN p.idsobat END)
+		FROM penilaian_kegiatan_petugas p
+		JOIN penilaian_kegiatan_periode per ON per.id = p.periode_id
+		LEFT JOIN evaluasi_petugas e
+			ON e.periode_id = p.periode_id AND e.yang_dinilai_idsobat = p.idsobat AND e.tahap = 1
+		WHERE `+where, args...,
+	).Scan(&total, &dinilai)
+	return total, dinilai, err
 }
 
 // GetDetailPenilaian returns the full aspect-by-aspect breakdown for one
