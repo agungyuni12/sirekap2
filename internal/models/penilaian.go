@@ -280,6 +280,27 @@ func SubmitPenilaianUlang(subjectMatterID int, in EvaluasiInput) error {
 	return err
 }
 
+// DeleteEvaluasi removes every evaluasi_petugas row (Tahap 1 and, if present,
+// Tahap 2) for one (periode, yang-dinilai) pair — used to undo a penilaian
+// that's already been submitted. Admin-only, enforced at the handler.
+func DeleteEvaluasi(periodeID int, idsobat string) error {
+	res, err := database.DB.Exec(
+		`DELETE FROM evaluasi_petugas WHERE periode_id = ? AND yang_dinilai_idsobat = ?`,
+		periodeID, idsobat,
+	)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
 // PendingKonfirmasiItem is one Tahap 1 score (PPL or PML Mitra) awaiting the
 // Subject Matter's approve/reject decision.
 type PendingKonfirmasiItem struct {

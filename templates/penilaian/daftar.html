@@ -1,5 +1,5 @@
 {{ define "content" }}
-<div class="space-y-6 md:space-y-8" x-data="daftarPenilaianPage()" x-init="init()">
+<div class="space-y-6 md:space-y-8" x-data="daftarPenilaianPage('{{ .UserRole }}')" x-init="init()">
 
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -165,19 +165,22 @@
 
             <div class="divide-y divide-gray-100" x-show="!riwayatLoading && riwayatList.length > 0">
                 <template x-for="r in riwayatList" :key="r.periode_id + '-' + r.idsobat">
-                    <button type="button" @click="riwayatOpen = false; openDetail(r)"
-                        class="w-full text-left px-6 py-4 hover:bg-gray-50 transition flex items-center justify-between gap-3">
-                        <div class="min-w-0">
+                    <div class="w-full px-6 py-4 hover:bg-gray-50 transition flex items-center justify-between gap-3">
+                        <button type="button" @click="riwayatOpen = false; openDetail(r)" class="min-w-0 text-left flex-1">
                             <p class="font-medium text-gray-900 truncate" x-text="r.kegiatan"></p>
                             <p class="text-xs text-gray-500" x-text="(r.periode || '-') + ' ' + (r.tahun || '') + ' · ' + r.peran + ' · ' + (r.kecamatan || '-')"></p>
                             <span class="inline-flex mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" :class="statusClass(r)" x-text="statusLabel(r)"></span>
-                        </div>
-                        <div class="flex-shrink-0 text-right">
+                        </button>
+                        <button type="button" @click="riwayatOpen = false; openDetail(r)" class="flex-shrink-0 text-right">
                             <p class="text-lg font-bold" :class="r.skor_akhir !== null ? 'text-primary' : 'text-gray-400'"
                                 x-text="r.skor_akhir !== null ? r.skor_akhir.toFixed(1) : '-'"></p>
                             <span x-show="r.predikat" class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold" :class="predikatClass(r.predikat)" x-text="r.predikat"></span>
-                        </div>
-                    </button>
+                        </button>
+                        <button type="button" x-show="isAdmin" @click="deletePenilaian(r)" title="Hapus penilaian ini"
+                            class="flex-shrink-0 text-red-500 hover:text-red-700 w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </template>
             </div>
         </div>
@@ -274,8 +277,9 @@
 </div>
 
 <script>
-    function daftarPenilaianPage() {
+    function daftarPenilaianPage(userRole) {
         return {
+            isAdmin: userRole === 'admin',
             items: [],
             kegiatanList: [],
             tahunOptions: [],
@@ -404,6 +408,21 @@
                     this.detailOpen = false;
                 } finally {
                     this.detailLoading = false;
+                }
+            },
+
+            async deletePenilaian(r) {
+                if (!confirm('Hapus penilaian "' + r.kegiatan + '" untuk mitra ini? Tindakan ini tidak bisa dibatalkan.')) return;
+                try {
+                    const params = new URLSearchParams({ periode_id: r.periode_id, idsobat: r.idsobat });
+                    const response = await fetch('/api/penilaian?' + params.toString(), { method: 'DELETE' });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result?.error?.message || 'Gagal menghapus penilaian');
+                    this.flash = { type: 'success', message: 'Penilaian berhasil dihapus.' };
+                    this.riwayatList = this.riwayatList.filter(x => !(x.periode_id === r.periode_id && x.idsobat === r.idsobat));
+                    await this.load();
+                } catch (error) {
+                    this.flash = { type: 'error', message: error.message };
                 }
             },
         };

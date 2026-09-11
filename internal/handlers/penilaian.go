@@ -494,6 +494,34 @@ func DetailPenilaianHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, detail)
 }
 
+// DeletePenilaianHandler DELETE /api/penilaian?periode_id=&idsobat= — admin-only.
+// Menghapus seluruh riwayat penilaian (Tahap 1 dan, jika ada, Tahap 2) untuk
+// satu pasangan periode+mitra.
+func DeletePenilaianHandler(w http.ResponseWriter, r *http.Request) {
+	periodeID, err := strconv.Atoi(r.URL.Query().Get("periode_id"))
+	if err != nil || periodeID <= 0 {
+		apiError(w, http.StatusBadRequest, "INVALID_PERIODE", "periode_id tidak valid")
+		return
+	}
+	idsobat := r.URL.Query().Get("idsobat")
+	if idsobat == "" {
+		apiError(w, http.StatusBadRequest, "INVALID_IDSOBAT", "idsobat tidak valid")
+		return
+	}
+
+	err = models.DeleteEvaluasi(periodeID, idsobat)
+	if errors.Is(err, sql.ErrNoRows) {
+		apiError(w, http.StatusNotFound, "NOT_FOUND", "Penilaian tidak ditemukan")
+		return
+	}
+	if err != nil {
+		log.Printf("Error deleting penilaian: %v", err)
+		apiError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Gagal menghapus penilaian")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{"status": "ok", "message": "Penilaian dihapus"})
+}
+
 // ListRosterPetugasHandler GET /api/penilaian/kegiatan/petugas?periode_id=&peran=
 // Roster petugas (PPL/PML Mitra/organik) terdaftar untuk satu periode
 // instance — dipakai Input Penilaian untuk memilih siapa yang dinilai.
