@@ -95,13 +95,22 @@ func batchTanggalDefault(batch int, kind string) string {
 // seqAll = nomor urut gabungan PML lalu PPL, LANJUT antar batch juga, WAJIB dipakai utk
 // nomor BAPP karena format BAPP sama persis utk PPL & PML (harus unik silang role & batch).
 // batch = 1, 2, atau 3, dipakai utk pilih tanggal default dokumen (lihat batchTanggalDefault).
-func getPayableSeq(idsobat string, isPML bool) (seq int, seqAll int, batch int, ok bool) {
+// termin=2: petugas dgn excluded_termin2=1 (arahan user: Moh Ma'ruf & M Iksan TIDAK dapat
+// BAPP/BAST termin 2) otomatis ok=false, walau statusnya valid di termin 1.
+func getPayableSeq(idsobat string, isPML bool, termin int) (seq int, seqAll int, batch int, ok bool) {
 	role := "ppl"
 	if isPML {
 		role = "pml"
 	}
-	err := database.DB.QueryRow(`SELECT seq, seq_all, batch FROM lk_ppk_payable_se2026 WHERE idsobat = ? AND role = ?`, idsobat, role).Scan(&seq, &seqAll, &batch)
-	return seq, seqAll, batch, err == nil
+	var excludedTermin2 bool
+	err := database.DB.QueryRow(`SELECT seq, seq_all, batch, excluded_termin2 FROM lk_ppk_payable_se2026 WHERE idsobat = ? AND role = ?`, idsobat, role).Scan(&seq, &seqAll, &batch, &excludedTermin2)
+	if err != nil {
+		return 0, 0, 0, false
+	}
+	if termin == 2 && excludedTermin2 {
+		return seq, seqAll, batch, false
+	}
+	return seq, seqAll, batch, true
 }
 
 // kepalaNomorSE2026 membangun nomor Surat Pernyataan Kepala BPS - dokumen tunggal per
@@ -139,11 +148,11 @@ func buildBAPPSE2026(rekapID, termin int, tanggalBAPP string) (bappSE2026Data, s
 	jenis := jenisPetugasSE2026(kegiatan)
 	isPML := jenis == "pml"
 
-	_, seqAll, batch, ok := getPayableSeq(idsobat, isPML)
+	_, seqAll, batch, ok := getPayableSeq(idsobat, isPML, termin)
 	if !ok {
-		return d, jenis, fmt.Errorf("'%s' tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)", d.NamaPetugas)
+		return d, jenis, fmt.Errorf("'%s' tidak ada di daftar yang bisa dibayarkan termin ini", d.NamaPetugas)
 	}
-	_, _, targetSLS, realisasiSLS, err := computeUsahaKeluargaSE2026(idsobat, isPML)
+	_, _, targetSLS, realisasiSLS, err := computeUsahaKeluargaSE2026(idsobat, isPML, termin)
 	if err != nil {
 		return d, jenis, fmt.Errorf("gagal menghitung SLS prioritas: %v", err)
 	}
@@ -243,9 +252,9 @@ func assignBAPPNumber(rekapID, termin int, tanggal string) error {
 	if idSpk == "" {
 		return fmt.Errorf("petugas belum memiliki nomor SPK")
 	}
-	_, seqAll, batch, ok := getPayableSeq(idsobat, jenisPetugasSE2026(kegiatan) == "pml")
+	_, seqAll, batch, ok := getPayableSeq(idsobat, jenisPetugasSE2026(kegiatan) == "pml", termin)
 	if !ok {
-		return fmt.Errorf("petugas tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)")
+		return fmt.Errorf("petugas tidak ada di daftar yang bisa dibayarkan termin ini")
 	}
 	if tanggal == "" && termin == 1 {
 		tanggal = batchTanggalDefault(batch, "bapp")

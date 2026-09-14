@@ -59,7 +59,7 @@ func buildPernyataanKepalaSE2026(batch int, tanggal string) (kepalaSE2026Data, [
 		if err := pmlRows.Scan(&idsobat, &nama); err != nil {
 			continue
 		}
-		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, true)
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, true, 1)
 		if err != nil {
 			continue
 		}
@@ -78,7 +78,7 @@ func buildPernyataanKepalaSE2026(batch int, tanggal string) (kepalaSE2026Data, [
 		if err := pplRows.Scan(&idsobat, &nama); err != nil {
 			continue
 		}
-		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, false)
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, false, 1)
 		if err != nil {
 			continue
 		}

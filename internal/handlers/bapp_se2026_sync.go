@@ -178,23 +178,29 @@ func persentase(realisasi, target int) float64 {
 	return float64(realisasi) / float64(target) * 100
 }
 
-// computeUsahaKeluargaSE2026 mengambil dari lk_ppk_termin1_se2026 (arahan user):
+// computeUsahaKeluargaSE2026 mengambil dari lk_ppk_termin1_se2026 (termin=1) atau
+// lk_ppk_termin2_se2026 (termin=2) - tabel terpisah per termin (arahan user: BAPP termin 2
+// HARUS pakai data termin 2 saja - target SLS, realisasi, dst - bukan reuse data termin 1):
 //   - target/realisasi (usaha+keluarga, dipakai tabel Pernyataan PML/Kepala/PPL) = SEMUA
 //     SLS (prioritas + bukan prioritas) - direvisi dari versi sebelumnya yg cuma prioritas.
 //   - targetSLS (dipakai BAPP) = jumlah SEMUA SLS (prioritas + bukan prioritas).
 //   - realisasiSLS (dipakai BAPP) = jumlah SLS PRIORITAS saja (tetap, ini beda konteks -
 //     hitungan JUMLAH SLS, bukan Usaha+Keluarga).
-func computeUsahaKeluargaSE2026(idsobat string, isPML bool) (target, realisasi, targetSLS, realisasiSLS int, err error) {
+func computeUsahaKeluargaSE2026(idsobat string, isPML bool, termin int) (target, realisasi, targetSLS, realisasiSLS int, err error) {
 	col := "ppl_idsobat"
 	if isPML {
 		col = "pml_idsobat"
+	}
+	table := "lk_ppk_termin1_se2026"
+	if termin == 2 {
+		table = "lk_ppk_termin2_se2026"
 	}
 	q := fmt.Sprintf(`
 		SELECT COALESCE(SUM(target),0),
 		       COALESCE(SUM(realisasi),0),
 		       COUNT(*),
 		       COALESCE(SUM(CASE WHEN prioritas = 1 THEN 1 ELSE 0 END),0)
-		FROM lk_ppk_termin1_se2026 WHERE %s = ?`, col)
+		FROM %s WHERE %s = ?`, table, col)
 	err = database.DB.QueryRow(q, idsobat).Scan(&target, &realisasi, &targetSLS, &realisasiSLS)
 	return
 }
@@ -219,7 +225,7 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 	jenis := jenisPetugasSE2026(kegiatan)
 	isPML := jenis == "pml"
 
-	seq, _, batch, ok := getPayableSeq(idsobat, isPML)
+	seq, _, batch, ok := getPayableSeq(idsobat, isPML, 1)
 	if !ok {
 		return d, jenis, nil, fmt.Errorf("'%s' tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)", d.NamaPetugas)
 	}
@@ -256,7 +262,7 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 
 	if !isPML {
 		// PPL: tidak ada lampiran tabel, cukup angka target/realisasi/persentase dirinya sendiri.
-		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, false)
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, false, 1)
 		if err != nil {
 			return d, jenis, nil, fmt.Errorf("gagal menghitung realisasi: %v", err)
 		}
@@ -282,7 +288,7 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 		if err := rows.Scan(&pplIDSobat, &nama); err != nil {
 			continue
 		}
-		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(pplIDSobat, false)
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(pplIDSobat, false, 1)
 		if err != nil {
 			continue
 		}
@@ -461,7 +467,7 @@ func assignPernyataanNumber(rekapID int, tanggal string) error {
 		return fmt.Errorf("petugas belum memiliki nomor SPK")
 	}
 	isPML := jenisPetugasSE2026(kegiatan) == "pml"
-	seq, _, batch, ok := getPayableSeq(idsobat, isPML)
+	seq, _, batch, ok := getPayableSeq(idsobat, isPML, 1)
 	if !ok {
 		return fmt.Errorf("petugas tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)")
 	}
