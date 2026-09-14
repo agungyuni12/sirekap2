@@ -323,7 +323,7 @@ func CreateBulkBAPPHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"ok": ok, "failed": failed, "errors": errs})
 }
 
-// DownloadBAPPSE2026Handler GET /api/rekap/spk/se2026/bapp/download?rekap_id=X&termin=1&tanggal=2026-08-15
+// DownloadBAPPSE2026Handler GET /api/rekap/spk/se2026/bapp/download?rekap_id=X&termin=1&tanggal=2026-09-15
 func DownloadBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	rekapID, _ := strconv.Atoi(r.URL.Query().Get("rekap_id"))
 	termin, _ := strconv.Atoi(r.URL.Query().Get("termin"))
@@ -333,7 +333,7 @@ func DownloadBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	tanggal := r.URL.Query().Get("tanggal")
 	if tanggal == "" && termin == 2 {
-		tanggal = "2026-08-15"
+		tanggal = batchTanggalDefaultTermin2
 	}
 	// termin==1: dibiarkan kosong kalau tidak dikirim eksplisit - buildBAPPSE2026 akan
 	// pilih tanggal default sesuai batch (1 atau 2) petugas ybs.
@@ -361,7 +361,7 @@ func DownloadBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	w.Write(docx)
 }
 
-// DownloadAllBAPPSE2026Handler GET /api/rekap/spk/se2026/bapp/download-all?jenis=pcl&termin=1&tanggal=2026-08-15
+// DownloadAllBAPPSE2026Handler GET /api/rekap/spk/se2026/bapp/download-all?jenis=pcl&termin=1&tanggal=2026-09-15
 func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	jenisFlt := strings.TrimSpace(r.URL.Query().Get("jenis"))
 	termin, _ := strconv.Atoi(r.URL.Query().Get("termin"))
@@ -371,7 +371,7 @@ func DownloadAllBAPPSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	tanggal := r.URL.Query().Get("tanggal")
 	if tanggal == "" && termin == 2 {
-		tanggal = "2026-08-15"
+		tanggal = batchTanggalDefaultTermin2
 	}
 	// termin==1: dibiarkan kosong kalau tidak dikirim eksplisit - buildBAPPSE2026 pilih
 	// tanggal per petugas sesuai batch-nya masing-masing.

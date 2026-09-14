@@ -205,10 +205,17 @@ func computeUsahaKeluargaSE2026(idsobat string, isPML bool, termin int) (target,
 	return
 }
 
+// batchTanggalDefaultTermin2 adalah tanggal default dokumen Termin 2 (BAPP II 15 Sep 2026,
+// dipakai juga sbg default Pernyataan II krn satu hari yg sama - arahan user via catatan).
+const batchTanggalDefaultTermin2 = "2026-09-15"
+
 // buildSuratPernyataanSE2026 mengambil data petugas (PPL atau PML, dari rekap) dan
 // menyusun map placeholder + (khusus PML) daftar PPL binaan untuk lampiran tabel - hanya
-// petugas yang ada di lk_ppk_termin1_se2026 (daftar resmi yang bisa dibayarkan) yang boleh.
-func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, string, []usahaKeluargaLampiranRow, error) {
+// petugas yang ada di lk_ppk_termin{1,2}_se2026 (daftar resmi yang bisa dibayarkan termin
+// tsb) yang boleh. termin=1: nomor lanjut per-batch (seq, tanggal per batch). termin=2:
+// satu grup gabungan (tanggal default 15 Sep, tidak per-batch), Ma'ruf/Iksan otomatis
+// ditolak lewat getPayableSeq (excluded_termin2).
+func buildSuratPernyataanSE2026(rekapID, termin int, tanggal string) (bappSE2026Data, string, []usahaKeluargaLampiranRow, error) {
 	var d bappSE2026Data
 	var idsobat, idSpk, tahun, kegiatan string
 
@@ -225,24 +232,32 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 	jenis := jenisPetugasSE2026(kegiatan)
 	isPML := jenis == "pml"
 
-	seq, _, batch, ok := getPayableSeq(idsobat, isPML, 1)
+	seq, _, batch, ok := getPayableSeq(idsobat, isPML, termin)
 	if !ok {
-		return d, jenis, nil, fmt.Errorf("'%s' tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)", d.NamaPetugas)
+		return d, jenis, nil, fmt.Errorf("'%s' tidak ada di daftar yang bisa dibayarkan termin ini", d.NamaPetugas)
 	}
 
 	if tanggal == "" {
-		tanggal = batchTanggalDefault(batch, "pernyataan")
+		if termin == 2 {
+			tanggal = batchTanggalDefaultTermin2
+		} else {
+			tanggal = batchTanggalDefault(batch, "pernyataan")
+		}
 	}
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
-		tgl, _ = time.Parse("2006-01-02", batchTanggalDefault(batch, "pernyataan"))
+		if termin == 2 {
+			tgl, _ = time.Parse("2006-01-02", batchTanggalDefaultTermin2)
+		} else {
+			tgl, _ = time.Parse("2006-01-02", batchTanggalDefault(batch, "pernyataan"))
+		}
 	}
 
 	kind := "pernyataan_ppl"
 	if isPML {
 		kind = "pernyataan_pml"
 	}
-	nomor, err := suratNomorSE2026(seq, kind, 1, tahun, tgl)
+	nomor, err := suratNomorSE2026(seq, kind, termin, tahun, tgl)
 	if err != nil {
 		return d, jenis, nil, err
 	}
@@ -262,7 +277,7 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 
 	if !isPML {
 		// PPL: tidak ada lampiran tabel, cukup angka target/realisasi/persentase dirinya sendiri.
-		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, false, 1)
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(idsobat, false, termin)
 		if err != nil {
 			return d, jenis, nil, fmt.Errorf("gagal menghitung realisasi: %v", err)
 		}
@@ -271,12 +286,16 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 		}}, nil
 	}
 
-	// PML: daftar PPL binaan (dari lk_ppk_termin1_se2026, dikelompokkan per PPL).
-	rows, err := database.DB.Query(`
-		SELECT ppl_idsobat, ppl_nama FROM lk_ppk_termin1_se2026
+	// PML: daftar PPL binaan (dari lk_ppk_termin{1,2}_se2026, dikelompokkan per PPL).
+	lkTable := "lk_ppk_termin1_se2026"
+	if termin == 2 {
+		lkTable = "lk_ppk_termin2_se2026"
+	}
+	rows, err := database.DB.Query(fmt.Sprintf(`
+		SELECT ppl_idsobat, ppl_nama FROM %s
 		WHERE pml_idsobat = ? AND prioritas = 1
 		GROUP BY ppl_idsobat, ppl_nama
-		ORDER BY ppl_nama`, idsobat)
+		ORDER BY ppl_nama`, lkTable), idsobat)
 	if err != nil {
 		return d, jenis, nil, fmt.Errorf("gagal mengambil daftar PPL binaan: %v", err)
 	}
@@ -288,7 +307,7 @@ func buildSuratPernyataanSE2026(rekapID int, tanggal string) (bappSE2026Data, st
 		if err := rows.Scan(&pplIDSobat, &nama); err != nil {
 			continue
 		}
-		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(pplIDSobat, false, 1)
+		target, realisasi, _, _, err := computeUsahaKeluargaSE2026(pplIDSobat, false, termin)
 		if err != nil {
 			continue
 		}
@@ -450,13 +469,24 @@ func generateSuratPernyataanDocx(d bappSE2026Data, jenis string, lampiran []usah
 }
 
 // assignPernyataanNumber sama seperti assignBAPPNumber tapi untuk Surat Pernyataan
-// Penyelesaian Lapangan (PPL & PML sama-sama pakai kolom id_pernyataan1/tgl_pernyataan1 -
-// aman karena baris rekap PPL dan PML untuk 1 orang tidak pernah sama, kegiatan-nya beda).
-func assignPernyataanNumber(rekapID int, tanggal string) error {
+// Penyelesaian Lapangan. termin=1 pakai kolom id_pernyataan1/tgl_pernyataan1, termin=2
+// pakai id_pernyataan2/tgl_pernyataan2 (kolom terpisah krn satu orang bisa dapat surat
+// di kedua termin - PPL & PML sama-sama aman pakai kolom yg sama krn baris rekap PPL
+// dan PML untuk 1 orang tidak pernah sama, kegiatan-nya beda).
+func assignPernyataanNumber(rekapID, termin int, tanggal string) error {
+	if termin != 1 && termin != 2 {
+		return fmt.Errorf("termin harus 1 atau 2")
+	}
+	idCol, tglCol := "id_pernyataan1", "tgl_pernyataan1"
+	if termin == 2 {
+		idCol, tglCol = "id_pernyataan2", "tgl_pernyataan2"
+	}
+
 	var idsobat, idSpk, tahun, kegiatan string
 	var existing sql.NullString
-	err := database.DB.QueryRow(`SELECT idsobat, COALESCE(id_spk,''), tahun, kegiatan, id_pernyataan1 FROM rekap WHERE id=?`, rekapID).
-		Scan(&idsobat, &idSpk, &tahun, &kegiatan, &existing)
+	err := database.DB.QueryRow(fmt.Sprintf(
+		`SELECT idsobat, COALESCE(id_spk,''), tahun, kegiatan, %s FROM rekap WHERE id=?`, idCol), rekapID,
+	).Scan(&idsobat, &idSpk, &tahun, &kegiatan, &existing)
 	if err != nil {
 		return fmt.Errorf("rekap id %d tidak ditemukan", rekapID)
 	}
@@ -467,12 +497,16 @@ func assignPernyataanNumber(rekapID int, tanggal string) error {
 		return fmt.Errorf("petugas belum memiliki nomor SPK")
 	}
 	isPML := jenisPetugasSE2026(kegiatan) == "pml"
-	seq, _, batch, ok := getPayableSeq(idsobat, isPML, 1)
+	seq, _, batch, ok := getPayableSeq(idsobat, isPML, termin)
 	if !ok {
-		return fmt.Errorf("petugas tidak ada di daftar LK PPK Termin 1 (tidak bisa dibayarkan termin ini)")
+		return fmt.Errorf("petugas tidak ada di daftar yang bisa dibayarkan termin ini")
 	}
 	if tanggal == "" {
-		tanggal = batchTanggalDefault(batch, "pernyataan")
+		if termin == 2 {
+			tanggal = batchTanggalDefaultTermin2
+		} else {
+			tanggal = batchTanggalDefault(batch, "pernyataan")
+		}
 	}
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
@@ -482,11 +516,11 @@ func assignPernyataanNumber(rekapID int, tanggal string) error {
 	if isPML {
 		kind = "pernyataan_pml"
 	}
-	nomor, err := suratNomorSE2026(seq, kind, 1, tahun, tgl)
+	nomor, err := suratNomorSE2026(seq, kind, termin, tahun, tgl)
 	if err != nil {
 		return err
 	}
-	_, err = database.DB.Exec(`UPDATE rekap SET id_pernyataan1=?, tgl_pernyataan1=? WHERE id=?`,
+	_, err = database.DB.Exec(fmt.Sprintf(`UPDATE rekap SET %s=?, %s=? WHERE id=?`, idCol, tglCol),
 		nomor, tgl.Format("2006-01-02"), rekapID)
 	return err
 }
@@ -495,13 +529,17 @@ func assignPernyataanNumber(rekapID int, tanggal string) error {
 func CreatePernyataanHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		RekapID int    `json:"rekap_id"`
+		Termin  int    `json:"termin"`
 		Tanggal string `json:"tanggal"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
-	if err := assignPernyataanNumber(req.RekapID, req.Tanggal); err != nil {
+	if req.Termin == 0 {
+		req.Termin = 1
+	}
+	if err := assignPernyataanNumber(req.RekapID, req.Termin, req.Tanggal); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -509,17 +547,22 @@ func CreatePernyataanHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
-// DownloadPernyataanSE2026Handler GET /api/rekap/spk/se2026/pernyataan/download?rekap_id=X&tanggal=2026-08-15
+// DownloadPernyataanSE2026Handler GET /api/rekap/spk/se2026/pernyataan/download?rekap_id=X&termin=1&tanggal=2026-08-15
 func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	rekapID, _ := strconv.Atoi(r.URL.Query().Get("rekap_id"))
 	if rekapID == 0 {
 		http.Error(w, "rekap_id wajib", http.StatusBadRequest)
 		return
 	}
+	termin, _ := strconv.Atoi(r.URL.Query().Get("termin"))
+	if termin == 0 {
+		termin = 1
+	}
 	tanggal := r.URL.Query().Get("tanggal")
-	// kalau tidak dikirim eksplisit, buildSuratPernyataanSE2026 pilih tanggal sesuai batch.
+	// kalau tidak dikirim eksplisit, buildSuratPernyataanSE2026 pilih tanggal sesuai
+	// batch (termin 1) atau default Termin 2.
 
-	d, jenis, lampiran, err := buildSuratPernyataanSE2026(rekapID, tanggal)
+	d, jenis, lampiran, err := buildSuratPernyataanSE2026(rekapID, termin, tanggal)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -535,19 +578,24 @@ func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fname := fmt.Sprintf("Surat_Pernyataan_SE2026_%s.docx", safeName(d.NamaPetugas))
+	fname := fmt.Sprintf("Surat_Pernyataan_Termin%d_SE2026_%s.docx", termin, safeName(d.NamaPetugas))
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, fname))
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 	w.Header().Set("Content-Length", strconv.Itoa(len(docx)))
 	w.Write(docx)
 }
 
-// DownloadAllPernyataanSE2026Handler GET /api/rekap/spk/se2026/pernyataan/download-all?jenis=pcl&tanggal=2026-07-16
+// DownloadAllPernyataanSE2026Handler GET /api/rekap/spk/se2026/pernyataan/download-all?jenis=pcl&termin=1&tanggal=2026-07-16
 func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	jenisFlt := strings.TrimSpace(r.URL.Query().Get("jenis"))
+	termin, _ := strconv.Atoi(r.URL.Query().Get("termin"))
+	if termin == 0 {
+		termin = 1
+	}
 	tanggal := r.URL.Query().Get("tanggal")
 	batch, _ := strconv.Atoi(r.URL.Query().Get("batch"))
-	// kalau tidak dikirim eksplisit, buildSuratPernyataanSE2026 pilih tanggal sesuai batch.
+	// kalau tidak dikirim eksplisit, buildSuratPernyataanSE2026 pilih tanggal sesuai batch
+	// (termin 1) atau default Termin 2.
 
 	var kegiatanFilter string
 	switch jenisFlt {
@@ -559,12 +607,16 @@ func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) 
 		kegiatanFilter = "%Sensus Ekonomi 2026%"
 	}
 
-	query := `
+	idCol := "id_pernyataan1"
+	if termin == 2 {
+		idCol = "id_pernyataan2"
+	}
+	query := fmt.Sprintf(`
 		SELECT r.id FROM rekap r
-		WHERE r.kegiatan LIKE ? AND r.id_pernyataan1 IS NOT NULL AND r.id_pernyataan1 != ''
-		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`
+		WHERE r.kegiatan LIKE ? AND r.%s IS NOT NULL AND r.%s != ''
+		  AND (r.tanggaran = 2026 OR r.tahun = '2026')`, idCol, idCol)
 	args := []interface{}{kegiatanFilter}
-	if batch >= 1 && batch <= 4 {
+	if termin == 1 && batch >= 1 && batch <= 4 {
 		query += ` AND EXISTS (SELECT 1 FROM lk_ppk_payable_se2026 p WHERE p.idsobat COLLATE utf8mb4_general_ci = r.idsobat AND p.batch = ?)`
 		args = append(args, batch)
 	}
@@ -589,17 +641,17 @@ func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	batchSuffix := ""
-	if batch >= 1 && batch <= 4 {
+	if termin == 1 && batch >= 1 && batch <= 4 {
 		batchSuffix = fmt.Sprintf("_Batch%d", batch)
 	}
 	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="Surat_Pernyataan_SE2026_%s%s.zip"`, jenisFlt, batchSuffix))
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="Surat_Pernyataan_Termin%d_SE2026_%s%s.zip"`, termin, jenisFlt, batchSuffix))
 
 	zw := zip.NewWriter(w)
 	defer zw.Close()
 
 	for _, id := range ids {
-		d, jenis, lampiran, err := buildSuratPernyataanSE2026(id, tanggal)
+		d, jenis, lampiran, err := buildSuratPernyataanSE2026(id, termin, tanggal)
 		if err != nil {
 			continue
 		}

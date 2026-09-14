@@ -296,7 +296,8 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
 		SELECT r.id, r.idsobat, r.namamitra, r.kegiatan, r.honor,
 		       COALESCE(r.id_spk, ''),
-		       COALESCE(r.id_bapp1, ''), COALESCE(r.id_bapp2, ''), COALESCE(r.id_pernyataan1, ''),
+		       COALESCE(r.id_bapp1, ''), COALESCE(r.id_bapp2, ''),
+		       COALESCE(r.id_pernyataan1, ''), COALESCE(r.id_pernyataan2, ''),
 		       COALESCE(NULLIF(r.jumlah_sls,''),'0'), r.realisasi_sls,
 		       COALESCE((SELECT m.alamat FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), ''),
 		       COALESCE((SELECT m.kecamatan FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), '')
@@ -313,23 +314,25 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type Item struct {
-		ID              int     `json:"id"`
-		IDSobat         string  `json:"idsobat"`
-		Nama            string  `json:"nama"`
-		Kegiatan        string  `json:"kegiatan"`
-		Honor           float64 `json:"honor"`
-		IDSpk           string  `json:"id_spk"`
-		SudahSPK        bool    `json:"sudah_spk"`
-		IDBapp1         string  `json:"id_bapp1"`
-		SudahBapp1      bool    `json:"sudah_bapp1"`
-		IDBapp2         string  `json:"id_bapp2"`
-		SudahBapp2      bool    `json:"sudah_bapp2"`
-		IDPernyataan1   string  `json:"id_pernyataan1"`
-		SudahPernyataan bool    `json:"sudah_pernyataan"`
-		TargetSLS       int     `json:"target_sls"`
-		RealisasiSLS    int     `json:"realisasi_sls"`
-		Alamat          string  `json:"alamat"`
-		Kecamatan       string  `json:"kecamatan"`
+		ID               int     `json:"id"`
+		IDSobat          string  `json:"idsobat"`
+		Nama             string  `json:"nama"`
+		Kegiatan         string  `json:"kegiatan"`
+		Honor            float64 `json:"honor"`
+		IDSpk            string  `json:"id_spk"`
+		SudahSPK         bool    `json:"sudah_spk"`
+		IDBapp1          string  `json:"id_bapp1"`
+		SudahBapp1       bool    `json:"sudah_bapp1"`
+		IDBapp2          string  `json:"id_bapp2"`
+		SudahBapp2       bool    `json:"sudah_bapp2"`
+		IDPernyataan1    string  `json:"id_pernyataan1"`
+		SudahPernyataan  bool    `json:"sudah_pernyataan"`
+		IDPernyataan2    string  `json:"id_pernyataan2"`
+		SudahPernyataan2 bool    `json:"sudah_pernyataan2"`
+		TargetSLS        int     `json:"target_sls"`
+		RealisasiSLS     int     `json:"realisasi_sls"`
+		Alamat           string  `json:"alamat"`
+		Kecamatan        string  `json:"kecamatan"`
 	}
 
 	var items []Item
@@ -337,7 +340,7 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		var item Item
 		var honorStr, jumlahSLSStr string
 		if err := rows.Scan(&item.ID, &item.IDSobat, &item.Nama, &item.Kegiatan,
-			&honorStr, &item.IDSpk, &item.IDBapp1, &item.IDBapp2, &item.IDPernyataan1,
+			&honorStr, &item.IDSpk, &item.IDBapp1, &item.IDBapp2, &item.IDPernyataan1, &item.IDPernyataan2,
 			&jumlahSLSStr, &item.RealisasiSLS, &item.Alamat, &item.Kecamatan); err != nil {
 			continue
 		}
@@ -347,6 +350,7 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		item.SudahBapp1 = item.IDBapp1 != ""
 		item.SudahBapp2 = item.IDBapp2 != ""
 		item.SudahPernyataan = item.IDPernyataan1 != ""
+		item.SudahPernyataan2 = item.IDPernyataan2 != ""
 		items = append(items, item)
 	}
 

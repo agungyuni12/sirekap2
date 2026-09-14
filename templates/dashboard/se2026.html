@@ -43,11 +43,23 @@
                     <span x-text="`BAPP I Batch ${b} (ZIP)`"></span>
                 </a>
             </template>
-            <a :href="`/api/rekap/spk/se2026/bapp/download-all?jenis=${tab}&termin=2&tanggal=2026-08-15`"
+            <a :href="`/api/rekap/spk/se2026/bapp/download-all?jenis=${tab}&termin=2&tanggal=2026-09-15`"
                 class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
                        bg-purple-700 hover:bg-purple-800 text-white shadow-lg shadow-purple-700/30">
                 <i class="fas fa-file-zipper"></i>
                 <span>BAPP II (ZIP)</span>
+            </a>
+            <a :href="`/api/rekap/spk/se2026/pernyataan/download-all?jenis=${tab}&termin=2&tanggal=2026-09-15`"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
+                       bg-sky-700 hover:bg-sky-800 text-white shadow-lg shadow-sky-700/30">
+                <i class="fas fa-file-zipper"></i>
+                <span>Pernyataan II (ZIP)</span>
+            </a>
+            <a :href="`/api/rekap/spk/se2026/bast/download-all?jenis=${tab}`"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
+                       bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/30">
+                <i class="fas fa-file-zipper"></i>
+                <span>BAST (ZIP)</span>
             </a>
             <template x-for="b in [1, 2, 3, 4]" :key="'pernyataan-'+b">
                 <a :href="`/api/rekap/spk/se2026/pernyataan/download-all?jenis=${tab}&batch=${b}`"
@@ -169,7 +181,9 @@
                         <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">SPK</th>
                         <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">BAPP I</th>
                         <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">BAPP II</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pernyataan</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pernyataan I</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pernyataan II</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">BAST</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
@@ -233,7 +247,7 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <template x-if="item.sudah_bapp2">
-                                    <a :href="`/api/rekap/spk/se2026/bapp/download?rekap_id=${item.id}&termin=2&tanggal=2026-08-15`"
+                                    <a :href="`/api/rekap/spk/se2026/bapp/download?rekap_id=${item.id}&termin=2&tanggal=2026-09-15`"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
                                                bg-purple-700 hover:bg-purple-800 text-white shadow-sm shadow-purple-300 dark:shadow-purple-900/40">
                                         <i class="fas fa-download"></i>BAPP II
@@ -252,20 +266,59 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <template x-if="item.sudah_pernyataan">
-                                    <a :href="`/api/rekap/spk/se2026/pernyataan/download?rekap_id=${item.id}`"
+                                    <a :href="`/api/rekap/spk/se2026/pernyataan/download?rekap_id=${item.id}&termin=1`"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
                                                bg-blue-500 hover:bg-blue-600 text-white shadow-sm shadow-blue-300 dark:shadow-blue-900/40">
-                                        <i class="fas fa-download"></i>Pernyataan
+                                        <i class="fas fa-download"></i>Pernyataan I
                                     </a>
                                 </template>
                                 <template x-if="!item.sudah_pernyataan && item.sudah_spk">
-                                    <button @click="createPernyataan(item)"
+                                    <button @click="createPernyataan(item, 1)"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
                                                bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
                                         <i class="fas fa-plus"></i>Buat
                                     </button>
                                 </template>
                                 <template x-if="!item.sudah_pernyataan && !item.sudah_spk">
+                                    <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
+                                </template>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <template x-if="item.sudah_pernyataan2">
+                                    <a :href="`/api/rekap/spk/se2026/pernyataan/download?rekap_id=${item.id}&termin=2&tanggal=2026-09-15`"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-sky-700 hover:bg-sky-800 text-white shadow-sm shadow-sky-300 dark:shadow-sky-900/40">
+                                        <i class="fas fa-download"></i>Pernyataan II
+                                    </a>
+                                </template>
+                                <template x-if="!item.sudah_pernyataan2 && item.sudah_spk">
+                                    <button @click="createPernyataan(item, 2)"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                        <i class="fas fa-plus"></i>Buat
+                                    </button>
+                                </template>
+                                <template x-if="!item.sudah_pernyataan2 && !item.sudah_spk">
+                                    <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
+                                </template>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <template x-if="bastStatus[item.id]">
+                                    <a :href="`/api/rekap/spk/se2026/bast/download-all?jenis=${tab}`"
+                                        title="BAST digabung satu ZIP (satu dokumen per orang, bukan per-termin)"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-teal-600 hover:bg-teal-700 text-white shadow-sm shadow-teal-300 dark:shadow-teal-900/40">
+                                        <i class="fas fa-check"></i>Sudah
+                                    </a>
+                                </template>
+                                <template x-if="!bastStatus[item.id] && item.sudah_spk">
+                                    <button @click="createBAST(item)"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                                               bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                        <i class="fas fa-plus"></i>Buat
+                                    </button>
+                                </template>
+                                <template x-if="!bastStatus[item.id] && !item.sudah_spk">
                                     <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
                                 </template>
                             </td>
@@ -288,9 +341,17 @@ function se2026() {
         unmatched: [],
         search: '',
         kepalaNomor: { 1: '', 2: '', 3: '', 4: '' },
+        bastStatus: {},
         toast: { show: false, message: '', type: 'success' },
 
         init() { this.load(); this.loadKepalaStatus(1); this.loadKepalaStatus(2); this.loadKepalaStatus(3); this.loadKepalaStatus(4); },
+
+        async loadBastStatus() {
+            try {
+                const res = await fetch(`/api/rekap/spk/se2026/bast/status?jenis=${this.tab}`);
+                this.bastStatus = await res.json() || {};
+            } catch (e) { /* diamkan, tombol "Buat" tetap tampil */ }
+        },
 
         async loadKepalaStatus(batch) {
             try {
@@ -321,6 +382,7 @@ function se2026() {
             try {
                 const res = await fetch(`/api/rekap/spk/se2026/list?jenis=${this.tab}`);
                 this.items = await res.json() || [];
+                await this.loadBastStatus();
             } catch(e) {
                 this.showToast('Gagal memuat data', 'error');
             } finally {
@@ -348,7 +410,7 @@ function se2026() {
                 const res = await fetch('/api/rekap/spk/se2026/bapp/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rekap_id: item.id, termin: termin, tanggal: termin === 2 ? '2026-08-15' : '' })
+                    body: JSON.stringify({ rekap_id: item.id, termin: termin, tanggal: termin === 2 ? '2026-09-15' : '' })
                 });
                 if (!res.ok) throw new Error(await res.text());
                 this.showToast(`Nomor BAPP Termin ${termin === 1 ? 'I' : 'II'} berhasil dibuat`);
@@ -358,18 +420,35 @@ function se2026() {
             }
         },
 
-        async createPernyataan(item) {
+        async createPernyataan(item, termin) {
             try {
                 const res = await fetch('/api/rekap/spk/se2026/pernyataan/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rekap_id: item.id, tanggal: '' })
+                    body: JSON.stringify({ rekap_id: item.id, termin: termin, tanggal: termin === 2 ? '2026-09-15' : '' })
                 });
                 if (!res.ok) throw new Error(await res.text());
-                this.showToast('Nomor Surat Pernyataan berhasil dibuat');
+                this.showToast(`Nomor Surat Pernyataan Termin ${termin === 1 ? 'I' : 'II'} berhasil dibuat`);
                 await this.load();
             } catch (e) {
                 this.showToast('Gagal membuat nomor Surat Pernyataan: ' + e.message, 'error');
+            }
+        },
+
+        async createBAST(item) {
+            try {
+                const res = await fetch('/api/rekap/spk/se2026/bast/create-bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tanggal: '2026-09-15', items: [{ rekap_id: item.id }] })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                if (data.failed > 0) throw new Error((data.errors || []).join(', ') || 'gagal');
+                this.showToast('Nomor BAST berhasil dibuat');
+                await this.loadBastStatus();
+            } catch (e) {
+                this.showToast('Gagal membuat nomor BAST: ' + e.message, 'error');
             }
         },
 
