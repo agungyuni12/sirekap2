@@ -87,6 +87,21 @@
                     </button>
                 </span>
             </template>
+            <span>
+                <a x-show="kepalaNomorTermin2" x-cloak
+                    href="/api/rekap/spk/se2026/pernyataan-kepala/download?termin=2&tanggal=2026-09-15"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
+                           bg-emerald-800 hover:bg-emerald-900 text-white shadow-lg shadow-emerald-800/30">
+                    <i class="fas fa-download"></i>
+                    <span>Pernyataan Kepala BPS (Termin II)</span>
+                </a>
+                <button x-show="!kepalaNomorTermin2" x-cloak @click="createKepalaTermin2()"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
+                           bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                    <i class="fas fa-plus"></i>
+                    <span>Buat Nomor Kepala BPS (Termin II)</span>
+                </button>
+            </span>
         </div>
     </div>
 
@@ -341,10 +356,38 @@ function se2026() {
         unmatched: [],
         search: '',
         kepalaNomor: { 1: '', 2: '', 3: '', 4: '' },
+        kepalaNomorTermin2: '',
         bastStatus: {},
         toast: { show: false, message: '', type: 'success' },
 
-        init() { this.load(); this.loadKepalaStatus(1); this.loadKepalaStatus(2); this.loadKepalaStatus(3); this.loadKepalaStatus(4); },
+        init() {
+            this.load();
+            this.loadKepalaStatus(1); this.loadKepalaStatus(2); this.loadKepalaStatus(3); this.loadKepalaStatus(4);
+            this.loadKepalaStatusTermin2();
+        },
+
+        async loadKepalaStatusTermin2() {
+            try {
+                const res = await fetch('/api/rekap/spk/se2026/pernyataan-kepala/status?termin=2');
+                const data = await res.json();
+                this.kepalaNomorTermin2 = data.sudah_ada ? data.nomor : '';
+            } catch (e) { /* diamkan, tombol "Buat" tetap tampil */ }
+        },
+
+        async createKepalaTermin2() {
+            try {
+                const res = await fetch('/api/rekap/spk/se2026/pernyataan-kepala/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ termin: 2, tanggal: '2026-09-15' })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                this.showToast('Nomor Surat Pernyataan Kepala BPS (Termin II) berhasil dibuat');
+                await this.loadKepalaStatusTermin2();
+            } catch (e) {
+                this.showToast('Gagal membuat nomor: ' + e.message, 'error');
+            }
+        },
 
         async loadBastStatus() {
             try {
