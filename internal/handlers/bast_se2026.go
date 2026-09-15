@@ -110,59 +110,84 @@ func buildBASTSE2026(rekapID int, tanggal string) (bastSE2026Data, string, []wil
 		d.HonorTerbilang = "Sebelas Juta Lima Ratus Tujuh Puluh Dua Ribu Lima Ratus Rupiah"
 	}
 
-	// PENTING: hitung COUNT(*) di subquery DULU sebelum JOIN ke se2026.sls -
-	// se2026.sls punya banyak baris per (kode_kec,kode_desa) (satu per SLS se-
-	// kabupaten), jadi JOIN langsung tanpa subquery akan fan-out dan bikin
-	// Jumlah SLS meledak/salah (bug yg dilaporkan user sbg "error bast").
+	// Query wilayah kerja TETAP query asli (tanpa JOIN) - ini query inti yang
+	// sudah terbukti benar, jangan digabung dgn lookup nama supaya kegagalan
+	// lookup nama (mis. tabel se2026.sls sementara tak terjangkau) tidak ikut
+	// menggagalkan seluruh BAST (bug "error bast": zip kosong krn SEMUA baris
+	// gagal generate saat lookup nama pakai JOIN/subquery ikut mengembalikan
+	// error keras).
 	var wilayah []wilayahKerjaRow
 	if isPML {
 		rows, err := database.DB.Query(`
-			SELECT g.ppl_nama, g.kode_kec, MAX(s.nama_kec), g.kode_desa, MAX(s.nama_desa), g.jml
-			FROM (
-				SELECT ppl_idsobat, ppl_nama, kode_kec, kode_desa, COUNT(*) AS jml
-				FROM lk_ppk_termin2_se2026
-				WHERE pml_idsobat = ?
-				GROUP BY ppl_idsobat, ppl_nama, kode_kec, kode_desa
-			) g
-			LEFT JOIN se2026.sls s ON s.kode_kec = g.kode_kec AND s.kode_desa = g.kode_desa
-			GROUP BY g.ppl_idsobat, g.ppl_nama, g.kode_kec, g.kode_desa, g.jml
-			ORDER BY g.ppl_nama, g.kode_kec, g.kode_desa`, idsobat)
+			SELECT ppl_nama, kode_kec, kode_desa, COUNT(*)
+			FROM lk_ppk_termin2_se2026
+			WHERE pml_idsobat = ?
+			GROUP BY ppl_idsobat, ppl_nama, kode_kec, kode_desa
+			ORDER BY ppl_nama, kode_kec, kode_desa`, idsobat)
 		if err != nil {
 			return d, jenis, nil, fmt.Errorf("gagal mengambil wilayah kerja: %v", err)
 		}
 		defer rows.Close()
 		for rows.Next() {
 			var w wilayahKerjaRow
-			if err := rows.Scan(&w.Nama, &w.KodeKec, &w.NamaKec, &w.KodeDesa, &w.NamaDesa, &w.JumlahSLS); err == nil {
+			if err := rows.Scan(&w.Nama, &w.KodeKec, &w.KodeDesa, &w.JumlahSLS); err == nil {
 				w.Nama = properCase(w.Nama)
 				wilayah = append(wilayah, w)
 			}
 		}
 	} else {
 		rows, err := database.DB.Query(`
-			SELECT g.kode_kec, MAX(s.nama_kec), g.kode_desa, MAX(s.nama_desa), g.jml
-			FROM (
-				SELECT kode_kec, kode_desa, COUNT(*) AS jml
-				FROM lk_ppk_termin2_se2026
-				WHERE ppl_idsobat = ?
-				GROUP BY kode_kec, kode_desa
-			) g
-			LEFT JOIN se2026.sls s ON s.kode_kec = g.kode_kec AND s.kode_desa = g.kode_desa
-			GROUP BY g.kode_kec, g.kode_desa, g.jml
-			ORDER BY g.kode_kec, g.kode_desa`, idsobat)
+			SELECT kode_kec, kode_desa, COUNT(*)
+			FROM lk_ppk_termin2_se2026
+			WHERE ppl_idsobat = ?
+			GROUP BY kode_kec, kode_desa
+			ORDER BY kode_kec, kode_desa`, idsobat)
 		if err != nil {
 			return d, jenis, nil, fmt.Errorf("gagal mengambil wilayah kerja: %v", err)
 		}
 		defer rows.Close()
 		for rows.Next() {
 			var w wilayahKerjaRow
-			if err := rows.Scan(&w.KodeKec, &w.NamaKec, &w.KodeDesa, &w.NamaDesa, &w.JumlahSLS); err == nil {
+			if err := rows.Scan(&w.KodeKec, &w.KodeDesa, &w.JumlahSLS); err == nil {
 				wilayah = append(wilayah, w)
 			}
 		}
 	}
 
+	// Isi nama kecamatan/desa best-effort dari se2026.sls - kalau query ini
+	// gagal (atau tabelnya tak terjangkau), JANGAN gagalkan BAST-nya: cukup
+	// tampilkan kode saja (fallback di fmtKodeNama).
+	attachWilayahNames(wilayah)
+
 	return d, jenis, wilayah, nil
+}
+
+// attachWilayahNames isi w.NamaKec/w.NamaDesa in-place dari se2026.sls, lookup
+// terpisah dari query inti wilayah (lihat komentar di buildBASTSE2026) supaya
+// kegagalan lookup nama tidak menggagalkan generate BAST.
+func attachWilayahNames(wilayah []wilayahKerjaRow) {
+	if len(wilayah) == 0 {
+		return
+	}
+	rows, err := database.DB.Query(`SELECT DISTINCT kode_kec, nama_kec, kode_desa, nama_desa FROM se2026.sls`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	type kd struct{ kec, desa string }
+	names := make(map[kd][2]string)
+	for rows.Next() {
+		var kk, nk, kdesa, nd string
+		if rows.Scan(&kk, &nk, &kdesa, &nd) == nil {
+			names[kd{kk, kdesa}] = [2]string{nk, nd}
+		}
+	}
+	for i := range wilayah {
+		if v, ok := names[kd{wilayah[i].KodeKec, wilayah[i].KodeDesa}]; ok {
+			wilayah[i].NamaKec = v[0]
+			wilayah[i].NamaDesa = v[1]
+		}
+	}
 }
 
 // wilayahColW4 (PPL: No/Kec/Desa/Jumlah) & wilayahColW5 (PML: +Nama Petugas) - lebar
