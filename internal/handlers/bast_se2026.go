@@ -37,8 +37,19 @@ type bastSE2026Data struct {
 type wilayahKerjaRow struct {
 	Nama      string // kosong utk PPL (baris milik diri sendiri) - diisi nama PPL binaan utk PML
 	KodeKec   string
+	NamaKec   string
 	KodeDesa  string
+	NamaDesa  string
 	JumlahSLS int
+}
+
+// fmtKodeNama gabungkan kode+nama wilayah spt "[050] Manggelewa". Kalau nama
+// tidak ditemukan (mis. tidak ada padanan di se2026.sls) tampilkan kode saja.
+func fmtKodeNama(kode, nama string) string {
+	if nama == "" {
+		return kode
+	}
+	return fmt.Sprintf("[%s] %s", kode, nama)
 }
 
 // buildBASTSE2026 mengambil data petugas dari rekap + hitung target/realisasi/wilayah
@@ -88,44 +99,52 @@ func buildBASTSE2026(rekapID int, tanggal string) (bastSE2026Data, string, []wil
 
 	database.DB.QueryRow(`SELECT nik FROM mitra WHERE idsobat = ? AND nik IS NOT NULL AND nik != '' LIMIT 1`, idsobat).Scan(&d.NIKPetugas)
 
-	honorVal, _ := strconv.ParseFloat(honorStr, 64)
-	honorInt := int64(honorVal)
-	d.HonorAngka = formatAngkaSE(honorInt)
-	d.HonorTerbilang = strings.Title(Terbilang(honorInt))
+	// Nilai Perjanjian BAST tetap (flat) sesuai honor SPK per peran, BUKAN
+	// honor per-orang di rekap.honor (arahan user - lihat template asli).
+	_ = honorStr
+	if isPML {
+		d.HonorAngka = "12.192.500"
+		d.HonorTerbilang = "Dua Belas Juta Seratus Sembilan Puluh Dua Ribu Lima Ratus Rupiah"
+	} else {
+		d.HonorAngka = "11.572.500"
+		d.HonorTerbilang = "Sebelas Juta Lima Ratus Tujuh Puluh Dua Ribu Lima Ratus Rupiah"
+	}
 
 	var wilayah []wilayahKerjaRow
 	if isPML {
 		rows, err := database.DB.Query(`
-			SELECT ppl_nama, kode_kec, kode_desa, COUNT(*)
-			FROM lk_ppk_termin2_se2026
-			WHERE pml_idsobat = ?
-			GROUP BY ppl_idsobat, ppl_nama, kode_kec, kode_desa
-			ORDER BY ppl_nama, kode_kec, kode_desa`, idsobat)
+			SELECT t.ppl_nama, t.kode_kec, MAX(s.nama_kec), t.kode_desa, MAX(s.nama_desa), COUNT(*)
+			FROM lk_ppk_termin2_se2026 t
+			LEFT JOIN se2026.sls s ON s.kode_kec = t.kode_kec AND s.kode_desa = t.kode_desa
+			WHERE t.pml_idsobat = ?
+			GROUP BY t.ppl_idsobat, t.ppl_nama, t.kode_kec, t.kode_desa
+			ORDER BY t.ppl_nama, t.kode_kec, t.kode_desa`, idsobat)
 		if err != nil {
 			return d, jenis, nil, fmt.Errorf("gagal mengambil wilayah kerja: %v", err)
 		}
 		defer rows.Close()
 		for rows.Next() {
 			var w wilayahKerjaRow
-			if err := rows.Scan(&w.Nama, &w.KodeKec, &w.KodeDesa, &w.JumlahSLS); err == nil {
+			if err := rows.Scan(&w.Nama, &w.KodeKec, &w.NamaKec, &w.KodeDesa, &w.NamaDesa, &w.JumlahSLS); err == nil {
 				w.Nama = properCase(w.Nama)
 				wilayah = append(wilayah, w)
 			}
 		}
 	} else {
 		rows, err := database.DB.Query(`
-			SELECT kode_kec, kode_desa, COUNT(*)
-			FROM lk_ppk_termin2_se2026
-			WHERE ppl_idsobat = ?
-			GROUP BY kode_kec, kode_desa
-			ORDER BY kode_kec, kode_desa`, idsobat)
+			SELECT t.kode_kec, MAX(s.nama_kec), t.kode_desa, MAX(s.nama_desa), COUNT(*)
+			FROM lk_ppk_termin2_se2026 t
+			LEFT JOIN se2026.sls s ON s.kode_kec = t.kode_kec AND s.kode_desa = t.kode_desa
+			WHERE t.ppl_idsobat = ?
+			GROUP BY t.kode_kec, t.kode_desa
+			ORDER BY t.kode_kec, t.kode_desa`, idsobat)
 		if err != nil {
 			return d, jenis, nil, fmt.Errorf("gagal mengambil wilayah kerja: %v", err)
 		}
 		defer rows.Close()
 		for rows.Next() {
 			var w wilayahKerjaRow
-			if err := rows.Scan(&w.KodeKec, &w.KodeDesa, &w.JumlahSLS); err == nil {
+			if err := rows.Scan(&w.KodeKec, &w.NamaKec, &w.KodeDesa, &w.NamaDesa, &w.JumlahSLS); err == nil {
 				wilayah = append(wilayah, w)
 			}
 		}
@@ -154,9 +173,9 @@ func generateWilayahKerjaTableXML(rows []wilayahKerjaRow, withNama bool) string 
 	for i, r := range rows {
 		var cells []string
 		if withNama {
-			cells = []string{strconv.Itoa(i + 1), escapeXML(r.Nama), r.KodeKec, r.KodeDesa, strconv.Itoa(r.JumlahSLS)}
+			cells = []string{strconv.Itoa(i + 1), escapeXML(r.Nama), fmtKodeNama(r.KodeKec, r.NamaKec), fmtKodeNama(r.KodeDesa, r.NamaDesa), strconv.Itoa(r.JumlahSLS)}
 		} else {
-			cells = []string{strconv.Itoa(i + 1), r.KodeKec, r.KodeDesa, strconv.Itoa(r.JumlahSLS)}
+			cells = []string{strconv.Itoa(i + 1), fmtKodeNama(r.KodeKec, r.NamaKec), fmtKodeNama(r.KodeDesa, r.NamaDesa), strconv.Itoa(r.JumlahSLS)}
 		}
 		rowXML.WriteString("<w:tr>")
 		for ci, cell := range cells {
