@@ -110,15 +110,23 @@ func buildBASTSE2026(rekapID int, tanggal string) (bastSE2026Data, string, []wil
 		d.HonorTerbilang = "Sebelas Juta Lima Ratus Tujuh Puluh Dua Ribu Lima Ratus Rupiah"
 	}
 
+	// PENTING: hitung COUNT(*) di subquery DULU sebelum JOIN ke se2026.sls -
+	// se2026.sls punya banyak baris per (kode_kec,kode_desa) (satu per SLS se-
+	// kabupaten), jadi JOIN langsung tanpa subquery akan fan-out dan bikin
+	// Jumlah SLS meledak/salah (bug yg dilaporkan user sbg "error bast").
 	var wilayah []wilayahKerjaRow
 	if isPML {
 		rows, err := database.DB.Query(`
-			SELECT t.ppl_nama, t.kode_kec, MAX(s.nama_kec), t.kode_desa, MAX(s.nama_desa), COUNT(*)
-			FROM lk_ppk_termin2_se2026 t
-			LEFT JOIN se2026.sls s ON s.kode_kec = t.kode_kec AND s.kode_desa = t.kode_desa
-			WHERE t.pml_idsobat = ?
-			GROUP BY t.ppl_idsobat, t.ppl_nama, t.kode_kec, t.kode_desa
-			ORDER BY t.ppl_nama, t.kode_kec, t.kode_desa`, idsobat)
+			SELECT g.ppl_nama, g.kode_kec, MAX(s.nama_kec), g.kode_desa, MAX(s.nama_desa), g.jml
+			FROM (
+				SELECT ppl_idsobat, ppl_nama, kode_kec, kode_desa, COUNT(*) AS jml
+				FROM lk_ppk_termin2_se2026
+				WHERE pml_idsobat = ?
+				GROUP BY ppl_idsobat, ppl_nama, kode_kec, kode_desa
+			) g
+			LEFT JOIN se2026.sls s ON s.kode_kec = g.kode_kec AND s.kode_desa = g.kode_desa
+			GROUP BY g.ppl_idsobat, g.ppl_nama, g.kode_kec, g.kode_desa, g.jml
+			ORDER BY g.ppl_nama, g.kode_kec, g.kode_desa`, idsobat)
 		if err != nil {
 			return d, jenis, nil, fmt.Errorf("gagal mengambil wilayah kerja: %v", err)
 		}
@@ -132,12 +140,16 @@ func buildBASTSE2026(rekapID int, tanggal string) (bastSE2026Data, string, []wil
 		}
 	} else {
 		rows, err := database.DB.Query(`
-			SELECT t.kode_kec, MAX(s.nama_kec), t.kode_desa, MAX(s.nama_desa), COUNT(*)
-			FROM lk_ppk_termin2_se2026 t
-			LEFT JOIN se2026.sls s ON s.kode_kec = t.kode_kec AND s.kode_desa = t.kode_desa
-			WHERE t.ppl_idsobat = ?
-			GROUP BY t.kode_kec, t.kode_desa
-			ORDER BY t.kode_kec, t.kode_desa`, idsobat)
+			SELECT g.kode_kec, MAX(s.nama_kec), g.kode_desa, MAX(s.nama_desa), g.jml
+			FROM (
+				SELECT kode_kec, kode_desa, COUNT(*) AS jml
+				FROM lk_ppk_termin2_se2026
+				WHERE ppl_idsobat = ?
+				GROUP BY kode_kec, kode_desa
+			) g
+			LEFT JOIN se2026.sls s ON s.kode_kec = g.kode_kec AND s.kode_desa = g.kode_desa
+			GROUP BY g.kode_kec, g.kode_desa, g.jml
+			ORDER BY g.kode_kec, g.kode_desa`, idsobat)
 		if err != nil {
 			return d, jenis, nil, fmt.Errorf("gagal mengambil wilayah kerja: %v", err)
 		}
