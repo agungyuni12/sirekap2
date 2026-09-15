@@ -682,10 +682,14 @@ func main() {
 	r.HandleFunc("/api/rekap/bast/download-all", middleware.RequireAdmin(handlers.DownloadFilteredBASTZipHandler)).Methods("GET")
 
 	// Server Configuration
+	// WriteTimeout dinaikkan dari 15s ke 5m - endpoint bulk download SE2026 (BAPP/
+	// Pernyataan/BAST ZIP) generate ratusan docx sekaligus dlm satu request, 15s
+	// kepotong di tengah jalan (muncul "error jaringan" di browser krn koneksi
+	// diputus paksa oleh server, bukan krn filenya sendiri corrupt).
 	srv := &http.Server{
 		Handler:      r,
 		Addr:         cfg.Server.Addr,
-		WriteTimeout: 15 * time.Second,
+		WriteTimeout: 5 * time.Minute,
 		ReadTimeout:  15 * time.Second,
 	}
 
