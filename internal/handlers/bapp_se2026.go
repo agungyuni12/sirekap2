@@ -44,7 +44,7 @@ type bappSE2026Data struct {
 // bulan+tanggal terbit dokumen ini sendiri. Sequence ini SENGAJA independen dari nomor SPK
 // (rekap.id_spk) - direnumber ulang khusus utk daftar petugas yang bisa dicairkan termin ini.
 // Format: B-{bulan(2)}.{tanggal(2)}.{seq(3)}/....
-// kind: "pernyataan_ppl" | "pernyataan_pml" | "bapp"
+// kind: "pernyataan_ppl" | "pernyataan_pml" | "bapp" | "bast"
 func suratNomorSE2026(seq int, kind string, termin int, tahun string, tgl time.Time) (string, error) {
 	tgd := fmt.Sprintf("%02d.%02d.%03d", int(tgl.Month()), tgl.Day(), seq)
 	switch kind {
@@ -54,6 +54,10 @@ func suratNomorSE2026(seq int, kind string, termin int, tahun string, tgl time.T
 			roman = "II"
 		}
 		return fmt.Sprintf("B-%s/BAPP-%s-SE2026/5205.PPK/BA/%s", tgd, roman, tahun), nil
+	case "bast":
+		// BAST satu dokumen per orang utk seluruh kontrak (bukan per-termin, "gabungan
+		// total"), jadi TIDAK ada suffix romawi termin di formatnya (beda dari BAPP).
+		return fmt.Sprintf("B-%s/BAST-SE2026/5205.PPK/BA/%s", tgd, tahun), nil
 	case "pernyataan_ppl":
 		return fmt.Sprintf("B-%s/SE2026/5205/Super.PPL/%s", tgd, tahun), nil
 	case "pernyataan_pml":

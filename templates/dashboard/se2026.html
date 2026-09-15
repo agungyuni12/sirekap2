@@ -318,22 +318,22 @@
                                 </template>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <template x-if="bastStatus[item.id]">
-                                    <a :href="`/api/rekap/spk/se2026/bast/download-all?jenis=${tab}`"
-                                        title="BAST digabung satu ZIP (satu dokumen per orang, bukan per-termin)"
+                                <template x-if="item.sudah_bast">
+                                    <a :href="`/api/rekap/spk/se2026/bast/download?rekap_id=${item.id}&tanggal=2026-09-15`"
+                                        title="BAST digabung total (satu dokumen per orang, bukan per-termin)"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
                                                bg-teal-600 hover:bg-teal-700 text-white shadow-sm shadow-teal-300 dark:shadow-teal-900/40">
-                                        <i class="fas fa-check"></i>Sudah
+                                        <i class="fas fa-download"></i>BAST
                                     </a>
                                 </template>
-                                <template x-if="!bastStatus[item.id] && item.sudah_spk">
+                                <template x-if="!item.sudah_bast && item.sudah_spk">
                                     <button @click="createBAST(item)"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
                                                bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
                                         <i class="fas fa-plus"></i>Buat
                                     </button>
                                 </template>
-                                <template x-if="!bastStatus[item.id] && !item.sudah_spk">
+                                <template x-if="!item.sudah_bast && !item.sudah_spk">
                                     <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
                                 </template>
                             </td>
@@ -357,7 +357,6 @@ function se2026() {
         search: '',
         kepalaNomor: { 1: '', 2: '', 3: '', 4: '' },
         kepalaNomorTermin2: '',
-        bastStatus: {},
         toast: { show: false, message: '', type: 'success' },
 
         init() {
@@ -389,13 +388,6 @@ function se2026() {
             }
         },
 
-        async loadBastStatus() {
-            try {
-                const res = await fetch(`/api/rekap/spk/se2026/bast/status?jenis=${this.tab}`);
-                this.bastStatus = await res.json() || {};
-            } catch (e) { /* diamkan, tombol "Buat" tetap tampil */ }
-        },
-
         async loadKepalaStatus(batch) {
             try {
                 const res = await fetch(`/api/rekap/spk/se2026/pernyataan-kepala/status?batch=${batch}`);
@@ -425,7 +417,6 @@ function se2026() {
             try {
                 const res = await fetch(`/api/rekap/spk/se2026/list?jenis=${this.tab}`);
                 this.items = await res.json() || [];
-                await this.loadBastStatus();
             } catch(e) {
                 this.showToast('Gagal memuat data', 'error');
             } finally {
@@ -480,16 +471,14 @@ function se2026() {
 
         async createBAST(item) {
             try {
-                const res = await fetch('/api/rekap/spk/se2026/bast/create-bulk', {
+                const res = await fetch('/api/rekap/spk/se2026/bast/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tanggal: '2026-09-15', items: [{ rekap_id: item.id }] })
+                    body: JSON.stringify({ rekap_id: item.id, tanggal: '2026-09-15' })
                 });
                 if (!res.ok) throw new Error(await res.text());
-                const data = await res.json();
-                if (data.failed > 0) throw new Error((data.errors || []).join(', ') || 'gagal');
                 this.showToast('Nomor BAST berhasil dibuat');
-                await this.loadBastStatus();
+                await this.load();
             } catch (e) {
                 this.showToast('Gagal membuat nomor BAST: ' + e.message, 'error');
             }

@@ -298,6 +298,7 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(r.id_spk, ''),
 		       COALESCE(r.id_bapp1, ''), COALESCE(r.id_bapp2, ''),
 		       COALESCE(r.id_pernyataan1, ''), COALESCE(r.id_pernyataan2, ''),
+		       COALESCE(r.id_bast_se2026, ''),
 		       COALESCE(NULLIF(r.jumlah_sls,''),'0'), r.realisasi_sls,
 		       COALESCE((SELECT m.alamat FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), ''),
 		       COALESCE((SELECT m.kecamatan FROM mitra m WHERE m.idsobat = r.idsobat LIMIT 1), '')
@@ -329,6 +330,8 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		SudahPernyataan  bool    `json:"sudah_pernyataan"`
 		IDPernyataan2    string  `json:"id_pernyataan2"`
 		SudahPernyataan2 bool    `json:"sudah_pernyataan2"`
+		IDBast           string  `json:"id_bast"`
+		SudahBast        bool    `json:"sudah_bast"`
 		TargetSLS        int     `json:"target_sls"`
 		RealisasiSLS     int     `json:"realisasi_sls"`
 		Alamat           string  `json:"alamat"`
@@ -341,7 +344,7 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		var honorStr, jumlahSLSStr string
 		if err := rows.Scan(&item.ID, &item.IDSobat, &item.Nama, &item.Kegiatan,
 			&honorStr, &item.IDSpk, &item.IDBapp1, &item.IDBapp2, &item.IDPernyataan1, &item.IDPernyataan2,
-			&jumlahSLSStr, &item.RealisasiSLS, &item.Alamat, &item.Kecamatan); err != nil {
+			&item.IDBast, &jumlahSLSStr, &item.RealisasiSLS, &item.Alamat, &item.Kecamatan); err != nil {
 			continue
 		}
 		item.Honor, _ = strconv.ParseFloat(honorStr, 64)
@@ -351,6 +354,7 @@ func ListRekapSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		item.SudahBapp2 = item.IDBapp2 != ""
 		item.SudahPernyataan = item.IDPernyataan1 != ""
 		item.SudahPernyataan2 = item.IDPernyataan2 != ""
+		item.SudahBast = item.IDBast != ""
 		items = append(items, item)
 	}
 
