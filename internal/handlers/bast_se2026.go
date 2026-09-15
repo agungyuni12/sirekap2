@@ -76,11 +76,12 @@ func buildBASTSE2026(rekapID int, tanggal string) (bastSE2026Data, string, []wil
 	if !ok {
 		return d, jenis, nil, fmt.Errorf("'%s' tidak ada di daftar yang bisa dibayarkan termin 2 (BAST digabung dgn termin 2)", d.NamaPetugas)
 	}
-	_, _, targetSLS, realisasiSLS, err := computeUsahaKeluargaSE2026(idsobat, isPML, 2)
-	if err != nil {
-		return d, jenis, nil, fmt.Errorf("gagal menghitung SLS: %v", err)
-	}
-	d.TargetSLS, d.RealisasiSLS = targetSLS, realisasiSLS
+	// TargetSLS/RealisasiSLS BAST = jumlah SLS TOTAL (gabungan seluruh kontrak,
+	// bukan hanya yg prioritas) - beda dgn BAPP yg pakai computeUsahaKeluargaSE2026
+	// (hitung SLS prioritas saja). Diisi setelah wilayah kerja diambil di bawah,
+	// dijumlahkan dari situ supaya konsisten persis dgn Lampiran Daftar Wilayah
+	// Kerja (arahan user: "realisasi di bast harusnya semua slsnya lgsg karena
+	// bast itu total semua bukan per termin2").
 
 	if tanggal == "" {
 		tanggal = batchTanggalDefaultTermin2
@@ -158,6 +159,12 @@ func buildBASTSE2026(rekapID int, tanggal string) (bastSE2026Data, string, []wil
 	// gagal (atau tabelnya tak terjangkau), JANGAN gagalkan BAST-nya: cukup
 	// tampilkan kode saja (fallback di fmtKodeNama).
 	attachWilayahNames(wilayah)
+
+	total := 0
+	for _, w := range wilayah {
+		total += w.JumlahSLS
+	}
+	d.TargetSLS, d.RealisasiSLS = total, total
 
 	return d, jenis, wilayah, nil
 }
