@@ -222,7 +222,7 @@ func generateBASTSE2026Docx(d bastSE2026Data, jenis string, wilayah []wilayahKer
 		"realisasi_sls":   strconv.Itoa(d.RealisasiSLS),
 		"honor_angka":     d.HonorAngka,
 		"honor_terbilang": d.HonorTerbilang,
-		"wilayah_table":   generateWilayahKerjaTableXML(wilayah, jenis == "pml"),
+		"table":           generateWilayahKerjaTableXML(wilayah, jenis == "pml"),
 	})
 }
 
