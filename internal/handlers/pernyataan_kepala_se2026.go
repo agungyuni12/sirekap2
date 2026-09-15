@@ -39,7 +39,7 @@ func buildPernyataanKepalaSE2026(termin, batch int, tanggal string) (kepalaSE202
 
 	if tanggal == "" {
 		if termin == 2 {
-			tanggal = batchTanggalDefaultTermin2
+			tanggal = pernyataanTanggalDefaultTermin2
 		} else {
 			tanggal = batchTanggalDefault(batch, "kepala")
 		}
@@ -47,7 +47,7 @@ func buildPernyataanKepalaSE2026(termin, batch int, tanggal string) (kepalaSE202
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
 		if termin == 2 {
-			tgl, _ = time.Parse("2006-01-02", batchTanggalDefaultTermin2)
+			tgl, _ = time.Parse("2006-01-02", pernyataanTanggalDefaultTermin2)
 		} else {
 			tgl, _ = time.Parse("2006-01-02", batchTanggalDefault(batch, "kepala"))
 		}

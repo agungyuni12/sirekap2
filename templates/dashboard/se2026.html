@@ -89,7 +89,7 @@
             </template>
             <span>
                 <a x-show="kepalaNomorTermin2" x-cloak
-                    href="/api/rekap/spk/se2026/pernyataan-kepala/download?termin=2&tanggal=2026-09-15"
+                    href="/api/rekap/spk/se2026/pernyataan-kepala/download?termin=2&tanggal=2026-09-14"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition
                            bg-emerald-800 hover:bg-emerald-900 text-white shadow-lg shadow-emerald-800/30">
                     <i class="fas fa-download"></i>
@@ -378,7 +378,7 @@ function se2026() {
                 const res = await fetch('/api/rekap/spk/se2026/pernyataan-kepala/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ termin: 2, tanggal: '2026-09-15' })
+                    body: JSON.stringify({ termin: 2, tanggal: '2026-09-14' })
                 });
                 if (!res.ok) throw new Error(await res.text());
                 this.showToast('Nomor Surat Pernyataan Kepala BPS (Termin II) berhasil dibuat');
