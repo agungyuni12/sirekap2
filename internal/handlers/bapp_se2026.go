@@ -92,8 +92,12 @@ func batchTanggalDefault(batch int, kind string) string {
 // seq = nomor urut per role, LANJUT antar batch (1..208 PPL batch 1, 209..225 batch 2 dst /
 // 1..14 PML batch 1, 15..20 batch 2 dst), dipakai utk nomor Surat Pernyataan (formatnya
 // beda suffix Super.PPL/Super.PML jadi aman walau seq sama antar role).
-// seqAll = nomor urut gabungan PML lalu PPL, LANJUT antar batch juga, WAJIB dipakai utk
-// nomor BAPP karena format BAPP sama persis utk PPL & PML (harus unik silang role & batch).
+// seqAll = nomor urut gabungan, WAJIB dipakai utk nomor BAPP/BAST karena formatnya sama
+// persis utk PPL & PML (harus unik silang role). termin=1: PML dulu baru PPL (kolom
+// seq_all, urutan lama). termin=2: PPL dulu (1..233) baru PML (234..265, kolom
+// seq_all_termin2) - urutan KEBALIK dari termin1, dikonfirmasi dari template resmi
+// (BAPP II PPL contoh=001, BAPP II PML contoh=234, lihat migrations/
+// add_seq_all_termin2_se2026.sql). JANGAN disamakan dgn seq_all termin1.
 // batch = 1, 2, atau 3, dipakai utk pilih tanggal default dokumen (lihat batchTanggalDefault).
 // termin=2: petugas dgn excluded_termin2=1 (arahan user: Moh Ma'ruf & M Iksan TIDAK dapat
 // BAPP/BAST termin 2) otomatis ok=false, walau statusnya valid di termin 1.
@@ -103,9 +107,16 @@ func getPayableSeq(idsobat string, isPML bool, termin int) (seq int, seqAll int,
 		role = "pml"
 	}
 	var excludedTermin2 bool
-	err := database.DB.QueryRow(`SELECT seq, seq_all, batch, excluded_termin2 FROM lk_ppk_payable_se2026 WHERE idsobat = ? AND role = ?`, idsobat, role).Scan(&seq, &seqAll, &batch, &excludedTermin2)
+	var seqAllTermin1 int
+	var seqAllTermin2 sql.NullInt64
+	err := database.DB.QueryRow(`SELECT seq, seq_all, seq_all_termin2, batch, excluded_termin2 FROM lk_ppk_payable_se2026 WHERE idsobat = ? AND role = ?`, idsobat, role).
+		Scan(&seq, &seqAllTermin1, &seqAllTermin2, &batch, &excludedTermin2)
 	if err != nil {
 		return 0, 0, 0, false
+	}
+	seqAll = seqAllTermin1
+	if termin == 2 {
+		seqAll = int(seqAllTermin2.Int64)
 	}
 	if termin == 2 && excludedTermin2 {
 		return seq, seqAll, batch, false

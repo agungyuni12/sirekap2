@@ -205,9 +205,15 @@ func computeUsahaKeluargaSE2026(idsobat string, isPML bool, termin int) (target,
 	return
 }
 
-// batchTanggalDefaultTermin2 adalah tanggal default dokumen Termin 2 (BAPP II 15 Sep 2026,
-// dipakai juga sbg default Pernyataan II krn satu hari yg sama - arahan user via catatan).
-const batchTanggalDefaultTermin2 = "2026-09-15"
+// batchTanggalDefaultTermin2 = tanggal default BAPP II & Pernyataan Kepala BPS Termin II
+// (15 Sep 2026, sesuai nomor contoh di template resmi - lihat Termin 2/[4],[9],[3]).
+// pernyataanTanggalDefaultTermin2 = tanggal default Surat Pernyataan Termin II PPL/PML,
+// BEDA SATU HARI dari BAPP II (14 Sep, bukan 15 - dikonfirmasi dari nomor contoh di
+// template resmi Termin 2/[1] & [2]: "B-09.14.001/SE2026/5205/Super.PPL/2026").
+const (
+	batchTanggalDefaultTermin2      = "2026-09-15"
+	pernyataanTanggalDefaultTermin2 = "2026-09-14"
+)
 
 // buildSuratPernyataanSE2026 mengambil data petugas (PPL atau PML, dari rekap) dan
 // menyusun map placeholder + (khusus PML) daftar PPL binaan untuk lampiran tabel - hanya
@@ -239,7 +245,7 @@ func buildSuratPernyataanSE2026(rekapID, termin int, tanggal string) (bappSE2026
 
 	if tanggal == "" {
 		if termin == 2 {
-			tanggal = batchTanggalDefaultTermin2
+			tanggal = pernyataanTanggalDefaultTermin2
 		} else {
 			tanggal = batchTanggalDefault(batch, "pernyataan")
 		}
@@ -247,7 +253,7 @@ func buildSuratPernyataanSE2026(rekapID, termin int, tanggal string) (bappSE2026
 	tgl, err := time.Parse("2006-01-02", tanggal)
 	if err != nil {
 		if termin == 2 {
-			tgl, _ = time.Parse("2006-01-02", batchTanggalDefaultTermin2)
+			tgl, _ = time.Parse("2006-01-02", pernyataanTanggalDefaultTermin2)
 		} else {
 			tgl, _ = time.Parse("2006-01-02", batchTanggalDefault(batch, "pernyataan"))
 		}
@@ -432,9 +438,13 @@ func generateLampiranTableXML(rows []usahaKeluargaLampiranRow) string {
 	) + rowXML.String() + `</w:tbl>`
 }
 
-func generateSuratPernyataanDocx(d bappSE2026Data, jenis string, lampiran []usahaKeluargaLampiranRow) ([]byte, error) {
+func generateSuratPernyataanDocx(d bappSE2026Data, jenis string, lampiran []usahaKeluargaLampiranRow, termin int) ([]byte, error) {
 	if jenis == "pml" {
-		return replaceInDocx("static/templates-se2026/surat_pernyataan_pml_se2026.docx", map[string]string{
+		tpl := "static/templates-se2026/surat_pernyataan_pml_se2026.docx"
+		if termin == 2 {
+			tpl = "static/templates-se2026/surat_pernyataan_termin2_pml_se2026.docx"
+		}
+		return replaceInDocx(tpl, map[string]string{
 			"nomor":          d.Nomor,
 			"nomor_spk":      d.NomorSPK,
 			"tgl_teks":       d.TglTeks,
@@ -452,7 +462,11 @@ func generateSuratPernyataanDocx(d bappSE2026Data, jenis string, lampiran []usah
 	if len(lampiran) == 1 {
 		target, realisasi = lampiran[0].TargetPrelist, lampiran[0].Realisasi
 	}
-	return replaceInDocx("static/templates-se2026/surat_pernyataan_ppl_se2026.docx", map[string]string{
+	tpl := "static/templates-se2026/surat_pernyataan_ppl_se2026.docx"
+	if termin == 2 {
+		tpl = "static/templates-se2026/surat_pernyataan_termin2_ppl_se2026.docx"
+	}
+	return replaceInDocx(tpl, map[string]string{
 		"nomor":               d.Nomor,
 		"nomor_spk":           d.NomorSPK,
 		"tgl_teks":            d.TglTeks,
@@ -503,7 +517,7 @@ func assignPernyataanNumber(rekapID, termin int, tanggal string) error {
 	}
 	if tanggal == "" {
 		if termin == 2 {
-			tanggal = batchTanggalDefaultTermin2
+			tanggal = pernyataanTanggalDefaultTermin2
 		} else {
 			tanggal = batchTanggalDefault(batch, "pernyataan")
 		}
@@ -572,7 +586,7 @@ func DownloadPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	docx, err := generateSuratPernyataanDocx(d, jenis, lampiran)
+	docx, err := generateSuratPernyataanDocx(d, jenis, lampiran, termin)
 	if err != nil {
 		http.Error(w, "Gagal generate Surat Pernyataan: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -655,7 +669,7 @@ func DownloadAllPernyataanSE2026Handler(w http.ResponseWriter, r *http.Request) 
 		if err != nil {
 			continue
 		}
-		docx, err := generateSuratPernyataanDocx(d, jenis, lampiran)
+		docx, err := generateSuratPernyataanDocx(d, jenis, lampiran, termin)
 		if err != nil {
 			continue
 		}
