@@ -32,6 +32,7 @@ type PegawaiDetail struct {
 }
 
 type DaftarTranslokSearchResult struct {
+	ID   int    `json:"id"`
 	Nama string `json:"nama"`
 	Mak  string `json:"mak"`
 }
@@ -282,14 +283,15 @@ func GetPegawaiByNIP(nip string) (*PegawaiDetail, error) {
 func SearchDaftarTranslok(query string) ([]DaftarTranslokSearchResult, error) {
 	sqlQuery := `
 		SELECT
+			COALESCE(id, 0) AS id,
 			COALESCE(NULLIF(kegiatan, ''), '') AS kegiatan,
 			COALESCE(NULLIF(mak, ''), '') AS mak
 		FROM daftartranslok
 		WHERE 1 = 1`
 
-	searchClause, searchArgs := buildFlexibleSearchClause([]string{"kegiatan", "CONCAT(COALESCE(kegiatan, ''), ' ', COALESCE(mak, ''))"}, query)
+	searchClause, searchArgs := buildFlexibleSearchClause([]string{"kegiatan", "mak", "CONCAT(COALESCE(kegiatan, ''), ' ', COALESCE(mak, ''))"}, query)
 	sqlQuery += searchClause + `
-		ORDER BY kegiatan ASC
+		ORDER BY kegiatan ASC, mak ASC, id ASC
 		LIMIT 20`
 
 	rows, err := database.DB.Query(sqlQuery, searchArgs...)
@@ -301,7 +303,7 @@ func SearchDaftarTranslok(query string) ([]DaftarTranslokSearchResult, error) {
 	results := make([]DaftarTranslokSearchResult, 0)
 	for rows.Next() {
 		var item DaftarTranslokSearchResult
-		if err := rows.Scan(&item.Nama, &item.Mak); err != nil {
+		if err := rows.Scan(&item.ID, &item.Nama, &item.Mak); err != nil {
 			return nil, err
 		}
 		results = append(results, item)

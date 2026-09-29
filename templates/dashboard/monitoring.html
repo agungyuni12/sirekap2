@@ -274,11 +274,11 @@
                                         placeholder="Ketik kegiatan dari daftartranslok">
                                     <div x-show="showKegiatanList && kegiatanResults.length > 0" x-cloak
                                         class="absolute z-20 w-full mt-1 bg-white shadow-xl rounded-xl border border-gray-200 max-h-56 overflow-y-auto">
-                                        <template x-for="item in kegiatanResults" :key="item.nama + item.mak">
+                                        <template x-for="item in kegiatanResults" :key="item.id">
                                             <button type="button" @click="selectKegiatan(item)"
                                                 class="w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-100 last:border-0">
                                                 <p class="font-medium text-gray-800" x-text="item.nama"></p>
-                                                <p class="text-xs text-gray-500 mt-1" x-text="item.mak || '-'"></p>
+                                                <p class="text-xs text-gray-500 mt-1" x-text="'MAK: ' + (item.mak || '-')"></p>
                                             </button>
                                         </template>
                                     </div>
